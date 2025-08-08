@@ -1,0 +1,330 @@
+# Autônomo Control - Sistema de Gestão Financeira para Profissionais Autônomos
+
+## 1. Visão Geral
+O Autônomo Control é uma aplicação de gestão financeira pessoal desenvolvida especificamente para profissionais autônomos, incluindo motoristas de aplicativo, entregadores, freelancers e outros trabalhadores independentes do Brasil. O sistema tem como objetivo principal facilitar o controle diário de receitas e despesas, oferecendo uma interface intuitiva com autenticação segura via Google, histórico completo de transações e relatórios financeiros simples e objetivos para melhor tomada de decisão.
+
+### 1.1. Propósito
+- Simplificar o controle financeiro diário de trabalhadores autônomos
+- Facilitar o cálculo de lucratividade real da atividade profissional
+- Proporcionar visibilidade sobre tendências de ganhos e gastos ao longo do tempo
+- Auxiliar no planejamento financeiro e declarações fiscais
+
+---
+
+## 2. Funcionalidades
+
+### 2.1. Autenticação e Segurança
+- Login integrado com Google OAuth2 (sem necessidade de criar nova senha)
+- Logout com invalidação de token
+- Proteção de rotas privadas com JWT (JSON Web Tokens)
+- Refresh token para manter sessão ativa por mais tempo
+- Criptografia de dados sensíveis no banco de dados
+- Recuperação de acesso via e-mail
+
+### 2.2. Gestão Financeira
+- Cadastro rápido de lançamentos financeiros (ganhos e despesas)
+- Campos detalhados: data, hora, valor, descrição, categoria, subcategoria, tipo (ganho/despesa)
+- Suporte a pagamentos recorrentes e parcelados
+- Edição, exclusão e arquivamento de lançamentos
+- Listagem com filtros avançados por data, tipo, categoria, valor e descrição
+- Anexo de comprovantes em formato de imagem (futuro)
+
+### 2.3. Dashboard Interativo
+- Visão geral do saldo atual e projeção para o período
+- Gráficos interativos de desempenho: ganhos vs despesas por período (dia, semana, mês, ano)
+- Estatísticas detalhadas: total de ganhos, despesas, saldo líquido, médias diárias
+- Análise de tendências com comparação entre períodos
+- Indicadores de desempenho financeiro personalizados
+- Metas financeiras com acompanhamento visual
+
+### 2.4. Backup e Exportação
+- Backup automático na nuvem (implementação futura)
+- Exportação de relatórios em múltiplos formatos (PDF, Excel, CSV)
+- Compartilhamento de relatórios via e-mail ou link temporário
+- Impressão direta de relatórios formatados
+
+### 2.5. Configurações e Personalização
+- Seleção de temas visuais (claro/escuro) com adaptação automática às preferências do sistema
+- Criação e gestão de categorias e subcategorias personalizadas
+- Configuração de múltiplos perfis de trabalho ou projetos
+- Preferências de notificações e alertas financeiros
+- Personalização de dashboard com widgets específicos
+
+---
+
+## 3. Arquitetura e Estrutura de Pastas
+
+O projeto segue uma arquitetura moderna de microsserviços, com separação clara entre backend e frontend, permitindo desenvolvimento independente e escalabilidade.
+
+### 3.1. Backend (FastAPI)
+
+O backend utiliza FastAPI, um framework Python moderno e de alta performance, com validação de dados nativa via Pydantic e documentação automática com OpenAPI/Swagger.
+
+```
+/backend
+  /app
+    /api
+      /v1
+        auth.py          # Rotas de autenticação (login Google, refresh token)
+        entries.py       # CRUD de lançamentos financeiros
+        users.py         # Gerenciamento de usuários
+        categories.py    # Gerenciamento de categorias personalizáveis
+        reports.py       # Geração de relatórios e análises
+    /core
+      config.py          # Configurações e variáveis de ambiente
+      security.py        # Funções de segurança e geração de tokens JWT
+      database.py        # Configuração de conexão com banco de dados
+      exceptions.py      # Handlers de exceções customizados
+    /models
+      user.py            # Modelagem User SQLAlchemy
+      entry.py           # Modelagem Entry SQLAlchemy
+      category.py        # Modelagem Category SQLAlchemy
+      base.py            # Modelo base com funcionalidades compartilhadas
+    /schemas
+      user.py            # Pydantic schemas para User
+      entry.py           # Pydantic schemas para Entry
+      category.py        # Pydantic schemas para Category
+      responses.py       # Schemas para padronização de respostas API
+    /services
+      google_auth.py     # Integração com Google OAuth2
+      email_service.py   # Serviço de envio de emails
+      storage.py         # Serviço de armazenamento de arquivos (anexos)
+      analytics.py       # Serviço de análise de dados financeiros
+    /migrations          # Migrações Alembic para evolução do banco de dados
+    /tests
+      /unit              # Testes unitários
+      /integration       # Testes de integração
+      conftest.py        # Configurações para testes
+    main.py              # Instancia e roda o app FastAPI
+    dependencies.py      # Dependências compartilhadas (auth, db, etc)
+  Dockerfile             # Configuração para containerização
+  requirements.txt       # Dependências Python
+  alembic.ini            # Configuração de migrações
+```
+
+### 3.2. Frontend (React + Tailwind CSS)
+
+O frontend utiliza React com componentização moderna e Tailwind CSS para estilização produtiva e responsiva, além de bibliotecas complementares de alta qualidade para gráficos e manipulação de dados.
+
+```
+/frontend
+  /public               # Arquivos estáticos públicos
+    index.html
+    favicon.ico
+    manifest.json
+  /src
+    /components         # Componentes reutilizáveis
+      /ui               # Componentes de interface básicos (botões, inputs, etc)
+      /layout           # Componentes estruturais (Header, Sidebar, etc)
+      /forms            # Componentes de formulários específicos
+      /charts           # Componentes de visualização de dados
+      /tables           # Componentes de tabelas e listagens
+      /modals           # Modais e diálogos
+    /pages              # Páginas da aplicação
+      /auth             # Páginas de autenticação
+      /dashboard        # Dashboard principal
+      /entries          # Gestão de lançamentos
+      /reports          # Relatórios e análises
+      /settings         # Configurações do usuário
+    /hooks              # Custom hooks para lógica reutilizável
+    /services           # Chamadas API e serviços externos
+      /api              # Clientes de API
+      /storage          # Serviços de armazenamento local
+    /utils              # Funções utilitárias
+      /formatters       # Formatadores (data, moeda, etc)
+      /validators       # Validadores de dados
+    /context            # Context API ou Zustand para estado global
+    /assets             # Recursos estáticos (imagens, ícones, etc)
+    /types              # Definições de tipos TypeScript
+    /i18n               # Internacionalização e traduções
+    App.jsx             # Componente principal
+    index.jsx           # Ponto de entrada da aplicação
+    routes.jsx          # Definição de rotas
+  package.json          # Dependências e scripts
+  tailwind.config.js    # Configuração do Tailwind CSS
+  vite.config.js        # Configuração do bundler (Vite)
+  .eslintrc.js          # Configuração do linter
+  Dockerfile            # Configuração para containerização
+```
+
+### 3.3. Diagrama de Arquitetura
+
+```
+┌────────────────┐    ┌─────────────────┐    ┌───────────────┐
+│   Frontend     │    │     Backend     │    │   Database    │
+│   (React)      │◄───┤    (FastAPI)    │◄───┤  (PostgreSQL) │
+└────────────────┘    └─────────────────┘    └───────────────┘
+        ▲                     ▲                     ▲
+        │                     │                     │
+        ▼                     ▼                     ▼
+┌────────────────┐    ┌─────────────────┐    ┌───────────────┐
+│  Static Files  │    │ External APIs   │    │    Backups    │
+│  (Vercel/CDN)  │    │ (Google OAuth)  │    │    (Cloud)    │
+└────────────────┘    └─────────────────┘    └───────────────┘
+```
+
+---
+
+## 4. Tecnologias e Ferramentas
+
+### 4.1. Stack Tecnológico Principal
+
+| Área                    | Tecnologia                                       | Justificativa                                      |
+|-------------------------|--------------------------------------------------|---------------------------------------------------|
+| Backend                 | FastAPI 0.95+, SQLAlchemy 2.0+, Alembic          | Alta performance, tipagem, documentação automática |
+| Banco de dados          | SQLite (desenvolvimento), PostgreSQL 15+ (produção) | Facilidade local, robustez em produção           |
+| Autenticação            | OAuth2 Google, JWT tokens, Refresh tokens        | Segurança e facilidade para usuários              |
+| Frontend                | React 18+, TypeScript, Tailwind CSS 3            | Produtividade, manutenibilidade e UI responsivo   |
+| Componentes UI          | Radix UI, Headless UI, Tailwind components       | Acessibilidade e consistência visual              |
+| Gerenciamento de estado | Zustand, React Query                             | Simplicidade e performance                        |
+| Gráficos                | Chart.js, D3.js, Recharts                        | Visualizações interativas e customizáveis         |
+| Formulários             | React Hook Form, Zod                             | Validação eficiente e tipagem                     |
+| Deploy Backend          | Docker, Railway, AWS, Azure                      | Escalabilidade e confiabilidade                   |
+| Deploy Frontend         | Vercel, Netlify                                  | Performance e integração contínua                 |
+| Testes Backend          | Pytest, TestClient (FastAPI)                     | Cobertura e integração com FastAPI                |
+| Testes Frontend         | Vitest, React Testing Library, Cypress           | Testes de componentes e E2E                       |
+
+### 4.2. Ferramentas de Desenvolvimento
+
+| Ferramenta        | Uso                                             |
+|-------------------|--------------------------------------------------|
+| Git & GitHub      | Controle de versão e colaboração                 |
+| VS Code           | IDE principal com extensões específicas          |
+| Docker            | Containerização para ambiente de desenvolvimento |
+| Postman/Insomnia  | Testes de API e documentação                     |
+| ESLint & Prettier | Formatação e linting consistentes                |
+| Husky             | Hooks de pre-commit para manter qualidade        |
+| GitHub Actions    | CI/CD automático para testes e deploy            |
+| pgAdmin / DBeaver | Gestão visual de banco de dados                  |
+| Sentry            | Monitoramento e rastreamento de erros            |
+
+### 4.3. Fluxo de Desenvolvimento
+
+```
+┌───────────────┐   ┌───────────────┐   ┌───────────────┐   ┌───────────────┐
+│  Feature      │   │   Commit &    │   │     Pull      │   │   Deploy to   │
+│  Branch       ├──►│   Push        ├──►│   Request     ├──►│   Staging     │
+└───────────────┘   └───────────────┘   └───────────────┘   └───────────────┘
+                                                                   │
+┌───────────────┐   ┌───────────────┐   ┌───────────────┐         ▼
+│   Deploy to   │   │   User        │   │  Automated    │◄────┬───────────────┐
+│   Production  │◄──┤   Acceptance  │◄──┤   Tests       │     │   Manual      │
+└───────────────┘   └───────────────┘   └───────────────┘     │   Testing     │
+                                                              └───────────────┘
+```
+
+- **Desenvolvimento local**: Ambiente Docker com hot-reload para backend e frontend
+- **Testes**: Testes automáticos executados em cada commit e pull request
+- **Staging**: Deploy automático para ambiente de testes após merge na branch develop
+- **Produção**: Deploy controlado após aprovação em ambiente de staging
+- **Monitoramento**: Logs centralizados e alertas para erros em produção
+
+---
+
+## 5. Funcionalidades Técnicas para Portfólio
+
+O projeto incorpora diversas tecnologias e padrões modernos que demonstram competência técnica e boas práticas de desenvolvimento:
+
+- **Autenticação OAuth2**: Implementação completa de fluxo OAuth2 com Google
+- **API RESTful**: Seguindo princípios REST com documentação automática via Swagger/OpenAPI
+- **Arquitetura em Camadas**: Separação clara entre controllers, services e models
+- **Tipagem Avançada**: Uso consistente de tipos estáticos com TypeScript e Pydantic
+- **Design Patterns**: Implementação de Repository Pattern, Dependency Injection e Singleton
+- **Testes Automatizados**: Cobertura de testes unitários, de integração e E2E
+- **Migração de Banco de Dados**: Versionamento de schema com Alembic
+- **Frontend Responsivo**: Design mobile-first com grid system moderno
+- **Acessibilidade**: WCAG 2.1 AA compliant para inclusão de todos os usuários
+- **Performance**: Optimizações de carregamento, lazy loading e caching
+
+---
+
+## 6. Segurança e Conformidade
+
+### 6.1. Segurança da Aplicação
+- Proteção contra OWASP Top 10 (injeção SQL, XSS, CSRF)
+- Sanitização de inputs e validação de dados
+- Armazenamento seguro de credenciais (sem senhas em texto puro)
+- Rate limiting para prevenir ataques de força bruta
+- Content Security Policy (CSP) para prevenir injeção de conteúdo
+
+### 6.2. Privacidade e Conformidade
+- Atendimento à LGPD (Lei Geral de Proteção de Dados)
+- Política de privacidade clara e transparente
+- Consentimento explícito para coleta de dados
+- Opção de exportar e excluir dados pessoais
+
+---
+
+## 7. Roadmap de Desenvolvimento
+
+### Fase 1: MVP (1-2 meses)
+- [x] Setup inicial de projeto (backend e frontend)
+- [x] Autenticação básica com Google OAuth
+- [x] CRUD de lançamentos financeiros
+- [ ] Dashboard simples com saldo atual
+- [ ] Deploy em ambiente de produção básico
+
+### Fase 2: Recursos Essenciais (2-3 meses)
+- [ ] Dashboard completo com gráficos
+- [ ] Categorias personalizáveis
+- [ ] Filtros avançados de lançamentos
+- [ ] Exportação básica de dados
+- [ ] PWA (Progressive Web App)
+
+### Fase 3: Recursos Avançados (3-4 meses)
+- [ ] Anexos para lançamentos
+- [ ] Relatórios customizados
+- [ ] Notificações e alertas
+- [ ] Backup automático
+- [ ] Importação de extratos bancários
+
+### Fase 4: Expansão (4-6 meses)
+- [ ] Aplicativo móvel nativo
+- [ ] Integração com APIs bancárias (Open Banking)
+- [ ] Projeções financeiras avançadas
+- [ ] Versão premium com recursos adicionais
+
+---
+
+## 8. Contribuição e Desenvolvimento
+
+### 8.1. Estrutura de Branches
+- `main`: Código em produção
+- `develop`: Próxima versão em desenvolvimento
+- `feature/*`: Funcionalidades em desenvolvimento
+- `hotfix/*`: Correções urgentes
+
+### 8.2. Processo de Contribuição
+1. Criar branch a partir de `develop`
+2. Desenvolver a funcionalidade ou correção
+3. Criar Pull Request com descrição detalhada
+4. Revisão de código por pelo menos um revisor
+5. Merge após aprovação e testes passando
+
+### 8.3. Padrões de Código
+- Backend: PEP 8 para Python
+- Frontend: Airbnb JavaScript Style Guide
+- Commits: Conventional Commits (feat, fix, docs, etc.)
+
+---
+
+## 9. Contato e Suporte
+
+Para questões relacionadas ao desenvolvimento ou uso da aplicação:
+
+- **Email de suporte**: suporte@autonomocontrol.com.br
+- **Repositório**: github.com/autonomocontrol/app
+- **Documentação**: docs.autonomocontrol.com.br
+
+---
+
+## 6. Roadmap Inicial
+
+| Etapa                | Descrição                               | Status      |
+|----------------------|---------------------------------------|-------------|
+| Setup do backend      | Criar app FastAPI, configurar banco   | Pendente    |
+| Autenticação Google   | Implementar login e logout             | Pendente    |
+| CRUD financeiro      | Endpoints para criar/listar/editar    | Pendente    |
+| Frontend básico       | Login, dashboard e lista de lançamentos| Pendente   |
+| Deploy                | Colocar app online para demo           | Pendente    |
+| Documentação          | Criar README, explicações e prints    | Pendente    |

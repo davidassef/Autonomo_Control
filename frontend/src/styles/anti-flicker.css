@@ -1,0 +1,73 @@
+/* Anti-flicker styles for Autônomo Control */
+
+/* Prevenir flickering durante transições */
+*, *::before, *::after {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+}
+
+/* Otimizar renderização de elementos com transition */
+.transition-transform,
+.transition-opacity,
+.transition-all {
+  will-change: transform, opacity;
+}
+
+/* Força aceleração de hardware em animações */
+.animate-spin,
+.animate-pulse {
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
+/* Prevenir layout shifts */
+.layout-stable {
+  contain: layout style;
+}
+
+/* Loading states sem flickering */
+.loading-state {
+  opacity: 1;
+  transition: opacity 0.15s ease-in-out;
+}
+
+.loading-state.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Sidebar otimizada */
+.sidebar-container {
+  contain: strict;
+  will-change: transform;
+}
+
+/* Tabelas e listas com melhor performance */
+.data-table {
+  contain: layout style;
+}
+
+.data-table tr {
+  contain: layout;
+}
+
+/* Charts containers */
+.chart-container {
+  contain: size layout;
+  isolation: isolate;
+}
+
+/* Reduzir repaints em hover states */
+.hover-optimized {
+  contain: layout;
+  will-change: background-color, border-color;
+}
+
+/* Prevent flickering during loading */
+.content-loader {
+  min-height: 100px;
+  contain: size layout;
+}

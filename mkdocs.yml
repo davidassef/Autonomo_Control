@@ -1,0 +1,115 @@
+site_name: Autônomo Control
+site_description: Sistema de gestão financeira para profissionais autônomos
+site_author: Equipe Autônomo Control
+site_url: https://autonomocontrol.docs.com
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.indexes
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+    - search.suggest
+    - toc.integrate
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Alternar para tema escuro
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Alternar para tema claro
+
+repo_name: autonomo-control
+repo_url: https://github.com/vidassef/Autonomo-Control
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed
+  - pymdownx.toc:
+      permalink: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - attr_list
+  - md_in_html
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences
+  - pymdownx.tabbed
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - toc:
+      permalink: true
+
+nav:
+  - Início: index.md
+  - Visão Geral:
+    - Sobre o Projeto: visao_geral/sobre.md
+    - Funcionalidades: visao_geral/funcionalidades.md
+    - Roadmap: visao_geral/roadmap.md
+  - Guia de Instalação:
+    - Pré-requisitos: instalacao/pre_requisitos.md
+    - Ambiente de Desenvolvimento: instalacao/ambiente_desenvolvimento.md
+    - Deploy em Produção: instalacao/deploy_producao.md
+  - Guia do Usuário:
+    - Primeiros Passos: guia_usuario/primeiros_passos.md
+    - Funcionalidades: guia_usuario/funcionalidades.md
+    - Dúvidas Frequentes: guia_usuario/faq.md
+  - Desenvolvimento:
+    - Configuração do Ambiente: desenvolvimento/ambiente.md
+    - Estrutura do Código: desenvolvimento/estrutura.md
+    - Testes: desenvolvimento/testes.md
+    - Contribuindo: desenvolvimento/contribuindo.md
+  - API:
+    - Visão Geral: api/visao_geral.md
+    - Autenticação: api/autenticacao.md
+    - Endpoints: api/endpoints/
+  - Histórico de Versões:
+    - Versão Atual: historico/versao_atual.md
+    - Changelog: historico/changelog.md
+
+plugins:
+  - search
+  - git-revision-date-localized:
+      type: timeago
+      timezone: America/Sao_Paulo
+      locale: pt_BR
+  - minify:
+      minify_html: true
+
+extra_css:
+  - css/extra.css
+
+extra_javascript:
+  - js/extra.js
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/seu-usuario/autonomo-control
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/autonomocontrol
+    - icon: fontawesome/brands/discord
+      link: https://discord.gg/autonomocontrol
+
+copyright: Copyright &copy; 2025 Autônomo Control
