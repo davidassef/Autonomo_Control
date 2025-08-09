@@ -1,5 +1,7 @@
 # Python
+# Ignorar caches e bytecode em qualquer nível
 __pycache__/
+**/__pycache__/
 *.py[cod]
 *$py.class
 *.so
@@ -45,13 +47,21 @@ yarn-error.log*
 dist/
 build/
 
-# Testing
+# Testing / Coverage
 .coverage
+**/.coverage
+coverage/
+**/coverage/
 htmlcov/
+**/htmlcov/
 .pytest_cache/
+**/.pytest_cache/
 
 # Environment variables
 .env
+.env.*
+**/.env
+**/.env.*
 
 # MkDocs
 docs/_build/
@@ -61,10 +71,21 @@ frontend/build/
 frontend/.pnp
 frontend/.pnp.js
 frontend/coverage/
+frontend/.env
+frontend/.env.*
+
+# Databases
+*.db
+*.sqlite3
+**/*.db
+**/*.sqlite3
+backend/autonomo_control.db
 
 # Logs
 logs/
+**/logs/
 *.log
+**/*.log
 
 # OS generated files
 .DS_Store
@@ -74,3 +95,24 @@ logs/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Tooling caches
+.ruff_cache/
+**/.ruff_cache/
+.mypy_cache/
+**/.mypy_cache/
+.pylint.d/
+**/.pylint.d/
+
+# Node optional diagnostics
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Temporary / editor swap files
+*.swp
+*.swo
+*.orig
+*.rej
+
