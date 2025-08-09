@@ -1,123 +1,155 @@
 # 📌 Plano de Desenvolvimento Contínuo (PREVC)
 
-Metodologia PREVC: **Planejar → Revisar → Executar → Commitar**. Documento vivo atualizado a cada ciclo.
+Metodologia PREVC: **Planejar → Revisar → Executar → Commitar**. Documento vivo.
 
-## 🎯 Objetivo Geral (MVP)
-Fornecer plataforma funcional de gestão financeira para autônomos com: cadastro de usuários, autenticação segura, lançamentos (receitas/despesas), categorias, dashboard com resumos mensais e distribuição por categoria.
+## 🎯 Nova Visão do Produto
+Plataforma SaaS mínima para **conversão de voz falada em voz cantada estilizada / voice cloning** baseada em modelos de voice conversion (similar a experiências Applio/RVC) com UI minimalista inspirada em Kits AI.
 
----
-## 🔁 Ciclo PREVC Atual (Sprint 01)
-Período alvo: 1 semana a partir da data de criação.
+### MVP (escopo enxuto)
+1. Upload de áudio de voz fala (mono WAV/16k ou 44.1k)
+2. Upload/seleção de modelo de voz treinado (slot de modelos)
+3. Conversão assíncrona (job queue) com retorno de preview e download (WAV + MP3)
+4. Gestão básica de modelos (listar, status: treinando / pronto / falhou)
+5. Tela minimal (dark / clean) com histórico das últimas conversões
+6. Autenticação (já existe base — adaptar para domínio de áudio)
+
+### Pós-MVP imediato
+- Fine-tuning rápido de voz (few-shot) com 1–5 minutos de dataset
+- Ajustes de parâmetros (pitch shift, formant preserve, noise gate)
+- Fila de processamento com prioridade por plano (futuro billing)
+- Observabilidade: métricas de jobs (latência, tempo GPU, taxa sucesso)
+
+## 🔍 Situação Atual do Repositório
+Código atual é de gestão financeira (entries, categories, dashboard). **Não existe pipeline de áudio/ML**. Precisamos de pivot estrutural:
+- Reaproveitar: autenticação, estrutura FastAPI, CORS, base frontend React
+- Remover/Substituir gradualmente: modelos financeiros, páginas de finanças
+- Introduzir novos domínios: `AudioJob`, `VoiceModel`, `DatasetSample`
+
+## 🧱 Arquitetura Alvo (Alta Nível)
+Backend (FastAPI):
+- Módulo `audio/` com submódulos: `ingest`, `preprocess`, `inference`, `training`, `jobs`
+- Fila: Celery ou RQ (redis) para processamento assíncrono (treino / conversão)
+- Armazenamento de arquivos: local `storage/` (futuro S3)
+- Model Registry simples: metadados em tabela + path do modelo (.pth / .onnx)
+- Conversão: wrapper sobre pipeline (ex: RVC / so-vits-svc) — sem incorporar código de terceiros aqui; integrar via plugin adaptador
+
+Frontend (React minimal):
+- Páginas: Login, Dashboard (jobs recentes), Converter, Modelos, Treinar Novo Modelo
+- Componente drag-n-drop para áudio
+- Progresso de job via polling ou WebSocket
+
+Fluxo de Conversão:
+Upload áudio → validação → criar Job (status=queued) → worker processa (carrega modelo + extrai features + síntese) → armazena saída → atualiza status → frontend exibe/prepara download/player.
+
+## 🗃️ Novas Entidades (Banco)
+- `voice_models(id, name, base_type, status, path, created_at)`
+- `audio_jobs(id, user_id, model_id, input_path, output_path, status, progress, params_json, created_at)`
+- `datasets(id, user_id, model_id, path, duration_sec, created_at)` (para treino)
+
+## 🔁 Ciclo PREVC Atual (Sprint 00 - Pivot)
+Objetivo: Preparar base para features de áudio removendo ruído financeiro.
 
 ### 1. Planejar
-Backlog priorizado para esta iteração.
-- [ ] Definir estrutura unificada de configuração (`settings` central) com suporte a ambientes (dev/test/prod)
-- [ ] Criar `.env.example` (backend + frontend variáveis)
-- [ ] Consolidar cobertura real de testes backend (gerar relatório atualizado) e registrar baseline
-- [ ] Introduzir testes iniciais do frontend (renderização e fluxo de login) com Vitest/Jest
-- [ ] Endpoint de healthcheck (`/api/v1/health`) com status DB e versão
-- [ ] Revisar e remover arquivos/documentação duplicada (histórico) — mapear antes
-- [ ] Adicionar script `make lint test` ou equivalente (Makefile / task runner)
-- [ ] Configurar pipeline CI (GitHub Actions) para: lint + testes + build frontend
-- [ ] Especificar padrão de versionamento (SemVer) e CHANGELOG inicial
-- [ ] Documentar política de branches (ex: `main`, `develop`, `feature/*`)
+Backlog priorizado desta pivot:
+- [ ] Arquivar (mover para `legacy/finance/`) o código de domínio financeiro (models/schemas/API) sem deletar histórico
+- [ ] Criar módulos vazios `backend/app/audio/{models,routers,services,workers}`
+- [ ] Definir modelos SQLAlchemy iniciais (`VoiceModel`, `AudioJob`)
+- [ ] Criar migração Alembic para novas tabelas
+- [ ] Endpoint `POST /audio/jobs` (cria job stub) + upload de arquivo (multipart)
+- [ ] Endpoint `GET /audio/jobs/{id}` (status + links)
+- [ ] Serviço de armazenamento local (`storage_service.py`) para salvar input/output
+- [ ] Worker simulado (placeholder) que marca job como completed após delay artificial
+- [ ] Página frontend minimal `Convert` (upload + lista jobs)
+- [ ] Página `Models` listando modelos fake (seed)
+- [ ] Atualizar README e este plano refletindo pivot
 
-### 2. Revisar (Critérios de Aceite / Definition of Done)
-- [ ] CI executa automaticamente em PRs
-- [ ] Healthcheck retorna JSON: `{\n  status, version, db: {connected}, time\n}`
-- [ ] Testes frontend >= 3 testes básicos (LoginPage, Protected Route, Entries list mock)
-- [ ] Backend tests passam 100% (baseline mantido ≥ baseline inicial)
-- [ ] `.env.example` cobre todas variáveis obrigatórias sem segredos
-- [ ] Lint sem erros críticos
-- [ ] Documentação atualizada (README + este plano)
+### 2. Revisar (Criteria / DoD)
+- [ ] Novos endpoints documentados no OpenAPI
+- [ ] Upload até 15MB funcionando (validar mime + duração aproximada)
+- [ ] Job ciclo completo (queued → processing → completed) com worker simulado
+- [ ] Tabelas criadas e persistência funcional
+- [ ] Dashboard antigo inacessível (link removido) para evitar confusão
 
 ### 3. Executar (Tarefas Técnicas Granulares)
-Backend:
-- [ ] Criar módulo `backend/app/core/settings.py` centralizando config (Pydantic Settings)
-- [ ] Implementar `/api/v1/health`
-- [ ] Script `scripts/print_settings.py` para depuração (não versionar env)
-- [ ] Remover duplicações de `security_fixed.py` etc., consolidar em `security.py`
-- [ ] Atualizar docs arquitetura com novo fluxo config
+Estrutura / Código:
+- [ ] Criar pasta `backend/app/audio`
+- [ ] `audio/models.py` (VoiceModel, AudioJob)
+- [ ] `audio/schemas.py` (Pydantic) 
+- [ ] `audio/routers.py` (jobs e modelos)
+- [ ] `audio/services/jobs.py` (criação e atualização de status)
+- [ ] `audio/services/storage.py` (salvar arquivo, gerar paths)
+- [ ] Registrar rotas em `api/v1/__init__.py`
+- [ ] Script seed modelos (`create_sample_models.py`)
+
+Fila / Worker (fase simulada):
+- [ ] Adicionar dependência Redis + simple RQ (ou fallback thread executor) – decisão
+- [ ] Worker placeholder converte após `sleep(3)` e cria arquivo WAV dummy
 
 Frontend:
-- [ ] Adicionar Vitest ou Jest + React Testing Library
-- [ ] Teste: render `LoginPage` + submissão mock
-- [ ] Teste: `PrivateRoute` redireciona sem token
-- [ ] Teste: mock entries service e render lista
+- [ ] Criar rota `/convert`
+- [ ] Componente Upload + chamada `POST /audio/jobs`
+- [ ] Lista jobs (polling cada 3s)
+- [ ] Player HTML5 quando `completed`
 
-DevOps / Qualidade:
-- [ ] GitHub Action workflow: Python (lint+test), Node (build+test)
-- [ ] Makefile ou `tasks.md` com comandos padronizados
-- [ ] Adicionar `ruff` (lint/format) e/ou `black` + `isort`
-- [ ] Configurar pre-commit hooks (opcional se tempo)
+Documentação:
+- [ ] Atualizar README visão do produto
+- [ ] Adicionar seção Arquitetura de Áudio
+- [ ] Atualizar PLANO_PREVC (este arquivo) marcando tarefas concluídas
 
-Documentação / Organização:
-- [ ] `.env.example` criado (backend + frontend)
-- [ ] Remover docs históricas redundantes (apenas consolidar link para arquivo histórico)
-- [ ] Atualizar README com seção Healthcheck + CI status badge
-- [ ] Adicionar CHANGELOG.md inicial
+### 4. Commitar
+Commits pequenos e coerentes:
+`chore(pivot): add audio module skeleton`
+`feat(audio): create models & migrations`
+`feat(audio): upload endpoint`
+`feat(audio): job worker simulation`
+`feat(frontend): convert page`
+`docs: update readme pivot`
 
-### 4. Commitar (Registro de Progresso)
-Usar mensagens convencionais: `feat:`, `fix:`, `chore:`, `docs:`, `test:`, `refactor:`, `ci:`.
-Registrar no fim do ciclo um resumo em seção específica abaixo.
+## 📊 Métricas a Acompanhar (Pivot)
+- Tempo médio de conversão (simulado agora, real depois)
+- Nº jobs por usuário
+- Tamanho médio dos uploads
 
----
-## 📊 Métricas a Acompanhar
-- Cobertura backend (%)
-- Nº testes frontend
-- Tempo médio pipeline CI
-- Bugs abertos vs fechados no ciclo
-- Lead time PR (abertura → merge)
+## 🧪 Baseline Inicial
+- Áudio: inexistente
+- Modelos: 0
+- Jobs: 0
+- Worker: não implementado
 
----
-## 🧪 Baseline Inicial (pre-sprint)
-- Testes backend: (atualizar após geração) — placeholder
-- Cobertura backend: (baseline %) — placeholder
-- Testes frontend: 0
-- CI: não configurado
-
----
 ## ✅ Registro de Ciclos Concluídos
-(Preencher ao finalizar Sprints)
+| Ciclo | Data Início | Data Fim | Entregas | Observações |
+|-------|-------------|----------|----------|-------------|
+| 00 | (preencher) | (preencher) | Pivot skeleton | - |
 
-| Ciclo | Data Início | Data Fim | Principais Entregas | Observações |
-|-------|-------------|----------|----------------------|-------------|
-| 01 | (preencher) | (preencher) | - | - |
+## 📂 Backlog Futuro
+- Conversão real (integração pipeline RVC / ONNX export) via adaptador isolado
+- Extração de features (f0, content vec) cacheadas
+- Fine-tuning incremental (upload dataset + progress)
+- Suporte GPU múltiplos workers
+- Streaming progress (WebSocket)
+- Filas com prioridade (planos pagos)
+- Conversão em lote
+- Modelo de autorização por quota
+- Export MP3/FLAC + normalização loudness
+- Log estruturado por job (JSON)
 
----
-## 📂 Backlog Futuro (Não no Ciclo Atual)
-- Multi-tenant
-- Exportação PDF / Relatórios avançados
-- Backup automatizado + criptografia
-- Monitoramento (Prometheus, Grafana, Sentry) implantação real
-- Modo orçamento / metas mensais
-- Integração bancária (open banking) – estudo
-- Otimizações performance (lazy load / pagination avançada)
+## 🔄 Atualização do Documento
+Seguir PREVC a cada mudança estrutural. Atualizar checklists e mover entregas concluídas para a tabela.
 
----
-## 🔄 Como Atualizar Este Documento
-1. Ao iniciar um ciclo: ajustar seções Planejar / Revisar / Executar.
-2. Ao concluir uma tarefa: marcar checkbox.
-3. Ao final do ciclo: preencher tabela de registro e mover itens não concluídos.
-4. Commit dedicado: `docs(plan): update PREVC progress cycle X`.
-
----
 ## 🔐 Governança
-- Revisões de PR exigem pelo menos 1 aprovação.
-- Branch naming: `feature/`, `fix/`, `chore/`, `docs/`.
-- Releases: tag `vMAJOR.MINOR.PATCH`.
+- Branches: `pivot/audio-*` durante sprint 00
+- Revisão obrigatória para código de worker / segurança arquivos
+- Licenciamento: evitar incorporar código de terceiros proprietários (usar adaptadores isolados, citar upstream open-source conforme licença)
 
----
 ## ⚠️ Riscos Atuais
 | Risco | Impacto | Mitigação |
 |-------|---------|-----------|
-| Ausência de CI | Falhas passam despercebidas | Priorizar workflow inicial |
-| Sem testes frontend | Regressões UI | Adicionar testes mínimos já no ciclo 01 |
-| Config dispersa | Erros de ambiente | Centralizar em settings Pydantic |
-| Documentação divergente | Onboarding lento | Consolidar e limpar duplicados |
+| Ausência de engine real | MVP sem valor para usuário final | Planejar integração mínima RVC fase 02 |
+| Processamento pesado no request | Travar API | Obrigatório job assíncrono |
+| Vazamento de arquivos | Problema privacidade | Sanitizar nomes, gerar UUID paths |
+| Crescimento de storage | Custos / limpeza | Tarefas de expiração (cron) |
+| Falta de GPU | Baixa qualidade/latência | Simulação inicial + planejar infra GPU |
 
----
 ## 💬 Notas Rápidas
-(Usar esta área para anotações de contexto rápidas durante execução.)
+> Este arquivo substitui plano anterior (finanças) – manter histórico no Git.
 
-> Documento versionado: manter enxuto e atualizado.
