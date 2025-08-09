@@ -1,155 +1,158 @@
 # 📌 Plano de Desenvolvimento Contínuo (PREVC)
 
-Metodologia PREVC: **Planejar → Revisar → Executar → Commitar**. Documento vivo.
+Metodologia PREVC: **Planejar → Revisar → Executar → Commitar**. Documento vivo focado no app de controle financeiro para motoristas de aplicativo (ex: Uber, 99, etc.).
 
-## 🎯 Nova Visão do Produto
-Plataforma SaaS mínima para **conversão de voz falada em voz cantada estilizada / voice cloning** baseada em modelos de voice conversion (similar a experiências Applio/RVC) com UI minimalista inspirada em Kits AI.
+## 🎯 Visão do Produto
+Aplicativo central para motoristas autônomos registrarem corridas, ganhos, taxas e despesas operacionais, produzindo métricas chave: lucro líquido, custo por km, ganho por hora, eficiência por plataforma e evolução diária/semanal/mensal.
 
-### MVP (escopo enxuto)
-1. Upload de áudio de voz fala (mono WAV/16k ou 44.1k)
-2. Upload/seleção de modelo de voz treinado (slot de modelos)
-3. Conversão assíncrona (job queue) com retorno de preview e download (WAV + MP3)
-4. Gestão básica de modelos (listar, status: treinando / pronto / falhou)
-5. Tela minimal (dark / clean) com histórico das últimas conversões
-6. Autenticação (já existe base — adaptar para domínio de áudio)
+## 🧪 Situação Atual (Base Existente)
+- Backend: CRUD genérico de lançamentos (INCOME/EXPENSE) com categorias e sumários simples.
+- Frontend: Dashboard básico de receitas/despesas, categorias e lançamentos.
+- Falta: Campos específicos de corrida (km, duração, plataforma, taxas), granularidade por viagem, relatórios direcionados ao motorista.
 
-### Pós-MVP imediato
-- Fine-tuning rápido de voz (few-shot) com 1–5 minutos de dataset
-- Ajustes de parâmetros (pitch shift, formant preserve, noise gate)
-- Fila de processamento com prioridade por plano (futuro billing)
-- Observabilidade: métricas de jobs (latência, tempo GPU, taxa sucesso)
+## 🧱 GAP PRINCIPAIS
+1. Modelo Entry sem atributos de corrida.
+2. Ausência de entidade "Trip" (corrida) ou distinção de tipo de lançamento (ex: corrida vs despesa fixa).
+3. Sem cálculo automático de métricas derivadas (R$/km, R$/hora, lucro líquido após custos variáveis).
+4. Categorias genéricas — necessidade de taxonomia orientada a motorista (Combustível, Manutenção, Lavagem, Taxa Plataforma, Pedágio, Alimentação em Turno, Seguro, Depreciação estimada).
+5. Relatórios temporais (dia/semana/mês) e comparativos ainda ausentes.
+6. Futuros: importação semiautomática (CSV export das plataformas), estimativa de impostos (INSS / MEI), metas e alertas.
 
-## 🔍 Situação Atual do Repositório
-Código atual é de gestão financeira (entries, categories, dashboard). **Não existe pipeline de áudio/ML**. Precisamos de pivot estrutural:
-- Reaproveitar: autenticação, estrutura FastAPI, CORS, base frontend React
-- Remover/Substituir gradualmente: modelos financeiros, páginas de finanças
-- Introduzir novos domínios: `AudioJob`, `VoiceModel`, `DatasetSample`
+## 🗃️ Evolução de Modelo de Dados (Proposta)
+Extender `Entry` ou criar `Trip` separado. Estratégia inicial: adicionar campos opcionais a Entry para acelerar, migrando para tabela própria se complexidade crescer.
 
-## 🧱 Arquitetura Alvo (Alta Nível)
-Backend (FastAPI):
-- Módulo `audio/` com submódulos: `ingest`, `preprocess`, `inference`, `training`, `jobs`
-- Fila: Celery ou RQ (redis) para processamento assíncrono (treino / conversão)
-- Armazenamento de arquivos: local `storage/` (futuro S3)
-- Model Registry simples: metadados em tabela + path do modelo (.pth / .onnx)
-- Conversão: wrapper sobre pipeline (ex: RVC / so-vits-svc) — sem incorporar código de terceiros aqui; integrar via plugin adaptador
+Novos campos (Entry) sugeridos:
+- `platform` (String) – UBER, 99, INDRIVE, OUTRA
+- `distance_km` (Float)
+- `duration_min` (Integer)
+- `gross_amount` (Float) – valor bruto recebido da plataforma
+- `platform_fee` (Float) – taxa retida
+- `tips_amount` (Float) – gorjetas
+- `net_amount` (Float) – (gross_amount + tips_amount - platform_fee) (pode ser calculado)
+- `vehicle_id` (String nullable) – referência futura a veículo
+- `shift_tag` (ENUM/Multi) – MANHA, TARDE, NOITE, MADRUGADA
+- `city` (String)
 
-Frontend (React minimal):
-- Páginas: Login, Dashboard (jobs recentes), Converter, Modelos, Treinar Novo Modelo
-- Componente drag-n-drop para áudio
-- Progresso de job via polling ou WebSocket
+Para despesas vinculadas a operação:
+- `is_trip_expense` (Boolean) – se despesa diretamente atribuível a corrida específica
+- `linked_entry_id` (String) – referencia cruzada (ex: pedágio específico)
 
-Fluxo de Conversão:
-Upload áudio → validação → criar Job (status=queued) → worker processa (carrega modelo + extrai features + síntese) → armazena saída → atualiza status → frontend exibe/prepara download/player.
+Alternativa futura: criar tabela `trips` e deixar `entries` apenas para agregados e despesas gerais.
 
-## 🗃️ Novas Entidades (Banco)
-- `voice_models(id, name, base_type, status, path, created_at)`
-- `audio_jobs(id, user_id, model_id, input_path, output_path, status, progress, params_json, created_at)`
-- `datasets(id, user_id, model_id, path, duration_sec, created_at)` (para treino)
+## � Métricas MVP Prioritárias
+- Ganho bruto diário/mensal por plataforma.
+- Taxa média de plataforma (% = platform_fee / gross_amount).
+- Lucro líquido (net_amount - despesas variáveis proporcionais - rateio de fixas/hora ou km).
+- Custo operacional por km (combustível + manutenção + depreciação estimada / km).
+- Rendimento por hora (net / horas ativas).
+- Distribuição de tipos de despesas.
 
-## 🔁 Ciclo PREVC Atual (Sprint 00 - Pivot)
-Objetivo: Preparar base para features de áudio removendo ruído financeiro.
+## 🔁 Ciclo PREVC Atual (Sprint 01 – Especialização para Motorista)
+Objetivo: Introduzir campos de corrida + tela de registro de corrida + dashboard básico de métricas.
 
-### 1. Planejar
-Backlog priorizado desta pivot:
-- [ ] Arquivar (mover para `legacy/finance/`) o código de domínio financeiro (models/schemas/API) sem deletar histórico
-- [ ] Criar módulos vazios `backend/app/audio/{models,routers,services,workers}`
-- [ ] Definir modelos SQLAlchemy iniciais (`VoiceModel`, `AudioJob`)
-- [ ] Criar migração Alembic para novas tabelas
-- [ ] Endpoint `POST /audio/jobs` (cria job stub) + upload de arquivo (multipart)
-- [ ] Endpoint `GET /audio/jobs/{id}` (status + links)
-- [ ] Serviço de armazenamento local (`storage_service.py`) para salvar input/output
-- [ ] Worker simulado (placeholder) que marca job como completed após delay artificial
-- [ ] Página frontend minimal `Convert` (upload + lista jobs)
-- [ ] Página `Models` listando modelos fake (seed)
-- [ ] Atualizar README e este plano refletindo pivot
+### 1. Planejar (Backlog Sprint 01)
+- [ ] Definir escolha: extender Entry (fase 1) — aprovado
+- [ ] Criar migração Alembic adicionando campos novos
+- [ ] Atualizar modelo SQLAlchemy e schemas Pydantic
+- [ ] Serviços: lógica para calcular `net_amount` se não enviado
+- [ ] Endpoints: permitir filtro por plataforma, intervalo data, cidade, turno
+- [ ] Endpoint extra: `/entries/metrics/daily` e `/entries/metrics/monthly`
+- [ ] Seed categorias padrão motorista (combustível, pedágio, manutenção, etc.)
+- [ ] Frontend: Formulário de nova corrida (com campos específicos)
+- [ ] Frontend: Tabela de corridas recentes + filtros (data inicial/final, plataforma)
+- [ ] Frontend: Dashboard métricas (cards: Bruto, Taxas, Líquido, R$/km, R$/hora)
+- [ ] Atualizar README (escopo motorista) + este plano
 
-### 2. Revisar (Criteria / DoD)
-- [ ] Novos endpoints documentados no OpenAPI
-- [ ] Upload até 15MB funcionando (validar mime + duração aproximada)
-- [ ] Job ciclo completo (queued → processing → completed) com worker simulado
-- [ ] Tabelas criadas e persistência funcional
-- [ ] Dashboard antigo inacessível (link removido) para evitar confusão
+### 2. Revisar (Critérios de Aceite / DoD)
+- [ ] Migração aplica e reverte sem erro
+- [ ] Novos campos aparecem no response (EntryInDB)
+- [ ] Cálculo de `net_amount` testado (unit > 3 casos: com/sem tips, sem fee)
+- [ ] Filtros retornam dados corretos (testes de integração)
+- [ ] Dashboard exibe métricas com base em mocks quando vazio (zero states) e dados reais
+- [ ] Performance: lista de 500 corridas < 400ms (local sqlite) — teste simples
+- [ ] Documentação de API atualizada (OpenAPI reflete novos campos)
 
 ### 3. Executar (Tarefas Técnicas Granulares)
-Estrutura / Código:
-- [ ] Criar pasta `backend/app/audio`
-- [ ] `audio/models.py` (VoiceModel, AudioJob)
-- [ ] `audio/schemas.py` (Pydantic) 
-- [ ] `audio/routers.py` (jobs e modelos)
-- [ ] `audio/services/jobs.py` (criação e atualização de status)
-- [ ] `audio/services/storage.py` (salvar arquivo, gerar paths)
-- [ ] Registrar rotas em `api/v1/__init__.py`
-- [ ] Script seed modelos (`create_sample_models.py`)
-
-Fila / Worker (fase simulada):
-- [ ] Adicionar dependência Redis + simple RQ (ou fallback thread executor) – decisão
-- [ ] Worker placeholder converte após `sleep(3)` e cria arquivo WAV dummy
+Backend:
+- [ ] Criar revisão de `Entry` adicionando colunas (script + Alembic)
+- [ ] Atualizar `EntryBase` / `EntryCreate` / `EntryUpdate` com validações (ex: distance_km > 0 quando presente)
+- [ ] Adicionar enum plataformas em `custom_types` (ou const)
+- [ ] Novo router ou expandir `entries` com rota `/entries/metrics/daily` & `/entries/metrics/monthly`
+- [ ] Função agregadora (CTEs ou GROUP BY por dia, plataforma)
+- [ ] Testes unit: validações de schema e agregações
+- [ ] Testes integração: criação corrida, listagem filtrada
 
 Frontend:
-- [ ] Criar rota `/convert`
-- [ ] Componente Upload + chamada `POST /audio/jobs`
-- [ ] Lista jobs (polling cada 3s)
-- [ ] Player HTML5 quando `completed`
+- [ ] Atualizar tipo `Entry` em `src/types`
+- [ ] Formulário de corrida (condicional: se type=INCOME exibir campos de corrida)
+- [ ] Hooks: `useEntries` aceitar novos filtros (platform, shift)
+- [ ] Dashboard: criar componentes de métricas e gráficos básicos (linha diária, pizza despesas)
+
+Dados / Seeds:
+- [ ] Script seed categorias padrão
+- [ ] Script gerar 50 corridas fictícias para testes locais
+
+Qualidade:
+- [ ] Atualizar cobertura alvo (≥ baseline anterior)
+- [ ] Verificar regressão endpoints antigos
 
 Documentação:
-- [ ] Atualizar README visão do produto
-- [ ] Adicionar seção Arquitetura de Áudio
-- [ ] Atualizar PLANO_PREVC (este arquivo) marcando tarefas concluídas
+- [ ] README seção "Modelo de Dados Estendido"
+- [ ] Atualizar este plano marcando concluído conforme avança
 
-### 4. Commitar
-Commits pequenos e coerentes:
-`chore(pivot): add audio module skeleton`
-`feat(audio): create models & migrations`
-`feat(audio): upload endpoint`
-`feat(audio): job worker simulation`
-`feat(frontend): convert page`
-`docs: update readme pivot`
+### 4. Commitar (Padrões)
+Commits exemplo:
+`feat(model): extend Entry with ride-specific fields`
+`feat(api): daily metrics endpoint`
+`feat(frontend): trip creation form`
+`chore(data): seed driver categories`
+`docs: update readme driver domain`
 
-## 📊 Métricas a Acompanhar (Pivot)
-- Tempo médio de conversão (simulado agora, real depois)
-- Nº jobs por usuário
-- Tamanho médio dos uploads
+## 📊 Métricas a Acompanhar (Sprint 01)
+- Nº corridas registradas
+- R$/km médio (net / soma km) — baseline
+- R$/hora médio (net / horas) — baseline
+- % taxa plataforma média
+- Cobertura testes backend (%)
 
-## 🧪 Baseline Inicial
-- Áudio: inexistente
-- Modelos: 0
-- Jobs: 0
-- Worker: não implementado
+## 🧪 Baseline Inicial (antes Sprint 01)
+- Campos específicos: inexistentes
+- Métricas por dia: inexistentes
+- Cobertura backend: (ver relatório) — registrar
+- Testes frontend específicos: 0
 
 ## ✅ Registro de Ciclos Concluídos
 | Ciclo | Data Início | Data Fim | Entregas | Observações |
 |-------|-------------|----------|----------|-------------|
-| 00 | (preencher) | (preencher) | Pivot skeleton | - |
+| 01 | (preencher) | (preencher) | Extensão modelo + métricas básicas | - |
 
-## 📂 Backlog Futuro
-- Conversão real (integração pipeline RVC / ONNX export) via adaptador isolado
-- Extração de features (f0, content vec) cacheadas
-- Fine-tuning incremental (upload dataset + progress)
-- Suporte GPU múltiplos workers
-- Streaming progress (WebSocket)
-- Filas com prioridade (planos pagos)
-- Conversão em lote
-- Modelo de autorização por quota
-- Export MP3/FLAC + normalização loudness
-- Log estruturado por job (JSON)
+## 📂 Backlog Futuro (Priorizar Próximos Sprints)
+- Importação CSV/Excel de extratos da plataforma
+- Estimador de depreciação por km (parâmetro configurável)
+- Cálculo de custo combustível (consumo médio × preço médio)
+- Metas mensais (lucro líquido alvo, horas, km)
+- Alertas (ex: taxa plataforma > X%, custo/km acima meta)
+- Modo offline PWA (cache local)
+- Multi-veículo e rateio de custos
+- Exportação de relatórios (PDF/CSV)
+- Suporte multi-moeda / ajuste inflação
 
 ## 🔄 Atualização do Documento
-Seguir PREVC a cada mudança estrutural. Atualizar checklists e mover entregas concluídas para a tabela.
+Aplicar PREVC: atualizar seções a cada sprint; mover itens concluídos para registro; não excluir histórico.
 
 ## 🔐 Governança
-- Branches: `pivot/audio-*` durante sprint 00
-- Revisão obrigatória para código de worker / segurança arquivos
-- Licenciamento: evitar incorporar código de terceiros proprietários (usar adaptadores isolados, citar upstream open-source conforme licença)
+- Branching: `feature/driver-*`, `feat/metrics-*`
+- Code review mínimo 1 aprovação
+- Migrações: uma por conjunto lógico de alterações, sempre com downgrade válido
 
 ## ⚠️ Riscos Atuais
 | Risco | Impacto | Mitigação |
 |-------|---------|-----------|
-| Ausência de engine real | MVP sem valor para usuário final | Planejar integração mínima RVC fase 02 |
-| Processamento pesado no request | Travar API | Obrigatório job assíncrono |
-| Vazamento de arquivos | Problema privacidade | Sanitizar nomes, gerar UUID paths |
-| Crescimento de storage | Custos / limpeza | Tarefas de expiração (cron) |
-| Falta de GPU | Baixa qualidade/latência | Simulação inicial + planejar infra GPU |
+| Aumento de complexidade do Entry | Dificultar queries | Migrar para tabela trip se >12 colunas extras |
+| Cálculos incorretos de métricas | Decisões erradas do usuário | Tests de agregação + casos limites |
+| Performance em agregações | Dashboard lento | Índices (date, platform, type) e caching leve |
+| Falta de dados de km/duração | Métricas distorcidas | Permitir estimativa e destacar incompletos |
 
 ## 💬 Notas Rápidas
-> Este arquivo substitui plano anterior (finanças) – manter histórico no Git.
+> Plano corrigido após engano de pivot. Foco 100% domínio motorista de app.
 
