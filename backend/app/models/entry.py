@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, String, DateTime, Integer, Float, ForeignKey, Enum
+from sqlalchemy import Boolean, Column, String, DateTime, Integer, Float, ForeignKey
 from sqlalchemy.sql import func
 from enum import Enum as PyEnum
 from uuid import uuid4
@@ -14,13 +14,27 @@ class Entry(Base):
 
     id = Column(String, primary_key=True, index=True, default=lambda: str(uuid4()))
 
-    # Dados do lançamento
-    amount = Column(Float)  # Valor do lançamento
+    # Dados do lançamento genérico / financeiro
+    amount = Column(Float)  # Valor consolidado (para despesas ou receitas simples)
     description = Column(String)  # Descrição
     date = Column(DateTime(timezone=True))  # Data do lançamento
-    type = Column(String, nullable=False)  # Tipo: INCOME ou EXPENSE
-    category = Column(String)  # Categoria (ex: Combustível, Alimentação, Pagamento)
-    subcategory = Column(String, nullable=True)  # Subcategoria
+    type = Column(String, nullable=False, index=True)  # INCOME / EXPENSE
+    category = Column(String, index=True)  # Categoria (Combustível, Corrida, etc.)
+    subcategory = Column(String, nullable=True)
+
+    # Campos específicos de corrida (opcionais, somente quando type=INCOME e representar corrida)
+    platform = Column(String, nullable=True, index=True)              # Plataforma (UBER, 99, etc.)
+    distance_km = Column(Float, nullable=True)                        # Distância em km
+    duration_min = Column(Integer, nullable=True)                     # Duração em minutos
+    gross_amount = Column(Float, nullable=True)                       # Valor bruto plataforma
+    platform_fee = Column(Float, nullable=True)                       # Taxa cobrada pela plataforma
+    tips_amount = Column(Float, nullable=True)                        # Gorjetas
+    net_amount = Column(Float, nullable=True)                         # Calculado = gross + tips - fee (fallback amount)
+    vehicle_id = Column(String, nullable=True)                        # Referência futura a veículo
+    shift_tag = Column(String, nullable=True, index=True)             # MANHA / TARDE / NOITE / MADRUGADA
+    city = Column(String, nullable=True)
+    is_trip_expense = Column(Boolean, default=False)                  # Se despesa atrelada a corrida
+    linked_entry_id = Column(String, ForeignKey("entries.id"), nullable=True)  # Possível referência cruzada
 
     # Relação com usuário
     user_id = Column(String, ForeignKey("users.id"))

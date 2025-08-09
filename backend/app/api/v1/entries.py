@@ -25,8 +25,19 @@ async def create_entry(
     """
     Cria um novo lançamento financeiro
     """
+    data = entry.model_dump()
+    # Se for uma corrida (INCOME com gross_amount) e net_amount não enviado, calcular
+    if data.get('type') == 'INCOME':
+        gross = data.get('gross_amount')
+        fee = data.get('platform_fee') or 0
+        tips = data.get('tips_amount') or 0
+        if gross is not None and data.get('net_amount') is None:
+            data['net_amount'] = (gross + tips) - fee
+            # Se amount não fornecido explicitamente diferente do net, alinhar amount ao net
+            if data.get('amount') == gross or data.get('amount') is None:
+                data['amount'] = data['net_amount']
     db_entry = Entry(
-        **entry.model_dump(),
+        **data,
         user_id=current_user.id,
     )
     db.add(db_entry)
@@ -293,6 +304,17 @@ async def update_entry(
         raise HTTPException(status_code=404, detail="Lançamento não encontrado")
 
     update_data = entry_update.model_dump(exclude_unset=True)
+    # Recalcular net_amount se campos relevantes alterados
+    fields_trigger = {'gross_amount', 'platform_fee', 'tips_amount'}
+    if fields_trigger.intersection(update_data.keys()) and db_entry.type == EntryType.INCOME:
+        gross = update_data.get('gross_amount', getattr(db_entry, 'gross_amount', None))
+        fee = update_data.get('platform_fee', getattr(db_entry, 'platform_fee', 0)) or 0
+        tips = update_data.get('tips_amount', getattr(db_entry, 'tips_amount', 0)) or 0
+        if gross is not None:
+            update_data['net_amount'] = (gross + tips) - fee
+            # Ajustar amount se parecer ser antigo bruto
+            if 'amount' not in update_data and getattr(db_entry, 'amount', None) in (gross, None):
+                update_data['amount'] = update_data['net_amount']
     for key, value in update_data.items():
         setattr(db_entry, key, value)
 
@@ -322,6 +344,15 @@ async def update_entry_patch(
         raise HTTPException(status_code=404, detail="Lançamento não encontrado")
 
     update_data = entry_update.model_dump(exclude_unset=True)
+    fields_trigger = {'gross_amount', 'platform_fee', 'tips_amount'}
+    if fields_trigger.intersection(update_data.keys()) and db_entry.type == EntryType.INCOME:
+        gross = update_data.get('gross_amount', getattr(db_entry, 'gross_amount', None))
+        fee = update_data.get('platform_fee', getattr(db_entry, 'platform_fee', 0)) or 0
+        tips = update_data.get('tips_amount', getattr(db_entry, 'tips_amount', 0)) or 0
+        if gross is not None:
+            update_data['net_amount'] = (gross + tips) - fee
+            if 'amount' not in update_data and getattr(db_entry, 'amount', None) in (gross, None):
+                update_data['amount'] = update_data['net_amount']
     for key, value in update_data.items():
         setattr(db_entry, key, value)
 
