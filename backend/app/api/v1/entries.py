@@ -57,6 +57,9 @@ async def read_entries(
     type: Optional[str] = None,  # Alterado de entry_type para type para corresponder à URL
     category: Optional[str] = None,
     search: Optional[str] = None,
+    platform: Optional[str] = None,
+    shift_tag: Optional[str] = None,
+    city: Optional[str] = None,
 ):
     """
     Retorna os lançamentos financeiros do usuário com filtros opcionais
@@ -87,6 +90,13 @@ async def read_entries(
                 Entry.subcategory.ilike(f"%{search}%"),
             )
         )
+
+    if platform:
+        query = query.filter(Entry.platform == platform)
+    if shift_tag:
+        query = query.filter(Entry.shift_tag == shift_tag)
+    if city:
+        query = query.filter(Entry.city == city)
 
     # Ordenar por data (mais recente primeiro)
     query = query.order_by(Entry.date.desc())
@@ -261,6 +271,109 @@ async def get_category_distribution(
         distributions=distributions,
         total=total
     )
+
+
+@router.get("/metrics/daily")
+async def get_daily_metrics(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    platform: Optional[str] = None,
+):
+    """Métricas agregadas por dia (ganho bruto, taxa, líquido, km, horas)."""
+    filters = [Entry.user_id == current_user.id, Entry.is_deleted.is_(False), Entry.type == EntryType.INCOME]
+    if start_date:
+        filters.append(func.date(Entry.date) >= start_date)
+    if end_date:
+        filters.append(func.date(Entry.date) <= end_date)
+    if platform:
+        filters.append(Entry.platform == platform)
+
+    rows = db.query(
+        func.date(Entry.date).label('day'),
+        func.sum(Entry.gross_amount).label('gross'),
+        func.sum(Entry.platform_fee).label('fee'),
+        func.sum(Entry.tips_amount).label('tips'),
+        func.sum(Entry.net_amount).label('net'),
+        func.sum(Entry.distance_km).label('km'),
+        func.sum(Entry.duration_min).label('minutes'),
+        func.count(Entry.id).label('rides'),
+    ).filter(*filters).group_by(func.date(Entry.date)).order_by(func.date(Entry.date)).all()
+
+    result = []
+    for r in rows:
+        fee_pct = float(r.fee or 0) / float(r.gross or 1) * 100 if r.gross else 0
+        km = float(r.km or 0)
+        minutes = float(r.minutes or 0)
+        hours = minutes / 60 if minutes else 0
+        net = float(r.net or 0)
+        result.append({
+            'day': str(r.day),
+            'gross': float(r.gross or 0),
+            'net': net,
+            'fee': float(r.fee or 0),
+            'fee_pct': round(fee_pct, 2),
+            'tips': float(r.tips or 0),
+            'rides': int(r.rides or 0),
+            'km': km,
+            'hours': round(hours, 2),
+            'earn_per_km': round(net / km, 2) if km else 0,
+            'earn_per_hour': round(net / hours, 2) if hours else 0,
+        })
+    return {'items': result, 'count': len(result)}
+
+
+@router.get("/metrics/monthly")
+async def get_monthly_metrics(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    year: Optional[int] = None,
+    platform: Optional[str] = None,
+):
+    """Métricas agregadas por mês do ano especificado (ou ano atual)."""
+    from datetime import datetime as dt
+    if year is None:
+        year = dt.utcnow().year
+    filters = [
+        Entry.user_id == current_user.id,
+        Entry.is_deleted.is_(False),
+        Entry.type == EntryType.INCOME,
+        func.strftime('%Y', Entry.date) == str(year)
+    ]
+    if platform:
+        filters.append(Entry.platform == platform)
+    rows = db.query(
+        func.strftime('%m', Entry.date).label('month'),
+        func.sum(Entry.gross_amount).label('gross'),
+        func.sum(Entry.platform_fee).label('fee'),
+        func.sum(Entry.tips_amount).label('tips'),
+        func.sum(Entry.net_amount).label('net'),
+        func.sum(Entry.distance_km).label('km'),
+        func.sum(Entry.duration_min).label('minutes'),
+        func.count(Entry.id).label('rides'),
+    ).filter(*filters).group_by(func.strftime('%m', Entry.date)).order_by(func.strftime('%m', Entry.date)).all()
+    result = []
+    for r in rows:
+        fee_pct = float(r.fee or 0) / float(r.gross or 1) * 100 if r.gross else 0
+        km = float(r.km or 0)
+        minutes = float(r.minutes or 0)
+        hours = minutes / 60 if minutes else 0
+        net = float(r.net or 0)
+        result.append({
+            'month': r.month,
+            'gross': float(r.gross or 0),
+            'net': net,
+            'fee': float(r.fee or 0),
+            'fee_pct': round(fee_pct, 2),
+            'tips': float(r.tips or 0),
+            'rides': int(r.rides or 0),
+            'km': km,
+            'hours': round(hours, 2),
+            'earn_per_km': round(net / km, 2) if km else 0,
+            'earn_per_hour': round(net / hours, 2) if hours else 0,
+        })
+    return {'year': year, 'items': result, 'count': len(result)}
 
 
 @router.get("/{entry_id}", response_model=EntrySchema)
