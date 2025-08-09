@@ -1,0 +1,224 @@
+# =============================================================
+# Autônomo Control - .gitignore
+# Mantém somente código-fonte, configs de exemplo e documentação.
+# =============================================================
+
+# --- Python ---
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+wheels/
+*.egg-info/
+*.egg
+
+# --- Virtual Envs ---
+venv/
+env/
+ENV/
+.venv/
+
+# --- Databases ---
+*.db
+*.sqlite3
+**/*.db
+**/*.sqlite3
+autonomo_control.db
+backend/autonomo_control.db
+
+# --- Environment Variables ---
+.env
+.env.*
+**/.env
+**/.env.*
+frontend/.env
+frontend/.env.*
+
+# --- Coverage / Test Artifacts ---
+.coverage
+**/.coverage
+coverage/
+**/coverage/
+htmlcov/
+**/htmlcov/
+.pytest_cache/
+**/.pytest_cache/
+
+# --- Logs ---
+logs/
+**/logs/
+*.log
+**/*.log
+
+# --- Node / Frontend ---
+node_modules/
+frontend/node_modules/
+frontend/build/
+frontend/coverage/
+frontend/.pnp
+frontend/.pnp.js
+pnpm-debug.log*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Tooling Caches ---
+.ruff_cache/
+**/.ruff_cache/
+.mypy_cache/
+**/.mypy_cache/
+.pylint.d/
+**/.pylint.d/
+.cache/
+**/.cache/
+
+# --- Editors / IDE ---
+.idea/
+.vscode/
+*.swp
+*.swo
+*.orig
+*.rej
+
+# --- OS Files ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# --- Build / Dist Generic ---
+dist/
+build/
+
+# --- Misc ---
+*.bak
+*.tmp
+~$*
+
+# =============================================================
+# Não adicionar segredos. Usar `.env.example` para variáveis modelo.
+# =============================================================# Python
+# Ignorar caches e bytecode em qualquer nível
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# Database
+*.db
+*.sqlite3
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build
+dist/
+build/
+
+# Testing / Coverage
+.coverage
+**/.coverage
+coverage/
+**/coverage/
+htmlcov/
+**/htmlcov/
+.pytest_cache/
+**/.pytest_cache/
+
+# Environment variables
+.env
+.env.*
+**/.env
+**/.env.*
+
+# MkDocs
+docs/_build/
+
+# Frontend
+frontend/build/
+frontend/.pnp
+frontend/.pnp.js
+frontend/coverage/
+frontend/.env
+frontend/.env.*
+
+# Databases
+*.db
+*.sqlite3
+**/*.db
+**/*.sqlite3
+backend/autonomo_control.db
+
+# Logs
+logs/
+**/logs/
+*.log
+**/*.log
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Tooling caches
+.ruff_cache/
+**/.ruff_cache/
+.mypy_cache/
+**/.mypy_cache/
+.pylint.d/
+**/.pylint.d/
+
+# Node optional diagnostics
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Temporary / editor swap files
+*.swp
+*.swo
+*.orig
+*.rej
+
