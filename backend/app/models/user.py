@@ -13,6 +13,8 @@ class User(Base):
     picture = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)    # Autenticação Google
     google_id = Column(String, unique=True, index=True, nullable=True)
+    # Controle de acesso: roles hierárquicas (MASTER > ADMIN > USER)
+    role = Column(String, default="USER", nullable=False, index=True)
 
     # Senha temporária para desenvolvimento (apenas para admin)
     hashed_password = Column(String, nullable=True)

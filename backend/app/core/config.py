@@ -23,5 +23,9 @@ class Settings(BaseModel):
     GOOGLE_CLIENT_SECRET: Optional[str] = os.getenv("GOOGLE_CLIENT_SECRET")
     GOOGLE_REDIRECT_URI: Optional[str] = os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:8000/api/v1/auth/google/callback")
 
+    # Admin / Master control
+    MASTER_EMAIL: Optional[str] = os.getenv("MASTER_EMAIL")
+    MASTER_PASSWORD: Optional[str] = os.getenv("MASTER_PASSWORD")
+
 # Instância global de configurações
 settings = Settings()
