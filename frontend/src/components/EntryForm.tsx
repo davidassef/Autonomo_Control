@@ -21,7 +21,7 @@ const EntryForm: React.FC<EntryFormProps> = ({
   const [formData, setFormData] = useState<Omit<Entry, 'id' | 'created_at' | 'updated_at' | 'user_id' | 'category'>>({
     amount: 0,
     date: new Date().toISOString().split('T')[0],
-    type: 'expense',
+  type: 'EXPENSE',
     description: '',
     category_id: '',
   });
@@ -42,7 +42,7 @@ const EntryForm: React.FC<EntryFormProps> = ({
       setFormData({
         amount: 0,
         date: new Date().toISOString().split('T')[0],
-        type: 'expense',
+                type: 'EXPENSE',
         description: '',
         category_id: '',
       });
@@ -51,7 +51,7 @@ const EntryForm: React.FC<EntryFormProps> = ({
 
   useEffect(() => {
     if (categories.length > 0) {
-      setFilteredCategories(categories.filter(cat => cat.type === formData.type));
+            setFilteredCategories(categories.filter(cat => cat.type.toUpperCase() === formData.type));
     }
   }, [categories, formData.type]);
 
@@ -66,7 +66,7 @@ const EntryForm: React.FC<EntryFormProps> = ({
     } else if (name === 'type') {
       setFormData({
         ...formData,
-        [name]: value as 'income' | 'expense',
+                [name]: value as 'INCOME' | 'EXPENSE',
         category_id: '', // Reset category when type changes
       });
     } else {
@@ -139,7 +139,8 @@ const EntryForm: React.FC<EntryFormProps> = ({
                           className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
                         >
                           <option value="expense">Despesa</option>
-                          <option value="income">Receita</option>
+                          <option value="EXPENSE">Despesa</option>
+                          <option value="INCOME">Receita</option>
                         </select>
                       </div>
                       <div className="flex-1">
@@ -210,6 +211,117 @@ const EntryForm: React.FC<EntryFormProps> = ({
                         ))}
                       </select>
                     </div>
+
+                    {formData.type === 'INCOME' && (
+                      <div className="border-t pt-4 space-y-4">
+                        <h4 className="text-sm font-semibold text-gray-700">Dados de Corrida (opcional)</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700" htmlFor="platform">Plataforma</label>
+                            <select
+                              name="platform"
+                              id="platform"
+                              value={(formData as any).platform || ''}
+                              onChange={handleChange}
+                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            >
+                              <option value="">--</option>
+                              <option value="UBER">UBER</option>
+                              <option value="99">99</option>
+                              <option value="INDRIVE">INDRIVE</option>
+                              <option value="OUTRA">OUTRA</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700" htmlFor="city">Cidade</label>
+                            <input
+                              type="text"
+                              name="city"
+                              id="city"
+                              value={(formData as any).city || ''}
+                              onChange={handleChange}
+                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700" htmlFor="distance_km">Distância (km)</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              name="distance_km"
+                              id="distance_km"
+                              value={(formData as any).distance_km || ''}
+                              onChange={handleChange}
+                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700" htmlFor="duration_min">Duração (min)</label>
+                            <input
+                              type="number"
+                              name="duration_min"
+                              id="duration_min"
+                              value={(formData as any).duration_min || ''}
+                              onChange={handleChange}
+                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700" htmlFor="gross_amount">Valor Bruto</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              name="gross_amount"
+                              id="gross_amount"
+                              value={(formData as any).gross_amount || ''}
+                              onChange={handleChange}
+                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700" htmlFor="platform_fee">Taxa Plataforma</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              name="platform_fee"
+                              id="platform_fee"
+                              value={(formData as any).platform_fee || ''}
+                              onChange={handleChange}
+                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700" htmlFor="tips_amount">Gorjetas</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              name="tips_amount"
+                              id="tips_amount"
+                              value={(formData as any).tips_amount || ''}
+                              onChange={handleChange}
+                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700" htmlFor="shift_tag">Turno</label>
+                            <select
+                              name="shift_tag"
+                              id="shift_tag"
+                              value={(formData as any).shift_tag || ''}
+                              onChange={handleChange}
+                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            >
+                              <option value="">--</option>
+                              <option value="MANHA">Manhã</option>
+                              <option value="TARDE">Tarde</option>
+                              <option value="NOITE">Noite</option>
+                              <option value="MADRUGADA">Madrugada</option>
+                            </select>
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-500">Preencha qualquer campo adicional para registrar detalhes da corrida. O valor líquido será calculado no backend se você informar bruto, taxa e gorjeta.</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

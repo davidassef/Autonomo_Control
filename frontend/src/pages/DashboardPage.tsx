@@ -127,14 +127,14 @@ const DashboardPage: React.FC = () => {
           <div className="bg-white shadow rounded-lg overflow-hidden chart-container">
             <CategoryDistributionChart
               entries={entries}
-              type="expense"
+              type="EXPENSE"
               isLoading={isLoading}
             />          </div>
 
           <div className="bg-white shadow rounded-lg overflow-hidden chart-container">
             <CategoryDistributionChart
               entries={entries}
-              type="income"
+              type="INCOME"
               isLoading={isLoading}
             />
           </div>
@@ -173,9 +173,9 @@ const DashboardPage: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
                         <div className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center ${
-                          entry.type === 'income' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                          entry.type === 'INCOME' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
                         }`}>
-                          {entry.type === 'income' ? (
+                          {entry.type === 'INCOME' ? (
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
                             </svg>
@@ -193,9 +193,9 @@ const DashboardPage: React.FC = () => {
                         </div>
                       </div>
                       <div className={`text-sm font-medium ${
-                        entry.type === 'income' ? 'text-green-600' : 'text-red-600'
+                        entry.type === 'INCOME' ? 'text-green-600' : 'text-red-600'
                       }`}>
-                        {entry.type === 'income' ? '+' : '-'} R$ {entry.amount.toFixed(2)}
+                        {entry.type === 'INCOME' ? '+' : '-'} R$ {entry.amount.toFixed(2)}
                       </div>
                     </div>
                   </li>

@@ -14,14 +14,20 @@ const EntriesPage: React.FC = () => {
   const [filters, setFilters] = useState({
     startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
     endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0],
-    type: '' as '' | 'income' | 'expense',
+    type: '' as '' | 'INCOME' | 'EXPENSE',
     categoryId: '',
+    platform: '',
+    shift_tag: '',
+    city: '',
   });
 
   // Converter filtros para o formato esperado pelo useEntries
   const useEntriesFilters = {
     ...filters,
     type: filters.type === '' ? undefined : filters.type,
+    platform: filters.platform || undefined,
+    shift_tag: filters.shift_tag || undefined,
+    city: filters.city || undefined,
   };
   const {
     entries,

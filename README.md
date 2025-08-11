@@ -3,9 +3,9 @@
 *Sistema completo de gestão financeira para profissionais autônomos*
 
 ![Status](https://img.shields.io/badge/Backend-100%25-brightgreen)
-![Status](https://img.shields.io/badge/Frontend-90%25-brightgreen)
-![Status](https://img.shields.io/badge/MVP-95%25-brightgreen)
-![Tests](https://img.shields.io/badge/Tests-144%2F144-brightgreen)
+![Status](https://img.shields.io/badge/Frontend-70%25-yellowgreen)
+![Status](https://img.shields.io/badge/MVP-80%25-yellowgreen)
+![Tests](https://img.shields.io/badge/Tests-236%2F236-brightgreen)
 ![Coverage](https://img.shields.io/badge/Coverage-99%25-brightgreen)
 ![Performance](https://img.shields.io/badge/Anti--Flickering-✅-brightgreen)
 
@@ -44,42 +44,198 @@ O Autônomo Control é uma aplicação de gestão financeira desenvolvida especi
 ---
 
 ## ⚡ **Quick Start**
+Roteiro mínimo para ter o sistema rodando em menos de 5 minutos.
 
-### **Backend (FastAPI)**
+### 1. Pré‑requisitos
+- Python 3.12+
+- Node.js 18+ / npm
+- (Opcional) pyenv ou virtualenv
+
+### 2. Clonar e configurar ambiente
 ```bash
-cd backend
-python -m venv venv
-.\venv\Scripts\activate  # Windows
-pip install -r requirements.txt
-python run_server.py
+git clone https://github.com/davidassef/Autonomo_Control.git
+cd Autonomo_Control
+cp backend/.env.example backend/.env  # Ajuste SECRET_KEY se quiser
 ```
 
-### **Frontend (React)**
+### 3. Backend (FastAPI)
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+python seed_data.py   # (opcional) popula categorias + corridas fictícias
+python run_server.py  # Servirá em http://127.0.0.1:8000 (requer venv ATIVA)
+
+# Dica:
+# Se aparecer "ModuleNotFoundError: No module named 'sqlalchemy'" o motivo quase sempre é a venv não ativada.
+# O script agora exibe instruções automáticas quando dependências faltam.
+
+# Alternativa direta (mesmo efeito do run_server.py):
+# uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+Swagger/OpenAPI: http://127.0.0.1:8000/docs
+
+### 4. Frontend (React)
+Em outro terminal:
 ```bash
 cd frontend
 npm install
-npm start
+npm start   # http://localhost:3000
 ```
 
-### **Testes**
+### 5. Login / Usuário de Seed
+O seed cria usuário system@seed (Google ID fictício). Para fluxo real de login Google implemente variáveis `GOOGLE_CLIENT_ID` etc. (ver `.env.example`).
+
+### 5.1 Roles & Administração (RBAC)
+O sistema agora suporta três níveis hierárquicos de acesso:
+
+| Role | Pode | Não Pode |
+|------|------|----------|
+| USER | Gerenciar seus próprios lançamentos e categorias | Acessar rota `/admin` |
+| ADMIN | Tudo de USER + listar usuários, criar USER, desativar USER | Criar ADMIN, promover roles sem MASTER password |
+| MASTER | Tudo de ADMIN + criar ADMIN, promover/rebaixar, desativar ADMIN | Desativar ou alterar o próprio MASTER |
+
+Operações críticas (criar ADMIN, alterar role, desativar ADMIN) exigem cabeçalho adicional:
+`X-Master-Key: <MASTER_PASSWORD>`
+
+Configure no arquivo `.env`:
+```
+MASTER_EMAIL=seu.email+master@dominio.com
+MASTER_PASSWORD=defina-uma-senha-forte
+```
+No primeiro start / seed:
+- Se `MASTER_EMAIL` não existir => usuário MASTER criado.
+- Se existir como USER/ADMIN => promovido a MASTER.
+
+Exemplo criar ADMIN (via curl):
+```bash
+curl -X POST \
+        -H "Authorization: Bearer <TOKEN_MASTER>" \
+        -H "X-Master-Key: $MASTER_PASSWORD" \
+        -H "Content-Type: application/json" \
+        http://127.0.0.1:8000/api/v1/admin/users?role=ADMIN \
+        -d '{"email":"novo.admin@example.com","name":"Novo Admin"}'
+```
+
+Promover USER → ADMIN:
+```bash
+curl -X PATCH \
+        -H "Authorization: Bearer <TOKEN_MASTER>" \
+        -H "X-Master-Key: $MASTER_PASSWORD" \
+        -H "Content-Type: application/json" \
+        http://127.0.0.1:8000/api/v1/admin/users/<USER_ID>/role \
+        -d '{"role":"ADMIN"}'
+```
+
+Desativar USER (ADMIN ou MASTER):
+```bash
+curl -X PATCH \
+        -H "Authorization: Bearer <TOKEN_ADMIN_OU_MASTER>" \
+        -H "Content-Type: application/json" \
+        http://127.0.0.1:8000/api/v1/admin/users/<USER_ID>/status \
+        -d '{"is_active":false}'
+```
+
+Notas de segurança:
+- NÃO commit o `.env` com `MASTER_PASSWORD` real.
+- Troque a master password periodicamente.
+- Em produção armazene hash (futuro: `MASTER_PASSWORD_HASH`).
+
+### 5.2 Painel Admin (UI)
+Interface web básica disponível em `/admin/users` (acesso restrito a ADMIN e MASTER), com recursos:
+
+| Recurso | USER | ADMIN | MASTER | Observações |
+|---------|------|-------|--------|-------------|
+| Listagem usuários | ❌ | ✅ | ✅ | Paginação futura (atual: lista completa) |
+| Criar USER | ❌ | ✅ | ✅ | Formulário inline |
+| Criar ADMIN | ❌ | ❌ | ✅ | Exige modal com Master Password |
+| Promover USER→ADMIN | ❌ | ❌ | ✅ | Botão + modal master password |
+| Rebaixar ADMIN→USER | ❌ | ❌ | ✅ | Botão + modal master password |
+| Ativar/Desativar USER | ❌ | ✅ | ✅ | Toggle direto |
+| Ativar/Desativar ADMIN | ❌ | ❌ | ✅ | Toggle bloqueado para ADMIN comum |
+| Desativar MASTER | ❌ | ❌ | ❌ | Sempre bloqueado |
+
+UX / Segurança:
+- Campo Master Password nunca é armazenado; limpa após tentativa.
+- Ações críticas mostram feedback via toasts.
+- Skeletons exibidos durante carregamento inicial.
+- Não é possível desativar o próprio usuário logado nem o MASTER.
+- Erros 403 diferenciados (permissão vs master password inválida) no modal.
+
+Roadmap UI Admin (próximos incrementos): paginação, filtros por role/status, busca, audit trail visível, exportação CSV.
+
+### 6. Testes Rápidos
 ```bash
 cd backend
-pytest --cov=app
+pytest -q
 ```
+
+Frontend (inclui testes iniciais painel admin):
+```bash
+cd frontend
+npm run test:ci
+```
+
+Relatório de cobertura frontend é exibido em terminal (scripts adicionados Fase 5).
+
+### 7. Estrutura de Pastas Essencial
+```
+backend/
+        app/ (api, models, schemas, services)
+        seed_data.py
+frontend/
+        src/
+                components/, hooks/, pages/, services/
+```
+
+### 8. Comandos Úteis
+```bash
+# Regenerar banco local (cuidado: perde dados)
+rm backend/autonomo_control.db && cd backend && python seed_data.py
+
+# Rodar somente testes de métricas
+pytest -k metrics -q
+
+# Ver logs de requisições (FastAPI já mostra em stdout)
+```
+
+### 9. Solução de Problemas
+| Sintoma | Causa Provável | Solução |
+|--------|----------------|---------|
+| `ModuleNotFoundError` | venv não ativada | `source .venv/bin/activate` |
+| Erro SQLite lock | Execuções concorrentes | Feche processos / use Postgres em prod |
+| 401 nas rotas | Falta token JWT | Autentique e envie `Authorization: Bearer <token>` |
+| Campos corrida não aparecem | Frontend antigo em cache | Hard refresh (Ctrl+Shift+R) |
+| 403 ao criar ADMIN | Master password ausente | Adicionar header X-Master-Key |
+| 403 Master password inválida | Valor incorreto | Verifique variável de ambiente MASTER_PASSWORD |
+| 403 promoção/rebaixamento | Usuário não MASTER | Logar com conta MASTER |
+
+### 10. Próximos (Opcional)
+| Objetivo | Passo inicial |
+|----------|---------------|
+| Usar PostgreSQL | Ajustar `DATABASE_URL=postgresql+psycopg://user:pass@host/db` em `.env` e rodar migrações |
+| Dockerizar | Criar `Dockerfile` multi-stage e `docker-compose.yml` com backend + frontend + db |
+| CI | Adicionar workflow GitHub Actions rodando pytest + build frontend |
+
+---
 
 ---
 
 ## 📊 **Status Atual**
 
-### ✅ **Backend - 100% Completo**
-- 🎯 **374/374 testes passando** (100% success rate)
-- 📊 **99% de cobertura** de testes
+Referência de planejamento contínuo detalhada em `PLANO_PREVC.md` (metodologia PREVC: Planejar, Revisar, Executar, Commitar).
+
+### ✅ **Backend - Sprint Motorista**
+- 🚖 Campos de corrida e métricas diárias/mensais adicionados
+- 🎯 **236/236 testes passando** (inclui testes admin RBAC)
+- 📊 Cobertura alta (executar pytest --cov para número atualizado)
 - ✅ **0 erros MyPy** (type safety perfeita)
 - 🔧 **25+ endpoints** implementados
 - 🛡️ **JWT + OAuth2** funcionando
 - 🗄️ **SQLAlchemy + Alembic** configurado
 
-### 🔄 **Frontend - 55% Implementado**
+### 🔄 **Frontend - 70% Implementado**
 - ⚛️ **React + TypeScript** configurado
 - 🎨 **Tailwind CSS** para estilização
 - 📱 **4/6 páginas** implementadas
@@ -87,8 +243,8 @@ pytest --cov=app
 - 🔐 **Autenticação** integrada
 - 📱 **Design responsivo** básico
 
-### 🎯 **MVP - 77.5% Completo**
-**Meta:** 100% até 30/06/2025
+### 🎯 **MVP - 80% Completo**
+**Meta (revisada):** 100% até 30/06/2025
 
 ---
 
@@ -197,18 +353,20 @@ pytest --cov=app
 
 ## 🚀 **Funcionalidades**
 
-### ✅ **Implementadas - Backend 100%**
+### ✅ **Implementadas - Backend (atual)**
 - 🔐 **Autenticação** (JWT + Google OAuth2 + Refresh Tokens)
 - 👤 **Gestão de usuários** (CRUD completo)
 - 📂 **Categorias** (receitas/despesas + subcategorias)
 - 💰 **Lançamentos financeiros** (CRUD completo com validações)
+- 🚖 **Campos de corrida**: platform, distance_km, duration_min, gross_amount, platform_fee, tips_amount, net_amount, shift_tag, city
+- 📈 **Métricas corridas**: `/entries/metrics/daily` & `/entries/metrics/monthly` (gross, net, fee %, tips, km, horas, R$/km, R$/hora)
 - 📊 **Dashboard** com resumos e estatísticas
 - 🔍 **Filtros avançados** (data, tipo, categoria, valor)
 - 📈 **Relatórios** (evolução e distribuição)
 - 🛡️ **Segurança** (proteção OWASP Top 10)
 - 🗄️ **Banco de dados** (SQLAlchemy + Alembic)
 
-### ✅ **Implementadas - Frontend 55%**
+### ✅ **Implementadas - Frontend 70%**
 - ⚛️ **React + TypeScript** configurado
 - 🎨 **Tailwind CSS** para estilização responsiva
 - 📱 **4/6 páginas** implementadas
@@ -337,45 +495,38 @@ pytest --cov=app
 - 📈 **99% cobertura** - Novo recorde de qualidade de testes
 - 🔒 **Type safety** - Zero erros MyPy em 63 arquivos
 
-### **🎉 Maio 2025**
+### **🎉 Maio / Agosto 2025**
 - 🎯 **Zero falhas** - 374/374 testes passando (25/05/2025)
 - ⚡ **Backend 100%** - Todas as funcionalidades implementadas
 - 🚀 **FastAPI** - 25+ endpoints funcionais
 - 🛡️ **Segurança** - JWT + OAuth2 + Rate limiting
 
-### **📊 Métricas Atuais**
-- **Backend:** 100% completo
-- **Frontend:** 55% implementado
-- **MVP:** 77.5% completo
-- **Testes:** 374/374 passando
-- **Cobertura:** 99%
+### **📊 Métricas Atuais (Sprint Motorista)**
+- **Backend:** Modelo extendido + métricas de corrida ativas
+- **Frontend:** Campos de corrida integrados (formulário, listagem, filtros plataforma/turno/cidade); dashboard de métricas ainda pendente
+- **Testes:** 231/231 passando
+- **Cobertura:** alta (executar pytest --cov para número preciso)
 - **Type errors:** 0
-- **Arquivos limpos:** 63
 
 ---
 
 ## 🧪 **Qualidade & Testes**
 
-### **Backend Testing - 99% Coverage**
+### **Backend Testing (atual)**
 ```bash
-# Executar todos os testes
 cd backend
-pytest --cov=app --cov-report=html
-
-# Resultados atuais:
-# 374 testes passando
-# 99% de cobertura
-# 0 falhas
-# 0 erros MyPy
+pytest --cov=app --cov-report=term-missing
+# Esperado: 231 passed
 ```
 
 ### **Frontend Testing - Em Implementação**
 ```bash
-# Setup em andamento
 cd frontend
-npm test                    # Jest + Testing Library
-npm run test:coverage       # Relatório cobertura
-npm run test:e2e           # Cypress E2E
+npm test            # Testes unitários (em preparação)
+```
+Testes específicos Admin Panel:
+```bash
+npm run test:ci -- src/components/admin
 ```
 
 ### **Code Quality Tools**
@@ -470,6 +621,7 @@ Este projeto demonstra competência em:
 - 📋 **Linhas de código:** ~15.000 (estimativa)
 - 🧪 **Testes:** 374 testes automatizados
 - 📊 **Coverage:** 99% backend, 0% frontend (em setup)
+        - Frontend coverage parcial (admin hooks/componentes) disponível via `npm run test:ci`.
 - 🔍 **Qualidade:** 0 erros MyPy, ESLint compliant
 
 ### **🏗️ Funcionalidades**
@@ -489,6 +641,56 @@ Este projeto demonstra competência em:
 ![Frontend](https://img.shields.io/badge/React-61DAFB?style=flat&logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)
+
+---
+
+## 🧪 Checklist QA Painel Admin
+Lista de verificação manual rápida antes de release.
+
+### Preparação
+- [ ] Variáveis `MASTER_EMAIL` e `MASTER_PASSWORD` definidas
+- [ ] Usuário MASTER criado / promovido automaticamente
+- [ ] Logar como MASTER e obter token JWT válido
+
+### Cenários CRUD Usuários
+- [ ] ADMIN consegue acessar `/admin/users`
+- [ ] USER não consegue acessar (redirect/login ou 403)
+- [ ] ADMIN cria novo USER (sucesso)
+- [ ] ADMIN tenta criar ADMIN (falha 403)
+- [ ] MASTER cria ADMIN com master password correta (sucesso)
+- [ ] MASTER cria ADMIN com master password incorreta (erro exibido no modal)
+
+### Alteração Role
+- [ ] MASTER promove USER→ADMIN (toast sucesso)
+- [ ] MASTER rebaixa ADMIN→USER (toast sucesso)
+- [ ] ADMIN não vê botões promover/rebaixar
+
+### Status / Ativação
+- [ ] ADMIN desativa USER (status muda e toast sucesso)
+- [ ] ADMIN tenta desativar ADMIN (botão ausente ou inoperante)
+- [ ] MASTER desativa ADMIN (sucesso)
+- [ ] Não é possível desativar MASTER
+- [ ] Usuário inativo não autentica (login bloqueado)
+
+### Segurança UI
+- [ ] Master Password não persiste após fechar modal
+- [ ] Ações múltiplas durante loading são bloqueadas (botões disabled)
+- [ ] Sem chamadas indevidas contendo `X-Master-Key` para operações que não exigem
+
+### Erros e Feedback
+- [ ] Mensagem clara para master password inválida
+- [ ] Mensagem clara para ação não permitida (403 genérico)
+- [ ] Skeleton exibido no carregamento inicial
+- [ ] Empty state exibido sem usuários
+
+### Regressão Básica
+- [ ] Dashboard continua acessível
+- [ ] Fluxos de lançamentos (entries) intactos
+- [ ] Logout funciona e limpa token
+
+### Pós-Teste
+- [ ] Atualizar plano (`PLANO_PAINEL_ADMIN.md`) com data da execução QA
+- [ ] Registrar anomalias / bugs encontrados
 
 ---
 

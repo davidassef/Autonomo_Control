@@ -34,7 +34,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
         )
 
     access_token = create_access_token(
-        data={"sub": user.email, "user_id": user.id}
+        data={"sub": user.email, "user_id": user.id, "role": user.role}
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -66,21 +66,18 @@ async def login_with_google(token: str, db: Session = Depends(get_db)):
     """
     user_data = verify_google_token(token)
     if not user_data:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token de autenticação Google inválido",
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token de autenticação Google inválido")
 
-    # Busca o usuário pelo email do Google ou cria um novo
-    user = db.query(User).filter(User.email == user_data["email"]).first()
+    # Valida campos essenciais
+    email = user_data.get("email") if isinstance(user_data, dict) else None
+    google_id = user_data.get("google_id") if isinstance(user_data, dict) else None
+    name = user_data.get("name") if isinstance(user_data, dict) else None
+    if not email or not google_id or not name:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Dados de usuário Google incompletos")
+
+    user = db.query(User).filter(User.email == email).first()
     if not user:
-        # Criar novo usuário
-        new_user = User(
-            email=user_data["email"],
-            name=user_data["name"],
-            picture=user_data.get("picture"),
-            google_id=user_data["google_id"],
-        )
+        new_user = User(email=email, name=name, picture=user_data.get("picture"), google_id=google_id)
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
@@ -88,7 +85,7 @@ async def login_with_google(token: str, db: Session = Depends(get_db)):
 
     # Gera um token de acesso
     access_token = create_access_token(
-        data={"sub": user.email, "user_id": user.id}
+        data={"sub": user.email, "user_id": user.id, "role": user.role}
     )
 
     return {"access_token": access_token, "token_type": "bearer"}
@@ -115,7 +112,7 @@ async def refresh_token(token: str = Depends(oauth2_scheme), db: Session = Depen
 
     # Gera um novo token de acesso
     access_token = create_access_token(
-        data={"sub": user.email, "user_id": user.id}
+        data={"sub": user.email, "user_id": user.id, "role": user.role}
     )
 
     return {"access_token": access_token, "token_type": "bearer"}

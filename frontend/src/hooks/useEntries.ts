@@ -5,8 +5,11 @@ import { entryService } from '../services/entries';
 interface UseEntriesOptions {
   startDate?: string;
   endDate?: string;
-  type?: 'expense' | 'income';
+  type?: 'EXPENSE' | 'INCOME';
   categoryId?: string;
+  platform?: string;
+  shift_tag?: string;
+  city?: string;
 }
 
 export const useEntries = (options: UseEntriesOptions = {}) => {
@@ -31,8 +34,11 @@ export const useEntries = (options: UseEntriesOptions = {}) => {
       const params: Record<string, string> = {};
       if (memoizedOptions.startDate) params.start_date = memoizedOptions.startDate;
       if (memoizedOptions.endDate) params.end_date = memoizedOptions.endDate;
-      if (memoizedOptions.type) params.type = memoizedOptions.type;
+  if (memoizedOptions.type) params.type = memoizedOptions.type;
       if (memoizedOptions.categoryId) params.category_id = memoizedOptions.categoryId;
+  if (memoizedOptions.platform) params.platform = memoizedOptions.platform;
+  if (memoizedOptions.shift_tag) params.shift_tag = memoizedOptions.shift_tag;
+  if (memoizedOptions.city) params.city = memoizedOptions.city;
 
       const data = await entryService.getAll(params);
       setEntries(data);

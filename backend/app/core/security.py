@@ -28,12 +28,14 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 def verify_token(token: str) -> Optional[TokenData]:
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        email: str = payload.get('sub')
-        user_id: str = payload.get('user_id')
-
-        if email is None or user_id is None:
-            return None
-
-        return TokenData(email=email, user_id=user_id)
     except JWTError:
         return None
+
+    email = payload.get('sub')  # type: ignore[assignment]
+    user_id = payload.get('user_id')  # type: ignore[assignment]
+    role = payload.get('role')  # optional
+
+    if not email or not user_id:
+        return None
+
+    return TokenData(email=email, user_id=user_id, role=role)

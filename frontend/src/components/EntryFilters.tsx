@@ -5,8 +5,11 @@ interface EntryFiltersProps {
   filters: {
     startDate: string;
     endDate: string;
-    type: '' | 'income' | 'expense';
+    type: '' | 'INCOME' | 'EXPENSE';
     categoryId: string;
+    platform: string;
+    shift_tag: string;
+    city: string;
   };
   categories: Category[];
   isLoading: boolean;
@@ -33,13 +36,16 @@ const EntryFilters: React.FC<EntryFiltersProps> = ({
       endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0],
       type: '',
       categoryId: '',
+      platform: '',
+      shift_tag: '',
+      city: '',
     });
   };
 
   return (
     <div className="bg-white shadow-sm rounded-lg p-4">
       <h2 className="text-lg font-medium text-gray-900 mb-3">Filtros</h2>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-7">
         <div>
           <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">
             Data Inicial
@@ -80,8 +86,8 @@ const EntryFilters: React.FC<EntryFiltersProps> = ({
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           >
             <option value="">Todos</option>
-            <option value="income">Receita</option>
-            <option value="expense">Despesa</option>
+            <option value="INCOME">Receita</option>
+            <option value="EXPENSE">Despesa</option>
           </select>
         </div>
 
@@ -104,6 +110,56 @@ const EntryFilters: React.FC<EntryFiltersProps> = ({
               </option>
             ))}
           </select>
+        </div>
+        <div>
+          <label htmlFor="platform" className="block text-sm font-medium text-gray-700">
+            Plataforma
+          </label>
+          <select
+            id="platform"
+            name="platform"
+            value={filters.platform}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          >
+            <option value="">Todas</option>
+            <option value="UBER">UBER</option>
+            <option value="99">99</option>
+            <option value="INDRIVE">INDRIVE</option>
+            <option value="OUTRA">OUTRA</option>
+          </select>
+        </div>
+        <div>
+          <label htmlFor="shift_tag" className="block text-sm font-medium text-gray-700">
+            Turno
+          </label>
+          <select
+            id="shift_tag"
+            name="shift_tag"
+            value={filters.shift_tag}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          >
+            <option value="">Todos</option>
+            <option value="MANHA">Manhã</option>
+            <option value="TARDE">Tarde</option>
+            <option value="NOITE">Noite</option>
+            <option value="MADRUGADA">Madrugada</option>
+          </select>
+        </div>
+        <div>
+          <label htmlFor="city" className="block text-sm font-medium text-gray-700">
+            Cidade
+          </label>
+          <input
+            type="text"
+            id="city"
+            name="city"
+            value={filters.city}
+            onChange={handleChange}
+            placeholder="Cidade"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          />
         </div>
       </div>
 

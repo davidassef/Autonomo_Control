@@ -6,14 +6,15 @@ import { Entry } from '../../types';
 
 interface CategoryDistributionChartProps {
   entries: Entry[];
-  type: 'income' | 'expense';
+  // Must match Entry['type'] which is 'INCOME' | 'EXPENSE'
+  type: 'INCOME' | 'EXPENSE';
   isLoading: boolean;
 }
 
 const CategoryDistributionChart: React.FC<CategoryDistributionChartProps> = ({ entries, type, isLoading }) => {
   // Função para calcular a distribuição por categorias
   const categoryData = useMemo(() => {
-    const filteredEntries = entries.filter(entry => entry.type === type);
+  const filteredEntries = entries.filter(entry => entry.type === type);
     const categorySums: Record<string, number> = {};
     const categoryNames: Record<string, string> = {};
     const categoryColors: Record<string, string> = {};
@@ -95,7 +96,7 @@ const CategoryDistributionChart: React.FC<CategoryDistributionChartProps> = ({ e
       },
       title: {
         display: true,
-        text: type === 'expense' ? 'Distribuição de Despesas' : 'Distribuição de Receitas',
+  text: type === 'EXPENSE' ? 'Distribuição de Despesas' : 'Distribuição de Receitas',
         font: {
           size: 16,
         },
@@ -133,7 +134,7 @@ const CategoryDistributionChart: React.FC<CategoryDistributionChartProps> = ({ e
     return (
       <div className="bg-white shadow rounded-lg p-4 h-60 flex items-center justify-center">
         <p className="text-gray-500 text-center">
-          Nenhum {type === 'expense' ? 'despesa' : 'receita'} no período selecionado.
+          Nenhum {type === 'EXPENSE' ? 'despesa' : 'receita'} no período selecionado.
         </p>
       </div>
     );

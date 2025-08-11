@@ -51,17 +51,17 @@ Alternativa futura: criar tabela `trips` e deixar `entries` apenas para agregado
 Objetivo: Introduzir campos de corrida + tela de registro de corrida + dashboard básico de métricas.
 
 ### 1. Planejar (Backlog Sprint 01)
-- [ ] Definir escolha: extender Entry (fase 1) — aprovado
-- [ ] Criar migração Alembic adicionando campos novos
-- [ ] Atualizar modelo SQLAlchemy e schemas Pydantic
-- [ ] Serviços: lógica para calcular `net_amount` se não enviado
-- [ ] Endpoints: permitir filtro por plataforma, intervalo data, cidade, turno
-- [ ] Endpoint extra: `/entries/metrics/daily` e `/entries/metrics/monthly`
-- [ ] Seed categorias padrão motorista (combustível, pedágio, manutenção, etc.)
-- [ ] Frontend: Formulário de nova corrida (com campos específicos)
-- [ ] Frontend: Tabela de corridas recentes + filtros (data inicial/final, plataforma)
+- [x] Definir escolha: extender Entry (fase 1) — aprovado
+- [x] Criar migração Alembic adicionando campos novos
+- [x] Atualizar modelo SQLAlchemy e schemas Pydantic
+- [x] Serviços: lógica para calcular `net_amount` se não enviado
+- [x] Endpoints: permitir filtro por plataforma, intervalo data, cidade, turno
+- [x] Endpoint extra: `/entries/metrics/daily` e `/entries/metrics/monthly`
+- [x] Seed categorias padrão motorista (combustível, pedágio, manutenção, etc.)
+- [x] Frontend: Formulário de nova corrida (com campos específicos)
+- [x] Frontend: Tabela de corridas recentes + filtros (data inicial/final, plataforma/turno/cidade)
 - [ ] Frontend: Dashboard métricas (cards: Bruto, Taxas, Líquido, R$/km, R$/hora)
-- [ ] Atualizar README (escopo motorista) + este plano
+- [x] Atualizar README (escopo motorista) + este plano
 
 ### 2. Revisar (Critérios de Aceite / DoD)
 - [ ] Migração aplica e reverte sem erro
@@ -74,31 +74,31 @@ Objetivo: Introduzir campos de corrida + tela de registro de corrida + dashboard
 
 ### 3. Executar (Tarefas Técnicas Granulares)
 Backend:
-- [ ] Criar revisão de `Entry` adicionando colunas (script + Alembic)
-- [ ] Atualizar `EntryBase` / `EntryCreate` / `EntryUpdate` com validações (ex: distance_km > 0 quando presente)
-- [ ] Adicionar enum plataformas em `custom_types` (ou const)
-- [ ] Novo router ou expandir `entries` com rota `/entries/metrics/daily` & `/entries/metrics/monthly`
-- [ ] Função agregadora (CTEs ou GROUP BY por dia, plataforma)
-- [ ] Testes unit: validações de schema e agregações
-- [ ] Testes integração: criação corrida, listagem filtrada
+- [x] Criar revisão de `Entry` adicionando colunas (script + Alembic)
+- [x] Atualizar `EntryBase` / `EntryCreate` / `EntryUpdate` com validações (ex: distance_km > 0 quando presente)
+- [x] Adicionar enum plataformas em `custom_types` (ou const)
+- [x] Novo router ou expandir `entries` com rota `/entries/metrics/daily` & `/entries/metrics/monthly`
+- [x] Função agregadora (CTEs ou GROUP BY por dia, plataforma)
+- [x] Testes unit: validações de schema e agregações
+- [x] Testes integração: criação corrida, listagem filtrada
 
 Frontend:
-- [ ] Atualizar tipo `Entry` em `src/types`
-- [ ] Formulário de corrida (condicional: se type=INCOME exibir campos de corrida)
-- [ ] Hooks: `useEntries` aceitar novos filtros (platform, shift)
+- [x] Atualizar tipo `Entry` em `src/types`
+- [x] Formulário de corrida (condicional: se type=INCOME exibir campos de corrida)
+- [x] Hooks: `useEntries` aceitar novos filtros (platform, shift, city)
 - [ ] Dashboard: criar componentes de métricas e gráficos básicos (linha diária, pizza despesas)
 
 Dados / Seeds:
-- [ ] Script seed categorias padrão
-- [ ] Script gerar 50 corridas fictícias para testes locais
+- [x] Script seed categorias padrão
+- [x] Script gerar 50 corridas fictícias para testes locais
 
 Qualidade:
 - [ ] Atualizar cobertura alvo (≥ baseline anterior)
 - [ ] Verificar regressão endpoints antigos
 
 Documentação:
-- [ ] README seção "Modelo de Dados Estendido"
-- [ ] Atualizar este plano marcando concluído conforme avança
+- [x] README seção "Modelo de Dados Estendido" (incluído resumo campos corrida)
+- [x] Atualizar este plano marcando concluído conforme avança
 
 ### 4. Commitar (Padrões)
 Commits exemplo:
@@ -124,7 +124,7 @@ Commits exemplo:
 ## ✅ Registro de Ciclos Concluídos
 | Ciclo | Data Início | Data Fim | Entregas | Observações |
 |-------|-------------|----------|----------|-------------|
-| 01 | (preencher) | (preencher) | Extensão modelo + métricas básicas | - |
+| 01 | 2025-08-09 | (em andamento) | Extensão modelo + métricas básicas + UI corrida parcial | Dashboard métricas pendente |
 
 ## 📂 Backlog Futuro (Priorizar Próximos Sprints)
 - Importação CSV/Excel de extratos da plataforma

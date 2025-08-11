@@ -5,9 +5,34 @@ from typing import List
 from app.dependencies import get_current_user
 from app.core.database import get_db
 from app.models.user import User
-from app.schemas.user_schema import User as UserSchema, UserUpdate
+from app.schemas.user_schema import User as UserSchema, UserUpdate, UserCreate
+from app.core.security import get_password_hash
 
 router = APIRouter(prefix="/users", tags=["usuários"])
+
+@router.post("/", response_model=UserSchema, status_code=status.HTTP_201_CREATED)
+async def create_user(
+    user_in: UserCreate,
+    db: Session = Depends(get_db),
+):
+    """Cria um novo usuário manual (fluxo alternativo ao Google OAuth).
+
+    Regras:
+    - Email deve ser único
+    - Para agora, gera uma senha hash padrão se não existir (ex: first-login)
+    - Pode ser extendido depois para aceitar senha explícita
+    """
+    existing = db.query(User).filter(User.email == user_in.email).first()
+    if existing:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email já cadastrado")
+
+    # Senha placeholder opcional para permitir login tradicional se necessário
+    hashed_password = get_password_hash("changeme")
+    new_user = User(email=user_in.email, name=user_in.name, hashed_password=hashed_password, is_active=True)
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
 
 @router.get("/", response_model=List[UserSchema])
 async def read_users(

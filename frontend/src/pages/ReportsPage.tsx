@@ -6,7 +6,7 @@ import CategoryDistributionChart from '../components/charts/CategoryDistribution
 
 const ReportsPage: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState<'month' | 'quarter' | 'year'>('quarter');
-  const [reportType, setReportType] = useState<'overview' | 'income' | 'expense'>('overview');
+  const [reportType, setReportType] = useState<'overview' | 'INCOME' | 'EXPENSE'>('overview');
 
   // Get date range based on selected period
   const getDateRange = () => {
@@ -183,9 +183,9 @@ const ReportsPage: React.FC = () => {
                 Visão Geral
               </button>
               <button
-                onClick={() => setReportType('income')}
+                onClick={() => setReportType('INCOME')}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  reportType === 'income'
+                  reportType === 'INCOME'
                     ? 'bg-green-100 text-green-700 border border-green-300'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
@@ -193,9 +193,9 @@ const ReportsPage: React.FC = () => {
                 Receitas
               </button>
               <button
-                onClick={() => setReportType('expense')}
+                onClick={() => setReportType('EXPENSE')}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  reportType === 'expense'
+                  reportType === 'EXPENSE'
                     ? 'bg-red-100 text-red-700 border border-red-300'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
@@ -225,7 +225,7 @@ const ReportsPage: React.FC = () => {
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Distribuição de Receitas</h3>
                   <CategoryDistributionChart
                     entries={entries}
-                    type="income"
+                    type="INCOME"
                     isLoading={isLoading}
                   />
                 </div>
@@ -233,7 +233,7 @@ const ReportsPage: React.FC = () => {
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Distribuição de Despesas</h3>
                   <CategoryDistributionChart
                     entries={entries}
-                    type="expense"
+                    type="EXPENSE"
                     isLoading={isLoading}
                   />
                 </div>
@@ -241,23 +241,23 @@ const ReportsPage: React.FC = () => {
             </>
           )}
 
-          {reportType === 'income' && (
+          {reportType === 'INCOME' && (
             <div className="bg-white shadow rounded-lg p-6">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Análise Detalhada de Receitas</h3>
               <CategoryDistributionChart
                 entries={entries}
-                type="income"
+                type="INCOME"
                 isLoading={isLoading}
               />
             </div>
           )}
 
-          {reportType === 'expense' && (
+          {reportType === 'EXPENSE' && (
             <div className="bg-white shadow rounded-lg p-6">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Análise Detalhada de Despesas</h3>
               <CategoryDistributionChart
                 entries={entries}
-                type="expense"
+                type="EXPENSE"
                 isLoading={isLoading}
               />
             </div>
@@ -310,16 +310,16 @@ const ReportsPage: React.FC = () => {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Receita Média:</span>                      <span className="font-medium text-green-600">
-                        R$ {entries.filter(e => e.type === 'income').length > 0 && summary?.total_income
-                          ? ((summary.total_income) / entries.filter(e => e.type === 'income').length).toFixed(2)
+                        R$ {entries.filter(e => e.type === 'INCOME').length > 0 && summary?.total_income
+                          ? ((summary.total_income) / entries.filter(e => e.type === 'INCOME').length).toFixed(2)
                           : '0.00'
                         }
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Despesa Média:</span>                      <span className="font-medium text-red-600">
-                        R$ {entries.filter(e => e.type === 'expense').length > 0 && summary?.total_expense
-                          ? ((summary.total_expense) / entries.filter(e => e.type === 'expense').length).toFixed(2)
+                        R$ {entries.filter(e => e.type === 'EXPENSE').length > 0 && summary?.total_expense
+                          ? ((summary.total_expense) / entries.filter(e => e.type === 'EXPENSE').length).toFixed(2)
                           : '0.00'
                         }
                       </span>

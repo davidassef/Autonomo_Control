@@ -43,46 +43,57 @@ const EntryList: React.FC<EntryListProps> = ({ entries, isLoading, onEdit, onDel
   return (
     <div className="bg-white shadow overflow-hidden sm:rounded-lg">
       <div className="divide-y divide-gray-200">
-        <div className="hidden sm:grid sm:grid-cols-5 sm:gap-4 sm:px-6 sm:py-3 bg-gray-50 text-sm font-medium text-gray-500">
+        <div className="hidden sm:grid sm:grid-cols-7 sm:gap-4 sm:px-6 sm:py-3 bg-gray-50 text-sm font-medium text-gray-500">
           <div>Data</div>
           <div>Descrição</div>
           <div>Categoria</div>
-          <div className="text-right">Valor</div>
+          <div>Plataforma</div>
+          <div className="text-right">Bruto</div>
+          <div className="text-right">Líquido</div>
           <div className="text-right">Ações</div>
         </div>
 
-        {entries.map((entry) => (
-          <div key={entry.id} className="px-4 py-4 sm:px-6 sm:grid sm:grid-cols-5 sm:gap-4">
-            <div className="text-sm font-medium text-gray-900 sm:flex sm:items-center">
-              {new Date(entry.date).toLocaleDateString()}
+        {entries.map((entry) => {
+          const isRide = entry.type === 'INCOME' && (entry.gross_amount || entry.platform);
+          return (
+            <div key={entry.id} className="px-4 py-4 sm:px-6 sm:grid sm:grid-cols-7 sm:gap-4">
+              <div className="text-sm font-medium text-gray-900 sm:flex sm:items-center">
+                {new Date(entry.date).toLocaleDateString()}
+              </div>
+              <div className="mt-1 text-sm text-gray-900 sm:mt-0 sm:flex sm:items-center">
+                {entry.description}
+              </div>
+              <div className="mt-1 text-sm text-gray-500 sm:mt-0 sm:flex sm:items-center">
+                {entry.category?.name || 'Sem categoria'}
+              </div>
+              <div className="mt-1 text-sm text-gray-500 sm:mt-0 sm:flex sm:items-center">
+                {isRide ? (entry.platform || '-') : '-'}
+              </div>
+              <div className="mt-1 text-sm sm:mt-0 sm:text-right sm:flex sm:items-center sm:justify-end">
+                {isRide && entry.gross_amount ? `R$ ${entry.gross_amount.toFixed(2)}` : '-'}
+              </div>
+              <div className={`mt-1 text-sm sm:mt-0 sm:text-right sm:flex sm:items-center sm:justify-end ${
+                entry.type === 'INCOME' ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {entry.type === 'INCOME' ? '+' : '-'} R$ {entry.amount.toFixed(2)}
+              </div>
+              <div className="mt-2 sm:mt-0 sm:text-right sm:flex sm:items-center sm:justify-end">
+                <button
+                  onClick={() => onEdit(entry)}
+                  className="inline-flex items-center py-1.5 px-3 text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 mr-2"
+                >
+                  Editar
+                </button>
+                <button
+                  onClick={() => onDelete(entry.id)}
+                  className="inline-flex items-center py-1.5 px-3 text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200"
+                >
+                  Excluir
+                </button>
+              </div>
             </div>
-            <div className="mt-1 text-sm text-gray-900 sm:mt-0 sm:flex sm:items-center">
-              {entry.description}
-            </div>
-            <div className="mt-1 text-sm text-gray-500 sm:mt-0 sm:flex sm:items-center">
-              {entry.category?.name || 'Sem categoria'}
-            </div>
-            <div className={`mt-1 text-sm sm:mt-0 sm:text-right sm:flex sm:items-center sm:justify-end ${
-              entry.type === 'income' ? 'text-green-600' : 'text-red-600'
-            }`}>
-              {entry.type === 'income' ? '+' : '-'} R$ {entry.amount.toFixed(2)}
-            </div>
-            <div className="mt-2 sm:mt-0 sm:text-right sm:flex sm:items-center sm:justify-end">
-              <button
-                onClick={() => onEdit(entry)}
-                className="inline-flex items-center py-1.5 px-3 text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 mr-2"
-              >
-                Editar
-              </button>
-              <button
-                onClick={() => onDelete(entry.id)}
-                className="inline-flex items-center py-1.5 px-3 text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200"
-              >
-                Excluir
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
