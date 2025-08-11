@@ -15,53 +15,46 @@ from app.core.database import SessionLocal, engine
 from app.models.user import User
 from app.models.category import Category
 from app.models.entry import Entry, EntryType
-# from app.core.security import get_password_hash  # Não usado - sistema usa Google OAuth2
+from app.core.security import get_password_hash  # Agora usado para permitir login local
 from datetime import datetime, date
 import uuid
 
 def create_admin_user():
     """Cria um usuário administrador de exemplo"""
     db: Session = SessionLocal()
+    # Verificar se o usuário admin já existe
+    existing_admin = db.query(User).filter(User.email == "admin@autonomocontrol.com").first()
+    if existing_admin:
+        print("✅ Usuário admin já existe!")
+        print(f"   📧 Email: {existing_admin.email}")
+        print(f"   👤 Nome: {existing_admin.name}")
+        print(f"   🆔 ID: {existing_admin.id}")
+        db.close()
+        return existing_admin
 
     try:
-        # Verificar se o usuário admin já existe
-        existing_admin = db.query(User).filter(User.email == "admin@autonomocontrol.com").first()
-        if existing_admin:
-            print("✅ Usuário admin já existe!")
-            print(f"   📧 Email: {existing_admin.email}")
-            print(f"   👤 Nome: {existing_admin.name}")
-            print(f"   🆔 ID: {existing_admin.id}")
-            return existing_admin
-
-        # Criar usuário admin (usando apenas campos do modelo atual)
+        dev_password = "admin123"  # senha padrão dev
         admin_user = User(
             id=str(uuid.uuid4()),
             name="Administrador Sistema",
             email="admin@autonomocontrol.com",
             picture="https://via.placeholder.com/150/1f2937/ffffff?text=ADMIN",
             is_active=True,
-            google_id="admin_google_id_example"  # ID fictício para admin
+            google_id="admin_google_id_example",
+            hashed_password=get_password_hash(dev_password)
         )
-
         db.add(admin_user)
         db.commit()
         db.refresh(admin_user)
-
         print("🎉 Usuário admin criado com sucesso!")
         print(f"   📧 Email: {admin_user.email}")
         print(f"   👤 Nome: {admin_user.name}")
         print(f"   🆔 ID: {admin_user.id}")
         print(f"   🖼️ Avatar: {admin_user.picture}")
-
-        # Criar categorias padrão para o admin
-        create_default_categories(db, admin_user.id)
-
-        # Criar alguns lançamentos de exemplo
-        create_sample_entries(db, admin_user.id)
-
+        create_default_categories(db, str(admin_user.id))
+        create_sample_entries(db, str(admin_user.id))
         return admin_user
-
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"❌ Erro ao criar usuário admin: {e}")
         db.rollback()
         return None
@@ -224,8 +217,8 @@ if __name__ == "__main__":
         print("✅ USUÁRIO ADMIN CRIADO COM SUCESSO!")
         print("=" * 50)
         print("📝 CREDENCIAIS DE ACESSO:")
-        print(f"   📧 Email: admin@autonomocontrol.com")
-        print(f"   🔑 Senha: admin123")
+        print("   📧 Email: admin@autonomocontrol.com")
+        print("   🔑 Senha: admin123 (hash salva – login local habilitado)")
         print("=" * 50)
         print("🌟 Você pode agora fazer login na aplicação!")
         print("🔗 Frontend: http://localhost:3000")
