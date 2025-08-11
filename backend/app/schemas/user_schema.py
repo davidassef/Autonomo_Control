@@ -14,6 +14,12 @@ class UserUpdate(BaseModel):
     name: Optional[str] = None
     picture: Optional[str] = None
 
+class RoleUpdate(BaseModel):
+    role: str = Field(..., description="Novo role: USER ou ADMIN")
+
+class StatusUpdate(BaseModel):
+    is_active: bool = Field(..., description="Novo status de ativação")
+
 class UserInDB(UserBase):
     id: str
     google_id: Optional[str] = None
@@ -21,6 +27,7 @@ class UserInDB(UserBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
     picture: Optional[str] = None
+    role: str = "USER"
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -35,3 +42,4 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     email: Optional[str] = None
     user_id: str
+    role: Optional[str] = None
