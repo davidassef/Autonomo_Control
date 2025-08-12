@@ -8,20 +8,22 @@ export const useDebounce = <T extends (...args: any[]) => void>(
 ): T => {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  return useCallback(
-    ((...args: Parameters<T>) => {
+  const debouncedCallback = useCallback(
+    (...args: Parameters<T>) => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
       timeoutRef.current = setTimeout(() => callback(...args), delay);
-    }) as T,
+    },
     [callback, delay]
   );
+
+  return debouncedCallback as T;
 };
 
 // Hook para evitar re-renders desnecessários em objetos
 export const useStableObject = <T extends Record<string, any>>(obj: T): T => {
-  return useMemo(() => obj, Object.values(obj));
+  return useMemo(() => obj, [obj]);
 };
 
 // Hook para throttle de funções (limita execuções por tempo)
@@ -31,20 +33,22 @@ export const useThrottle = <T extends (...args: any[]) => void>(
 ): T => {
   const lastRun = useRef(Date.now());
 
-  return useCallback(
-    ((...args: Parameters<T>) => {
+  const throttledCallback = useCallback(
+    (...args: Parameters<T>) => {
       if (Date.now() - lastRun.current >= delay) {
         callback(...args);
         lastRun.current = Date.now();
       }
-    }) as T,
+    },
     [callback, delay]
   );
+
+  return throttledCallback as T;
 };
 
 // Hook para evitar re-renders com arrays
 export const useStableArray = <T>(array: T[]): T[] => {
-  return useMemo(() => array, [JSON.stringify(array)]);
+  return useMemo(() => array, [array]);
 };
 
 // Hook para detectar mudanças e logar (debug)

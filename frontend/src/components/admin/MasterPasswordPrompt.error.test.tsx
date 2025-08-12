@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MasterPasswordPrompt } from './MasterPasswordPrompt';
 
@@ -9,6 +9,6 @@ describe('MasterPasswordPrompt errors', () => {
     render(<MasterPasswordPrompt title="Teste" onConfirm={onConfirm} onClose={()=>{}} />);
     fireEvent.change(screen.getByLabelText(/master password/i), { target: { value: 'x' } });
     fireEvent.click(screen.getByText('Confirmar'));
-    await waitFor(()=> expect(screen.getByText(/Master password inválida/i)).toBeInTheDocument());
+    await screen.findByText(/Master password inválida/i);
   });
 });

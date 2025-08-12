@@ -36,8 +36,8 @@ export const MasterPasswordPrompt: React.FC<Props> = ({ title, onConfirm, onClos
         <h2 className="text-lg font-semibold">{title}</h2>
         <form onSubmit={submit} className="space-y-3">
           <div>
-            <label className="block text-xs font-semibold mb-1">Master Password</label>
-            <input autoFocus type="password" value={masterKey} onChange={e=>setMasterKey(e.target.value)} className="w-full border rounded px-2 py-1" />
+            <label htmlFor="master-password" className="block text-xs font-semibold mb-1">Master Password</label>
+            <input id="master-password" autoFocus type="password" value={masterKey} onChange={e=>setMasterKey(e.target.value)} className="w-full border rounded px-2 py-1" />
           </div>
           {error && <div className="text-xs text-red-600">{error}</div>}
           <div className="flex gap-2 justify-end">

@@ -6,12 +6,9 @@ import { MasterPasswordPrompt } from '../components/admin/MasterPasswordPrompt';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 
-interface Toast { type: 'success' | 'error'; message: string; }
-
 const AdminUsersPage: React.FC = () => {
   const { users, loading, actionId, create, toggleStatus, promote, demote, reload, error } = useAdminUsers();
   const { user: current } = useAuth();
-  const [toast, setToast] = useState<Toast | null>(null);
   const [pendingAction, setPendingAction] = useState<null | { type: 'promote' | 'demote'; userId: string }>(null);
   const { push } = useToast();
 
@@ -55,7 +52,7 @@ const AdminUsersPage: React.FC = () => {
     <div className="p-6 space-y-6">
       <h1 className="text-2xl font-bold">Administração de Usuários</h1>
 
-      {error && !toast && (
+      {error && (
         <div className="border px-3 py-2 rounded text-sm bg-red-100 border-red-400 text-red-800">{error}</div>
       )}
 

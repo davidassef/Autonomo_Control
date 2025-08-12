@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { User } from '../types';
 import { authService } from '../services/auth';
 
@@ -37,7 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkAuth();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string) => {
     console.log('🔐 AuthContext: Iniciando login...', { email });
     setIsLoading(true);
     setError(null);
@@ -62,7 +62,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoading(false);
     }
-  };const googleLogin = async (token: string) => {
+  }, []);
+
+  const googleLogin = useCallback(async (token: string) => {
     setIsLoading(true);
     setError(null);
     try {
@@ -76,9 +78,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const register = async (name: string, email: string, password: string): Promise<void> => {
+  const register = useCallback(async (name: string, email: string, password: string): Promise<void> => {
     setIsLoading(true);
     setError(null);
     try {
@@ -91,18 +93,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [login]);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     authService.logout();
     setUser(null);
-  };
-  const clearError = () => {
+  }, []);
+
+  const clearError = useCallback(() => {
     setError(null);
-  };
+  }, []);
 
   // Evitar re-renders desnecessários com useMemo
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const contextValue = React.useMemo(() => ({
     user,
     isLoading,
@@ -112,7 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     register,
     logout,
     clearError,
-  }), [user, isLoading, error]);
+  }), [user, isLoading, error, login, googleLogin, register, logout, clearError]);
 
   return (
     <AuthContext.Provider value={contextValue}>
