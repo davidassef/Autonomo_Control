@@ -52,8 +52,18 @@ export const authService = {
     }
   },
 
-  async register(name: string, email: string, password: string): Promise<User> {
-    const response = await api.post<User>('/users', { name, email, password });
+  async register(name: string, email: string, password: string, securityQuestion1Id: string, securityAnswer1: string, securityQuestion2Id: string, securityAnswer2: string, securityQuestion3Id: string, securityAnswer3: string): Promise<User> {
+    const response = await api.post<User>('/users', { 
+      name, 
+      email, 
+      password, 
+      security_question_1_id: securityQuestion1Id,
+      security_answer_1: securityAnswer1,
+      security_question_2_id: securityQuestion2Id,
+      security_answer_2: securityAnswer2,
+      security_question_3_id: securityQuestion3Id,
+      security_answer_3: securityAnswer3
+    });
     return response.data;
   },
 

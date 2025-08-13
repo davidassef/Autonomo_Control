@@ -17,8 +17,28 @@ class User(Base):
     role = Column(String, default="USER", nullable=False, index=True)
 
     # Senha temporária para desenvolvimento (apenas para admin)
-    hashed_password = Column(String, nullable=True)
-
-    # Campos de controle
+    hashed_password = Column(String, nullable=True)  # Para desenvolvimento/admin
+    temp_password_hash = Column(String, nullable=True)  # Senha temporária
+    temp_password_expires = Column(DateTime(timezone=True), nullable=True)  # Expiração da senha temporária
+    password_reset_by = Column(String, nullable=True)  # ID do admin que resetou a senha
+    
+    # Controle de bloqueio de usuários
+    blocked_at = Column(DateTime(timezone=True), nullable=True)  # Data/hora do bloqueio
+    blocked_by = Column(String, nullable=True)  # ID do admin que bloqueou o usuário
+    
+    # Controles de hierarquia e visibilidade
+    can_view_admins = Column(Boolean, default=False, nullable=False)  # Se ADMIN pode ver outras contas ADMIN
+    promoted_by = Column(String, nullable=True)  # ID do MASTER que promoveu para ADMIN
+    demoted_by = Column(String, nullable=True)  # ID do MASTER que rebaixou de ADMIN
+    demoted_at = Column(DateTime(timezone=True), nullable=True)  # Data/hora do rebaixamento
+    
+    # Perguntas secretas para recuperação de senha (sistema flexível)
+    security_question_1_id = Column(String, nullable=True)  # ID da primeira pergunta escolhida
+    security_answer_1 = Column(String, nullable=True)  # Hash da resposta da primeira pergunta
+    security_question_2_id = Column(String, nullable=True)  # ID da segunda pergunta escolhida
+    security_answer_2 = Column(String, nullable=True)  # Hash da resposta da segunda pergunta
+    security_question_3_id = Column(String, nullable=True)  # ID da terceira pergunta escolhida
+    security_answer_3 = Column(String, nullable=True)  # Hash da resposta da terceira pergunta
+    
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

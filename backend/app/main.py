@@ -19,8 +19,10 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",  # Create React App
+        "http://localhost:3001",  # Create React App (porta alternativa)
         "http://localhost:5173",  # Vite
         "http://127.0.0.1:3000",  # Create React App (127.0.0.1)
+        "http://127.0.0.1:3001",  # Create React App (127.0.0.1 porta alternativa)
         "http://127.0.0.1:5173"   # Vite (127.0.0.1)
     ],
     allow_credentials=True,

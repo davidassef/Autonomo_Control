@@ -1,6 +1,7 @@
 // Teste básico do hook useAuth
 // Mocks já configurados no setupTests.ts
 
+import React from 'react';
 import { renderHook } from '@testing-library/react';
 import { useAuth } from '../contexts/AuthContext';
 

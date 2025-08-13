@@ -37,6 +37,13 @@ async def get_current_user(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Usuário inativo"
         )
+    
+    # Verificar se o usuário está bloqueado
+    if getattr(user, 'blocked_at', None) is not None:  # type: ignore[attr-defined]
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Usuário bloqueado pelo administrador"
+        )
 
     # Backfill defensivo: alguns registros legados podem ter role NULL
     if getattr(user, 'role', None) is None:  # type: ignore[attr-defined]

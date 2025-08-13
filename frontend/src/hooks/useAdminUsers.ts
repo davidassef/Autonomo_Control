@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { AdminUser, listUsers, createUser, changeRole, changeStatus } from '../services/adminUsers';
+import { AdminUser, listUsers, createUser, changeRole, changeStatus, resetUserPassword, blockUser, unblockUser, toggleAdminVisibility, deleteUser } from '../services/adminUsers';
 
 interface State {
   users: AdminUser[];
@@ -60,6 +60,66 @@ export function useAdminUsers() {
     } finally { setAction(null); }
   }, []);
 
+  const resetPassword = useCallback(async (user: AdminUser) => {
+    setAction(user.id);
+    try {
+      const result = await resetUserPassword(user.id);
+      return result;
+    } finally {
+      setAction(null);
+    }
+  }, []);
+
+  const block = useCallback(async (user: AdminUser) => {
+    setAction(user.id);
+    try {
+      const result = await blockUser(user.id);
+      // Atualizar o usuário como inativo e bloqueado
+      const updatedUser = { ...user, is_active: false, blocked_at: result.blocked_at };
+      setState(s => ({ ...s, users: s.users.map(u => u.id === user.id ? updatedUser : u) }));
+      return result;
+    } finally {
+      setAction(null);
+    }
+  }, []);
+
+  const unblock = useCallback(async (user: AdminUser) => {
+    setAction(user.id);
+    try {
+      const result = await unblockUser(user.id);
+      // Atualizar o usuário como ativo e desbloqueado
+      const updatedUser = { ...user, is_active: true, blocked_at: undefined };
+      setState(s => ({ ...s, users: s.users.map(u => u.id === user.id ? updatedUser : u) }));
+      return result;
+    } finally {
+      setAction(null);
+    }
+  }, []);
+
+  const toggleVisibility = useCallback(async (user: AdminUser, masterKey: string) => {
+    if (user.role !== 'ADMIN') return user;
+    setAction(user.id);
+    try {
+      const updated = await toggleAdminVisibility(user.id, { can_view_admins: !user.can_view_admins }, masterKey);
+      setState(s => ({ ...s, users: s.users.map(u => u.id === user.id ? updated : u) }));
+      return updated;
+    } finally {
+      setAction(null);
+    }
+  }, []);
+
+  const deleteUserAccount = useCallback(async (user: AdminUser) => {
+    setAction(user.id);
+    try {
+      const result = await deleteUser(user.id);
+      // Remove o usuário da lista
+      setState(s => ({ ...s, users: s.users.filter(u => u.id !== user.id) }));
+      return result;
+    } finally {
+      setAction(null);
+    }
+  }, []);
+
   return {
     ...state,
     reload: load,
@@ -67,5 +127,10 @@ export function useAdminUsers() {
     toggleStatus,
     promote,
     demote,
+    resetPassword,
+    block,
+    unblock,
+    toggleVisibility,
+    deleteUserAccount,
   };
 }

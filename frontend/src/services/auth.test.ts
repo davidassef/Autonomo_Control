@@ -219,12 +219,18 @@ describe('AuthService', () => {
     it('deve registrar usuário com sucesso', async () => {
       mockApi.post.mockResolvedValue({ data: mockUser });
 
-      const result = await authService.register('New User', 'newuser@example.com', 'password123');
+      const result = await authService.register('New User', 'newuser@example.com', 'password123', 'favorite_food', 'Pizza', 'first_pet', 'Rex', 'birth_year', '1990');
 
       expect(mockApi.post).toHaveBeenCalledWith('/users', {
         name: 'New User',
         email: 'newuser@example.com',
-        password: 'password123'
+        password: 'password123',
+        security_question_1_id: 'favorite_food',
+        security_answer_1: 'Pizza',
+        security_question_2_id: 'first_pet',
+        security_answer_2: 'Rex',
+        security_question_3_id: 'birth_year',
+        security_answer_3: '1990'
       });
       expect(result).toEqual(mockUser);
     });
@@ -239,7 +245,7 @@ describe('AuthService', () => {
 
       mockApi.post.mockRejectedValue(mockError);
 
-      await expect(authService.register('User', 'existing@example.com', 'password123'))
+      await expect(authService.register('User', 'existing@example.com', 'password123', 'favorite_food', 'Pizza', 'first_pet', 'Rex', 'birth_year', '1990'))
         .rejects.toEqual(mockError);
     });
 
@@ -261,7 +267,7 @@ describe('AuthService', () => {
 
       mockApi.post.mockRejectedValue(mockError);
 
-      await expect(authService.register('User', '', 'password123'))
+      await expect(authService.register('User', '', 'password123', 'favorite_food', 'Pizza', 'first_pet', 'Rex', 'birth_year', '1990'))
         .rejects.toEqual(mockError);
     });
   });

@@ -29,7 +29,7 @@ describe('EntryService', () => {
       updated_at: '2024-01-01T00:00:00Z'
     },
     platform: 'cash',
-    shift_tag: 'MANHA',
+    shift_tag: 'morning',
     city: 'São Paulo',
     user_id: 'user1',
     created_at: '2024-01-15T10:00:00Z',
@@ -42,8 +42,8 @@ describe('EntryService', () => {
     total_income: 1000.00,
     total_expense: 500.00,
     balance: 500.00,
-    count_income: 6,
-    count_expense: 4,
+    count_income: 5,
+    count_expense: 5,
     total_count: 10
   };
 
@@ -138,7 +138,7 @@ describe('EntryService', () => {
     it('deve buscar entrada por ID', async () => {
       mockApi.get.mockResolvedValue({ data: mockEntry });
 
-      const result = await entryService.getById('1'); // eslint-disable-line testing-library/no-await-sync-query
+      const result = await entryService.getById('1');
 
       expect(mockApi.get).toHaveBeenCalledWith('/entries/1');
       expect(result).toEqual(mockEntry);
@@ -166,7 +166,7 @@ describe('EntryService', () => {
       date: '2024-01-20',
       category_id: 'cat2',
       platform: 'credit_card',
-      shift_tag: 'TARDE',
+      shift_tag: 'afternoon',
       city: 'Rio de Janeiro'
     };
 
@@ -423,7 +423,7 @@ describe('EntryService', () => {
         date: '2024-01-25',
         category_id: 'cat1',
         platform: 'debit_card',
-        shift: 'evening',
+        shift_tag: 'evening',
         city: 'Brasília'
       };
 
@@ -440,7 +440,7 @@ describe('EntryService', () => {
       expect(created).toEqual(createdEntry);
 
       // Buscar entrada criada
-      const fetched = await entryService.getById('3'); // eslint-disable-line testing-library/no-await-sync-query
+      const fetched = await entryService.getById('3');
       expect(fetched).toEqual(createdEntry);
 
       expect(mockApi.post).toHaveBeenCalledWith('/entries', newEntryData);
@@ -462,7 +462,7 @@ describe('EntryService', () => {
       expect(updated).toEqual(updatedEntry);
 
       // Buscar entrada atualizada
-      const fetched = await entryService.getById('1'); // eslint-disable-line testing-library/no-await-sync-query
+      const fetched = await entryService.getById('1');
       expect(fetched).toEqual(updatedEntry);
 
       expect(mockApi.put).toHaveBeenCalledWith('/entries/1', updateData);

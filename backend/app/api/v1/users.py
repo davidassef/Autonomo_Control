@@ -5,12 +5,12 @@ from typing import List
 from app.dependencies import get_current_user
 from app.core.database import get_db
 from app.models.user import User
-from app.schemas.user_schema import User as UserSchema, UserUpdate, UserCreate
+from app.schemas.user_schema import User, UserUpdate, UserCreate
 from app.core.security import get_password_hash
 
 router = APIRouter(prefix="/users", tags=["usuários"])
 
-@router.post("/", response_model=UserSchema, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=User, status_code=status.HTTP_201_CREATED)
 async def create_user(
     user_in: UserCreate,
     db: Session = Depends(get_db),
@@ -34,7 +34,7 @@ async def create_user(
     db.refresh(new_user)
     return new_user
 
-@router.get("/", response_model=List[UserSchema])
+@router.get("/", response_model=List[User])
 async def read_users(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -47,14 +47,14 @@ async def read_users(
     users = db.query(User).offset(skip).limit(limit).all()
     return users
 
-@router.get("/me", response_model=UserSchema)
+@router.get("/me", response_model=User)
 async def read_current_user(current_user: User = Depends(get_current_user)):
     """
     Retorna os dados do usuário autenticado
     """
     return current_user
 
-@router.get("/{user_id}", response_model=UserSchema)
+@router.get("/{user_id}", response_model=User)
 async def read_user_by_id(
     user_id: str,
     current_user: User = Depends(get_current_user),
@@ -71,7 +71,7 @@ async def read_user_by_id(
         )
     return user
 
-@router.put("/me", response_model=UserSchema)
+@router.put("/me", response_model=User)
 async def update_current_user(
     user_update: UserUpdate,
     current_user: User = Depends(get_current_user),

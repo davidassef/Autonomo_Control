@@ -8,7 +8,7 @@ interface AuthContextType {
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
   googleLogin: (token: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string, securityQuestion1Id: string, securityAnswer1: string, securityQuestion2Id: string, securityAnswer2: string, securityQuestion3Id: string, securityAnswer3: string) => Promise<void>;
   logout: () => void;
   clearError: () => void;
 }
@@ -80,11 +80,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const register = useCallback(async (name: string, email: string, password: string): Promise<void> => {
+  const register = useCallback(async (name: string, email: string, password: string, securityQuestion1Id: string, securityAnswer1: string, securityQuestion2Id: string, securityAnswer2: string, securityQuestion3Id: string, securityAnswer3: string): Promise<void> => {
     setIsLoading(true);
     setError(null);
     try {
-      await authService.register(name, email, password);
+      await authService.register(name, email, password, securityQuestion1Id, securityAnswer1, securityQuestion2Id, securityAnswer2, securityQuestion3Id, securityAnswer3);
       // Após o registro, fazer login automaticamente
       await login(email, password);
     } catch (err: any) {

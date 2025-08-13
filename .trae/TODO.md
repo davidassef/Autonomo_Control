@@ -1,9 +1,9 @@
 # TODO:
 
-- [x] check_lint_issues: Verificar todos os problemas de lint atuais no frontend (priority: High)
-- [x] fix_eslint_errors: Corrigir erros críticos do ESLint (priority: High)
-- [x] fix_typescript_errors: Resolver problemas de tipagem TypeScript (priority: High)
-- [x] run_lint_check: Executar verificação final de lint para confirmar correções (priority: High)
-- [x] fix_formatting_issues: Corrigir problemas de formatação e estilo (priority: Medium)
-- [x] fix_unused_imports: Remover imports não utilizados (priority: Medium)
-- [x] fix_console_logs: Remover ou substituir console.log por logging adequado (priority: Low)
+- [x] add_security_answer_fields: Adicionar campos security_answer_1, security_answer_2, security_answer_3 no modelo User (priority: High)
+- [x] create_migration_answer_fields: Criar migração para adicionar os campos de resposta das perguntas secretas (priority: High)
+- [x] update_user_schemas: Atualizar schemas Pydantic para incluir campos de resposta das perguntas (priority: High)
+- [x] update_registration_endpoint: Atualizar endpoint de registro para processar respostas das perguntas secretas (priority: High)
+- [x] update_profile_endpoint: Atualizar endpoint de perfil para permitir alteração das respostas (priority: Medium)
+- [x] update_password_recovery_endpoint: Atualizar endpoint de recuperação de senha para validar respostas (priority: Medium)
+- [x] update_frontend_forms: Atualizar formulários do frontend para incluir campos de resposta (priority: Medium)

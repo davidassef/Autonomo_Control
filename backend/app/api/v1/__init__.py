@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
-from app.api.v1 import auth, users, entries, categories, admin_users
+from app.api.v1 import auth, users, entries, categories, admin_users, audit_logs, system_reports
+from app.routes import system_config
 
 router = APIRouter(prefix="/api/v1")
 
@@ -10,3 +11,6 @@ router.include_router(users.router)
 router.include_router(entries.router)
 router.include_router(categories.router)
 router.include_router(admin_users.router)
+router.include_router(audit_logs.router)
+router.include_router(system_reports.router)
+router.include_router(system_config.router)

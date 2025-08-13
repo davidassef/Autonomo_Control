@@ -66,8 +66,6 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
-
-
 // Limpa todos os mocks antes de cada teste
 beforeEach(() => {
   jest.clearAllMocks();

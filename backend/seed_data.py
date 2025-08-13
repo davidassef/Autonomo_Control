@@ -30,9 +30,11 @@ CITIES = ["São Paulo", "Campinas", "Santos"]
 
 
 def get_or_create_system_user(db: Session) -> User:
-    user = db.query(User).filter(User.email == "system@seed").first()
+    # Usar email válido para evitar problemas de validação
+    system_email = "system@example.com"
+    user = db.query(User).filter(User.email == system_email).first()
     if not user:
-        user = User(email="system@seed", name="Seed User", google_id="seed-user")
+        user = User(email=system_email, name="Seed User", google_id="seed-user")
         db.add(user)
         db.commit()
         db.refresh(user)

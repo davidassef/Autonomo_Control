@@ -16,6 +16,13 @@ class Settings(BaseModel):
     # Segurança e autenticação
     SECRET_KEY: str = os.getenv("SECRET_KEY", "temporaria_chave_secreta_dev")
     ALGORITHM: str = "HS256"
+    
+    # Configurações de email SMTP
+    SMTP_SERVER: str = os.getenv("SMTP_SERVER", "smtp.gmail.com")
+    SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
+    SMTP_USERNAME: str = os.getenv("SMTP_USERNAME", "")
+    SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
+    FROM_EMAIL: str = os.getenv("FROM_EMAIL", "noreply@autonomocontrol.com")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
     # Configuração Google OAuth2 (será implementada posteriormente)
