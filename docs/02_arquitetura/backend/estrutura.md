@@ -53,9 +53,11 @@ backend/
 │   │
 │   ├── tests/            # Testes automatizados
 │   │   ├── conftest.py
-│   │   ├── test_models/
-│   │   ├── test_api/
-│   │   └── test_services/
+│   │   ├── unit/         # Testes unitários
+│   │   │   ├── test_models/
+│   │   │   └── test_services/
+│   │   └── integration/  # Testes de integração
+│   │       └── test_api/
 │   │
 │   ├── main.py           # Ponto de entrada da aplicação
 │   └── __init__.py
@@ -113,13 +115,15 @@ backend/
 app/
 └── tests/
     ├── conftest.py         # Configuração dos fixtures
-    ├── test_models/        # Testes dos modelos
-    │   ├── test_user.py
-    │   └── test_entry.py
-    ├── test_services/      # Testes dos serviços
-    │   └── test_auth.py
-    └── test_api/           # Testes da API
-        └── test_users.py
+    ├── unit/               # Testes unitários
+    │   ├── test_models/    # Testes dos modelos
+    │   │   ├── test_user.py
+    │   │   └── test_entry.py
+    │   └── test_services/  # Testes dos serviços
+    │       └── test_auth.py
+    └── integration/        # Testes de integração
+        └── test_api/       # Testes da API
+            └── test_users.py
 ```
 
 ### Tipos de Testes
@@ -135,8 +139,14 @@ pytest
 # Executar testes com cobertura
 pytest --cov=app --cov-report=term-missing
 
+# Executar apenas testes unitários
+pytest app/tests/unit/ -v
+
+# Executar apenas testes de integração
+pytest app/tests/integration/ -v
+
 # Executar testes específicos
-pytest app/tests/test_models/test_user.py -v
+pytest app/tests/unit/test_models/test_user.py -v
 ```
 
 ## 🔄 Migrações de Banco de Dados

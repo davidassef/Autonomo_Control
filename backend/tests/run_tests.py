@@ -76,18 +76,18 @@ def main():
     
     # Definir diretório de testes
     if args.unit:
-        cmd.append('app/tests/unit')
+        cmd.append('unit')
         test_type = "unitários"
     elif args.integration:
-        cmd.append('app/tests/integration')
+        cmd.append('integration')
         test_type = "de integração"
     else:
-        cmd.append('app/tests')
+        cmd.append('.')
         test_type = "todos"
     
     # Configurar cobertura
     if not args.no_coverage and not args.fast:
-        cmd.extend(['--cov=app'])
+        cmd.extend(['--cov=../app'])
         
         if args.html:
             cmd.extend(['--cov-report=html'])

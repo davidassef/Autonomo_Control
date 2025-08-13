@@ -53,8 +53,12 @@ Autonomo Control/
 ├── backend/
 │   ├── app/                     # Código da API
 │   ├── migrations/              # Migrações do banco
+│   ├── scripts/                 # Scripts utilitários organizados
+│   │   ├── admin/               # Scripts de administração
+│   │   ├── database/            # Scripts de banco de dados
+│   │   ├── tests/               # Scripts de teste
+│   │   └── utils/               # Scripts utilitários
 │   ├── autonomo_control.db      # Banco SQLite
-│   ├── create_admin_user.py     # Script de criação do admin
 │   └── requirements.txt         # Dependências Python
 ├── frontend/
 │   ├── src/                     # Código React/TypeScript

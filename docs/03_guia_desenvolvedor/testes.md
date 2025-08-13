@@ -30,17 +30,18 @@ O projeto utiliza diferentes tipos de testes para garantir a qualidade do códig
 
 ### Backend
 ```
-tests/
-├── conftest.py           # Configuração global de fixtures
-├── test_models/          # Testes de modelos
-│   ├── test_user.py
-│   └── test_entry.py
-├── test_services/        # Testes de serviços
-│   ├── test_auth.py
-│   └── test_entry.py
-└── test_api/             # Testes de API
-    ├── test_users.py
-    └── test_entries.py
+backend/
+├── scripts/tests/        # Scripts de teste organizados
+│   ├── run_tests.py      # Script principal para executar testes
+│   ├── simple_test.py    # Testes básicos
+│   └── test_*.py         # Scripts de teste específicos
+└── app/tests/            # Estrutura de testes do projeto
+    ├── conftest.py       # Configuração global de fixtures
+    ├── unit/             # Testes unitários
+    │   ├── test_models/  # Testes de modelos
+    │   └── test_services/ # Testes de serviços
+    └── integration/      # Testes de integração
+        └── test_api/     # Testes de API
 ```
 
 ### Frontend
@@ -142,11 +143,20 @@ describe('Dashboard', () => {
 # Executar todos os testes
 pytest
 
+# Executar script de testes organizado
+python scripts/tests/run_tests.py
+
 # Executar testes com cobertura
 pytest --cov=app --cov-report=term-missing
 
+# Executar apenas testes unitários
+pytest app/tests/unit/ -v
+
+# Executar apenas testes de integração
+pytest app/tests/integration/ -v
+
 # Executar testes específicos
-pytest tests/test_models/test_user.py -v
+pytest app/tests/unit/test_models/test_user.py -v
 
 # Executar testes com watch mode
 ptw --runner "pytest -xvs"

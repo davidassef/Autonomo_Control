@@ -31,9 +31,7 @@
 
 ## 📜 Histórico
 - [Unificação Concluída](05_historico/unificacao_concluida.md)
-- [Resumo de Conquistas](05_historico/resumo_conquistas.md)
-- [Status dos Testes de Integração](05_historico/status_testes_integracao.md)
 
 ## 📚 Recursos
-- [Otimizações Anti-Flickering](../docs/03_guia_desenvolvedor/otimizacoes_anti_flickering.md)
-- [Links Úteis](../docs/00_guia_rapido/links_uteis.md)
+- [Otimizações Anti-Flickering](03_guia_desenvolvedor/otimizacoes_anti_flickering.md)
+- [Links Úteis](00_guia_rapido/links_uteis.md)

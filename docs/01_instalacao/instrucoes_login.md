@@ -48,7 +48,7 @@ alembic upgrade head
 
 ### **Senha Hash Gerada:**
 ```bash
-python update_admin_password.py
+python scripts/admin/update_admin_password.py
 # ✅ Senha 'admin123' convertida para hash bcrypt
 ```
 

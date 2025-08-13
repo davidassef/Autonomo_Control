@@ -64,14 +64,14 @@ cd backend
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-python seed_data.py   # (opcional) popula categorias + corridas fictícias
-python run_server.py  # Servirá em http://127.0.0.1:8000 (requer venv ATIVA)
+python scripts/utils/seed_data.py   # (opcional) popula categorias + corridas fictícias
+python scripts/utils/run_server.py  # Servirá em http://127.0.0.1:8000 (requer venv ATIVA)
 
 # Dica:
 # Se aparecer "ModuleNotFoundError: No module named 'sqlalchemy'" o motivo quase sempre é a venv não ativada.
 # O script agora exibe instruções automáticas quando dependências faltam.
 
-# Alternativa direta (mesmo efeito do run_server.py):
+# Alternativa direta (mesmo efeito do scripts/utils/run_server.py):
 # uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 Swagger/OpenAPI: http://127.0.0.1:8000/docs
@@ -192,7 +192,7 @@ frontend/
 ### 8. Comandos Úteis
 ```bash
 # Regenerar banco local (cuidado: perde dados)
-rm backend/autonomo_control.db && cd backend && python seed_data.py
+rm backend/autonomo_control.db && cd backend && python scripts/utils/seed_data.py
 
 # Rodar somente testes de métricas
 pytest -k metrics -q

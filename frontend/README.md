@@ -1,59 +1,100 @@
 # Autônomo Control - Frontend
 
-Sistema de gestão financeira para profissionais autônomos desenvolvido com React e TypeScript.
+Interface web do sistema de gestão financeira para profissionais autônomos, desenvolvida com React e TypeScript.
 
-## Documentação
+## Tecnologias
 
-A documentação completa do frontend está disponível na pasta `docs`:
-
-- [Índice de Documentação](./docs/index.md)
-- [Documentação Geral do Frontend](./docs/frontend_documentation.md)
-- [Documentação da Tela de Lançamentos](./docs/entries_page_documentation.md)
-- [Documentação da Tela de Categorias](./docs/categories_page_documentation.md)
-
-## Primeiros Passos
-
-Este projeto foi inicializado com [Create React App](https://github.com/facebook/create-react-app).
+- **React 18** - Biblioteca para interfaces de usuário
+- **TypeScript** - Tipagem estática para JavaScript
+- **Tailwind CSS** - Framework CSS utilitário
+- **Vite** - Build tool e dev server
+- **React Router** - Roteamento SPA
+- **Axios** - Cliente HTTP
+- **React Hook Form** - Gerenciamento de formulários
+- **Jest & Testing Library** - Testes unitários
 
 ## Scripts Disponíveis
 
-In the project directory, you can run:
+### Desenvolvimento
+```bash
+npm start          # Inicia servidor de desenvolvimento (porta 3000)
+npm run dev        # Alias para npm start
+```
 
-### `npm start`
+### Testes
+```bash
+npm test           # Executa testes em modo watch
+npm run test:ci    # Executa testes uma vez (CI/CD)
+npm run test:coverage  # Relatório de cobertura
+```
 
-Executa o aplicativo no modo de desenvolvimento.\
-Abra [http://localhost:3000](http://localhost:3000) para visualizá-lo no navegador.
+### Build
+```bash
+npm run build      # Build para produção
+npm run preview    # Preview do build local
+```
 
-A página será recarregada se você fizer edições.\
-Você também verá quaisquer erros de lint no console.
+### Qualidade de Código
+```bash
+npm run lint       # Verifica código com ESLint
+npm run lint:fix   # Corrige problemas automaticamente
+npm run type-check # Verifica tipos TypeScript
+```
 
-### `npm test`
+## Estrutura do Projeto
 
-Inicia o executor de teste no modo de observação interativo.\
-Consulte a seção sobre [execução de testes](https://facebook.github.io/create-react-app/docs/running-tests) para obter mais informações.
+```
+src/
+├── components/     # Componentes reutilizáveis
+├── pages/         # Páginas da aplicação
+├── hooks/         # Hooks customizados
+├── services/      # Serviços de API
+├── contexts/      # Contextos React
+├── types/         # Definições TypeScript
+├── utils/         # Funções utilitárias
+└── styles/        # Estilos globais
+```
 
-### `npm run build`
+## Funcionalidades
 
-Compila o aplicativo para produção na pasta `build`.\
-Ele agrupa corretamente o React no modo de produção e otimiza a compilação para obter o melhor desempenho.
+- 🔐 **Autenticação** - Login/logout com JWT
+- 📊 **Dashboard** - Visão geral financeira
+- 💰 **Lançamentos** - CRUD de receitas e despesas
+- 🏷️ **Categorias** - Organização personalizada
+- 📈 **Relatórios** - Análises e gráficos
+- 👤 **Perfil** - Gerenciamento de conta
+- ⚙️ **Admin** - Painel administrativo (RBAC)
 
-A compilação é minificada e os nomes dos arquivos incluem os hashes.\
-Seu aplicativo está pronto para ser implantado!
+## Desenvolvimento
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+1. **Instalar dependências:**
+   ```bash
+   npm install
+   ```
 
-### `npm run eject`
+2. **Configurar ambiente:**
+   ```bash
+   # Criar arquivo .env se necessário
+   # Ajustar REACT_APP_API_URL se necessário
+   ```
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+3. **Iniciar desenvolvimento:**
+   ```bash
+   npm start
+   ```
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+4. **Executar testes:**
+   ```bash
+   npm test
+   ```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+## Documentação
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+Para documentação completa do projeto, consulte:
+- [README Principal](../README.md)
+- [Documentação da Arquitetura](../docs/02_arquitetura/)
+- [Guia do Desenvolvedor](../docs/03_guia_desenvolvedor/)
 
-## Learn More
+---
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+**Status:** ✅ Funcional | **Cobertura:** Em desenvolvimento | **Versão:** 1.0.0

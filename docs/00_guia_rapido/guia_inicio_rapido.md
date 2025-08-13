@@ -29,7 +29,7 @@ source venv/bin/activate  # No Windows: .\venv\Scripts\activate
 pip install -r requirements.txt
 
 # Configurar variáveis de ambiente
-cp .env.example .env
+# Configure as variáveis de ambiente conforme necessário
 # Edite o arquivo .env com suas configurações
 
 # Aplicar migrações
@@ -43,7 +43,7 @@ cd frontend
 npm install
 
 # Copiar arquivo de configuração
-cp .env.example .env
+# Configure as variáveis de ambiente conforme necessário
 # Edite o arquivo .env com suas configurações
 ```
 
