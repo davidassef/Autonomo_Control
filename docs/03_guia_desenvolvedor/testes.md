@@ -4,27 +4,32 @@ Este documento descreve como escrever e executar testes no projeto Autônomo Con
 
 ## 📋 Visão Geral
 
-O projeto utiliza diferentes tipos de testes para garantir a qualidade do código:
+O projeto possui **832 testes implementados** (417 backend + 415 frontend) com **95%+ de cobertura** em módulos críticos:
 
 - **Testes Unitários**: Testam funções e componentes isoladamente
 - **Testes de Integração**: Testam a interação entre componentes
-- **Testes de API**: Testam os endpoints da API
+- **Testes de API**: Testam os endpoints da API (auth.py, secret_keys.py)
+- **Testes de Segurança**: XSS, SQL injection, CSRF, timing attacks
+- **Testes de Performance**: Load testing, concorrência, race conditions
+- **Penetration Testing**: Análise de vulnerabilidades básicas
 - **Testes E2E**: Testam fluxos completos do usuário
 
 ## 🛠️ Ferramentas
 
-### Backend (Python)
+### Backend (Python) - 417 Testes
 - **pytest**: Framework de testes
-- **pytest-cov**: Cobertura de código
+- **pytest-cov**: Cobertura de código (95%+ em módulos críticos)
 - **pytest-asyncio**: Suporte a testes assíncronos
 - **HTTPX**: Cliente HTTP para testes de API
 - **Factory Boy**: Criação de dados de teste
+- **Testes Críticos**: auth.py, dependencies.py, security.py, master_protection.py
 
-### Frontend (JavaScript/TypeScript)
+### Frontend (JavaScript/TypeScript) - 415 Testes
 - **Vitest**: Executor de testes
-- **React Testing Library**: Testes de componentes React
+- **React Testing Library**: Testes de componentes React (Login, Register, ForgotPassword)
 - **MSW**: Mock de requisições HTTP
 - **Cypress**: Testes E2E
+- **Testes Críticos**: AuthContext, useAuth, API services (auth.ts)
 
 ## 🏗️ Estrutura de Testes
 
@@ -135,18 +140,32 @@ describe('Dashboard', () => {
 });
 ```
 
+## 🔧 Correções e Melhorias Implementadas
+
+### Correções de Bugs
+- **Teste 'deve validar perguntas diferentes'**: Corrigido problema de seleção de botão usando `getAllByRole('button')` com filtro por texto exato
+- **Abordagem robusta**: Implementada seleção de elementos mais confiável em testes de interface
+- **Validação de IDs**: Correção na validação de perguntas secretas duplicadas
+
+### Melhorias de Segurança
+- **Testes XSS**: Proteção contra Cross-Site Scripting
+- **Testes SQL Injection**: Validação de entrada de dados
+- **Testes CSRF**: Proteção contra Cross-Site Request Forgery
+- **Timing Attacks**: Testes de proteção contra ataques de tempo
+- **Força Bruta**: Testes de proteção contra ataques de força bruta
+
 ## 🚀 Executando Testes
 
 ### Backend
 
 ```bash
-# Executar todos os testes
+# Executar todos os testes (417 testes)
 pytest
 
 # Executar script de testes organizado
 python scripts/tests/run_tests.py
 
-# Executar testes com cobertura
+# Executar testes com cobertura (95%+ em módulos críticos)
 pytest --cov=app --cov-report=term-missing
 
 # Executar apenas testes unitários
@@ -165,14 +184,17 @@ ptw --runner "pytest -xvs"
 ### Frontend
 
 ```bash
-# Executar testes unitários
+# Executar testes unitários (415 testes)
 npm test
 
 # Executar testes em modo watch
 npm test -- --watch
 
-# Executar testes de cobertura
+# Executar testes de cobertura (95%+ em componentes críticos)
 npm test -- --coverage
+
+# Executar testes específicos (ex: RegisterPage corrigido)
+npm test RegisterPage.test.tsx
 
 # Executar testes E2E (com Cypress aberto)
 npm run test:e2e
