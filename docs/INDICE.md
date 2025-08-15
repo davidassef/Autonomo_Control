@@ -23,6 +23,7 @@
 ## 👨‍💻 Guia do Desenvolvedor
 - [Otimizações de Performance](03_guia_desenvolvedor/otimizacoes_performance.md)
 - [Testes](03_guia_desenvolvedor/testes.md)
+- [Relatório de Cobertura de Testes](03_guia_desenvolvedor/test_coverage_report.md)
 - [Git Workflow](03_guia_desenvolvedor/git_workflow.md)
 
 ## 📖 Manuais
