@@ -4,7 +4,7 @@ Este documento descreve os endpoints da API do Autônomo Control, incluindo par�
 
 ## 🔐 Autenticação
 
-A API usa autenticação baseada em JWT (JSON Web Tokens). Para autenticar uma requisição, inclua o token JWT no cabeçalho `Authorization`.
+A API usa autenticação baseada em JWT (JSON Web Tokens) com sistema de conta master única. Para autenticar uma requisição, inclua o token JWT no cabeçalho `Authorization`.
 
 ```http
 Authorization: Bearer seu_token_aqui
@@ -18,12 +18,10 @@ Authorization: Bearer seu_token_aqui
 POST /api/v1/auth/token
 ```
 
-**Corpo da Requisição (JSON):**
-```json
-{
-  "username": "usuario@exemplo.com",
-  "password": "senha123"
-}
+**Corpo da Requisição (form-data):**
+```
+username=masterautonomocontrol
+password=Senhamaster123
 ```
 
 **Resposta de Sucesso (200 OK):**
@@ -31,7 +29,46 @@ POST /api/v1/auth/token
 {
   "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "token_type": "bearer",
-  "expires_in": 3600
+  "user": {
+    "id": 1,
+    "username": "masterautonomocontrol",
+    "full_name": "Master Admin",
+    "role": "admin"
+  }
+}
+```
+
+#### Registro de Usuários
+
+```http
+POST /api/v1/auth/register
+```
+
+**Corpo da Requisição (JSON):**
+```json
+{
+  "username": "novousuario",
+  "email": "usuario@exemplo.com",
+  "password": "senha123",
+  "full_name": "Nome Completo",
+  "name": "Nome"
+}
+```
+
+#### Sistema de Chaves Secretas
+
+```http
+POST /api/v1/secret_keys
+```
+
+**Corpo da Requisição (JSON):**
+```json
+{
+  "user_id": 1,
+  "question_1": "Qual o nome da sua primeira escola?",
+  "answer_1": "Escola ABC",
+  "question_2": "Qual o nome do seu primeiro animal?",
+  "answer_2": "Rex"
 }
 ```
 
@@ -185,17 +222,40 @@ GET /api/v1/categories
 
 ## 🚦 Códigos de Status
 
-A API retorna os seguintes códigos de status HTTP:
+A API retorna os seguintes códigos de status HTTP com tratamento robusto de erros:
 
 - `200 OK`: Requisição bem-sucedida
 - `201 Created`: Recurso criado com sucesso
 - `204 No Content`: Recurso excluído com sucesso
-- `400 Bad Request`: Dados inválidos na requisição
+- `400 Bad Request`: Dados inválidos na requisição (mensagens específicas implementadas)
 - `401 Unauthorized`: Autenticação necessária
 - `403 Forbidden`: Acesso negado
 - `404 Not Found`: Recurso não encontrado
-- `422 Unprocessable Entity`: Erro de validação
+- `422 Unprocessable Entity`: Erro de validação (campos obrigatórios: full_name + name)
 - `500 Internal Server Error`: Erro no servidor
+
+### Exemplos de Respostas de Erro
+
+**400 Bad Request:**
+```json
+{
+  "detail": "Username já existe no sistema",
+  "error_code": "DUPLICATE_USERNAME"
+}
+```
+
+**422 Unprocessable Entity:**
+```json
+{
+  "detail": [
+    {
+      "loc": ["body", "full_name"],
+      "msg": "field required",
+      "type": "value_error.missing"
+    }
+  ]
+}
+```
 
 ## 🔄 Paginação
 
