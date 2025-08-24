@@ -3,11 +3,13 @@
 *Sistema completo de gestão financeira para profissionais autônomos*
 
 ![Status](https://img.shields.io/badge/Backend-100%25-brightgreen)
-![Status](https://img.shields.io/badge/Frontend-70%25-yellowgreen)
-![Status](https://img.shields.io/badge/MVP-80%25-yellowgreen)
-![Tests](https://img.shields.io/badge/Tests-236%2F236-brightgreen)
+![Status](https://img.shields.io/badge/Frontend-95%25-brightgreen)
+![Status](https://img.shields.io/badge/MVP-95%25-brightgreen)
+![Tests](https://img.shields.io/badge/Tests-300%2B-brightgreen)
 ![Coverage](https://img.shields.io/badge/Coverage-99%25-brightgreen)
 ![Performance](https://img.shields.io/badge/Anti--Flickering-✅-brightgreen)
+![TypeScript](https://img.shields.io/badge/TypeScript-Zero%20Errors-brightgreen)
+![Testing](https://img.shields.io/badge/Jest-Migrated-brightgreen)
 
 ---
 
@@ -39,7 +41,29 @@ O Autônomo Control é uma aplicação de gestão financeira desenvolvida especi
 - [Frontend](docs/02_arquitetura/frontend/estrutura.md) - Documentação técnica do frontend
 - 🔑 **[Instruções de Login](docs/historico/unificacao_30_05_2025/INSTRUCOES_LOGIN.md)** - Configuração de autenticação
 - ⚡ **[Otimizações Anti-Flickering](docs/ANTI_FLICKERING_OPTIMIZATIONS.md)** - Performance improvements
+- 🧪 **[Testes E2E](frontend/e2e/)** - Testes end-to-end com Playwright
 - 📁 **[Arquivo Histórico](docs/historico/)** - Documentos consolidados anteriores
+
+---
+
+## 🆕 **Melhorias Recentes**
+
+### ✅ **Correções de TypeScript (Janeiro 2025)**
+- **Zero erros TypeScript**: Resolvidos mais de 65 erros de tipagem
+- **Migração Jest**: Convertido de Vitest para Jest com Testing Library
+- **Tipagem aprimorada**: Interfaces `Entry`, `Category`, `SecurityQuestion` padronizadas
+- **IDs consistentes**: Migração de `number` para `string` em todos os componentes
+- **Hooks otimizados**: `useAuth` e `useToast` com tipagem correta
+- **Testes robustos**: 300+ testes unitários e de integração
+- **E2E implementado**: Testes end-to-end com Playwright
+- **Scripts de correção**: Ferramentas automáticas para manutenção de código
+
+### 🔧 **Melhorias Técnicas**
+- **Backend completo**: API FastAPI com estrutura modular
+- **Segurança aprimorada**: Sistema de roles RBAC (USER/ADMIN/MASTER)
+- **Testes abrangentes**: Cobertura de 99% no backend
+- **Configuração Supabase**: Integração com banco de dados em nuvem
+- **Scripts administrativos**: Ferramentas para gestão de usuários
 
 ---
 
@@ -178,6 +202,14 @@ npm run test:ci
 ```
 
 Relatório de cobertura frontend é exibido em terminal (scripts adicionados Fase 5).
+
+### Testes E2E (Playwright)
+```bash
+cd frontend
+npm run test:e2e
+```
+
+Testes end-to-end incluem validação de login e interface visual.
 
 ### 7. Estrutura de Pastas Essencial
 ```
