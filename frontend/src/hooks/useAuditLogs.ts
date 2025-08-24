@@ -1,6 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
-import { auditLogsService, AuditLog, AuditLogFilter, AuditLogStats } from '../services/auditLogs';
-import { toast } from 'sonner';
+import { useState, useEffect, useCallback } from "react";
+import {
+  auditLogsService,
+  AuditLog,
+  AuditLogFilter,
+  AuditLogStats,
+} from "../services/auditLogs";
+import { toast } from "sonner";
 
 interface UseAuditLogsState {
   logs: AuditLog[];
@@ -30,29 +35,30 @@ export function useAuditLogs(): UseAuditLogsReturn {
     availableActions: [],
     availableResourceTypes: [],
     stats: null,
-    statsLoading: false
+    statsLoading: false,
   });
 
   /**
    * Carrega logs de auditoria com filtros
    */
   const loadLogs = useCallback(async (filters: AuditLogFilter = {}) => {
-    setState(prev => ({ ...prev, loading: true, error: null }));
-    
+    setState((prev) => ({ ...prev, loading: true, error: null }));
+
     try {
       const logs = await auditLogsService.getAuditLogs(filters);
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         logs,
         totalLogs: logs.length,
-        loading: false
+        loading: false,
       }));
     } catch (error: any) {
-      const errorMessage = error.response?.data?.detail || 'Erro ao carregar logs de auditoria';
-      setState(prev => ({
+      const errorMessage =
+        error.response?.data?.detail || "Erro ao carregar logs de auditoria";
+      setState((prev) => ({
         ...prev,
         error: errorMessage,
-        loading: false
+        loading: false,
       }));
       toast.error(errorMessage);
     }
@@ -62,18 +68,19 @@ export function useAuditLogs(): UseAuditLogsReturn {
    * Carrega estatísticas de auditoria
    */
   const loadStats = useCallback(async (days: number = 30) => {
-    setState(prev => ({ ...prev, statsLoading: true }));
-    
+    setState((prev) => ({ ...prev, statsLoading: true }));
+
     try {
       const stats = await auditLogsService.getAuditStats(days);
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         stats,
-        statsLoading: false
+        statsLoading: false,
       }));
     } catch (error: any) {
-      const errorMessage = error.response?.data?.detail || 'Erro ao carregar estatísticas';
-      setState(prev => ({ ...prev, statsLoading: false }));
+      const errorMessage =
+        error.response?.data?.detail || "Erro ao carregar estatísticas";
+      setState((prev) => ({ ...prev, statsLoading: false }));
       toast.error(errorMessage);
     }
   }, []);
@@ -81,19 +88,23 @@ export function useAuditLogs(): UseAuditLogsReturn {
   /**
    * Remove logs antigos
    */
-  const cleanupLogs = useCallback(async (daysToKeep: number = 90) => {
-    try {
-      const result = await auditLogsService.cleanupOldLogs(daysToKeep);
-      toast.success(result.message);
-      
-      // Recarregar logs após limpeza
-      await loadLogs();
-      await loadStats();
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.detail || 'Erro ao limpar logs antigos';
-      toast.error(errorMessage);
-    }
-  }, [loadLogs, loadStats]);
+  const cleanupLogs = useCallback(
+    async (daysToKeep: number = 90) => {
+      try {
+        const result = await auditLogsService.cleanupOldLogs(daysToKeep);
+        toast.success(result.message);
+
+        // Recarregar logs após limpeza
+        await loadLogs();
+        await loadStats();
+      } catch (error: any) {
+        const errorMessage =
+          error.response?.data?.detail || "Erro ao limpar logs antigos";
+        toast.error(errorMessage);
+      }
+    },
+    [loadLogs, loadStats],
+  );
 
   /**
    * Carrega filtros disponíveis (ações e tipos de recursos)
@@ -102,16 +113,16 @@ export function useAuditLogs(): UseAuditLogsReturn {
     try {
       const [actions, resourceTypes] = await Promise.all([
         auditLogsService.getAvailableActions(),
-        auditLogsService.getAvailableResourceTypes()
+        auditLogsService.getAvailableResourceTypes(),
       ]);
-      
-      setState(prev => ({
+
+      setState((prev) => ({
         ...prev,
         availableActions: actions,
-        availableResourceTypes: resourceTypes
+        availableResourceTypes: resourceTypes,
       }));
     } catch (error: any) {
-      console.error('Erro ao carregar filtros:', error);
+      console.error("Erro ao carregar filtros:", error);
     }
   }, []);
 
@@ -119,7 +130,7 @@ export function useAuditLogs(): UseAuditLogsReturn {
    * Limpa erro
    */
   const clearError = useCallback(() => {
-    setState(prev => ({ ...prev, error: null }));
+    setState((prev) => ({ ...prev, error: null }));
   }, []);
 
   // Carregar dados iniciais
@@ -134,6 +145,6 @@ export function useAuditLogs(): UseAuditLogsReturn {
     loadStats,
     cleanupLogs,
     refreshFilters,
-    clearError
+    clearError,
   };
 }

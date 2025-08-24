@@ -1,4 +1,4 @@
-import api from './api';
+import api from "./api";
 
 export interface SystemConfig {
   [key: string]: any;
@@ -37,13 +37,16 @@ class SystemConfigService {
   /**
    * Obtém todas as configurações do sistema
    */
-  async getAllConfigs(category?: string, publicOnly?: boolean): Promise<SystemConfig> {
+  async getAllConfigs(
+    category?: string,
+    publicOnly?: boolean,
+  ): Promise<SystemConfig> {
     const params = new URLSearchParams();
-    if (category) params.append('category', category);
-    if (publicOnly) params.append('public_only', 'true');
-    
+    if (category) params.append("category", category);
+    if (publicOnly) params.append("public_only", "true");
+
     const response = await api.get<ApiResponse<SystemConfig>>(
-      `/system-config/?${params.toString()}`
+      `/system-config/?${params.toString()}`,
     );
     return response.data.data;
   }
@@ -52,7 +55,9 @@ class SystemConfigService {
    * Obtém apenas as configurações públicas (não requer autenticação)
    */
   async getPublicConfigs(): Promise<SystemConfig> {
-    const response = await api.get<ApiResponse<SystemConfig>>('/system-config/public');
+    const response = await api.get<ApiResponse<SystemConfig>>(
+      "/system-config/public",
+    );
     return response.data.data;
   }
 
@@ -61,7 +66,7 @@ class SystemConfigService {
    */
   async getConfigsByCategory(category: string): Promise<SystemConfig> {
     const response = await api.get<ApiResponse<SystemConfig>>(
-      `/system-config/category/${category}`
+      `/system-config/category/${category}`,
     );
     return response.data.data;
   }
@@ -71,7 +76,7 @@ class SystemConfigService {
    */
   async getConfigByKey(key: string): Promise<any> {
     const response = await api.get<ApiResponse<{ [key: string]: any }>>(
-      `/system-config/key/${key}`
+      `/system-config/key/${key}`,
     );
     return response.data.data[key];
   }
@@ -80,9 +85,9 @@ class SystemConfigService {
    * Atualiza uma configuração específica
    */
   async updateConfig(key: string, value: any): Promise<string> {
-    const response = await api.put<ApiResponse<null>>('/system-config/', {
+    const response = await api.put<ApiResponse<null>>("/system-config/", {
       key,
-      value
+      value,
     });
     return response.data.message;
   }
@@ -96,14 +101,14 @@ class SystemConfigService {
     results?: { [key: string]: boolean };
   }> {
     const response = await api.put<ApiResponse<{ [key: string]: boolean }>>(
-      '/system-config/multiple',
-      { configs }
+      "/system-config/multiple",
+      { configs },
     );
-    
+
     return {
       success: response.data.success,
       message: response.data.message,
-      results: response.data.data
+      results: response.data.data,
     };
   }
 
@@ -111,7 +116,7 @@ class SystemConfigService {
    * Reseta todas as configurações para os valores padrão
    */
   async resetToDefaults(): Promise<string> {
-    const response = await api.post<ApiResponse<null>>('/system-config/reset');
+    const response = await api.post<ApiResponse<null>>("/system-config/reset");
     return response.data.message;
   }
 
@@ -119,20 +124,25 @@ class SystemConfigService {
    * Inicializa as configurações padrão no banco de dados
    */
   async initializeDefaults(): Promise<string> {
-    const response = await api.post<ApiResponse<null>>('/system-config/initialize');
+    const response = await api.post<ApiResponse<null>>(
+      "/system-config/initialize",
+    );
     return response.data.message;
   }
 
   /**
    * Obtém o histórico de alterações das configurações
    */
-  async getConfigHistory(key?: string, limit: number = 50): Promise<ConfigHistoryItem[]> {
+  async getConfigHistory(
+    key?: string,
+    limit: number = 50,
+  ): Promise<ConfigHistoryItem[]> {
     const params = new URLSearchParams();
-    if (key) params.append('key', key);
-    params.append('limit', limit.toString());
-    
+    if (key) params.append("key", key);
+    params.append("limit", limit.toString());
+
     const response = await api.get<ApiResponse<ConfigHistoryItem[]>>(
-      `/system-config/history?${params.toString()}`
+      `/system-config/history?${params.toString()}`,
     );
     return response.data.data;
   }
@@ -141,7 +151,9 @@ class SystemConfigService {
    * Obtém todas as categorias de configuração disponíveis
    */
   async getCategories(): Promise<string[]> {
-    const response = await api.get<ApiResponse<string[]>>('/system-config/categories');
+    const response = await api.get<ApiResponse<string[]>>(
+      "/system-config/categories",
+    );
     return response.data.data;
   }
 }

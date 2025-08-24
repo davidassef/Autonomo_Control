@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Category } from '../types';
-import { categoryService } from '../services/categories';
+import { useState, useEffect, useCallback } from "react";
+import { Category } from "../types";
+import { categoryService } from "../services/categories";
 
-export const useCategories = (type?: 'expense' | 'income') => {
+export const useCategories = (type?: "expense" | "income") => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -14,8 +14,8 @@ export const useCategories = (type?: 'expense' | 'income') => {
       const data = await categoryService.getAll(type);
       setCategories(data);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to fetch categories.');
-      console.error('Error fetching categories:', err);
+      setError(err.response?.data?.detail || "Failed to fetch categories.");
+      console.error("Error fetching categories:", err);
     } finally {
       setIsLoading(false);
     }
@@ -25,7 +25,9 @@ export const useCategories = (type?: 'expense' | 'income') => {
     fetchCategories();
   }, [fetchCategories]);
 
-  const addCategory = async (category: Omit<Category, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => {
+  const addCategory = async (
+    category: Omit<Category, "id" | "created_at" | "updated_at" | "user_id">,
+  ) => {
     setIsLoading(true);
     setError(null);
     try {
@@ -33,24 +35,32 @@ export const useCategories = (type?: 'expense' | 'income') => {
       setCategories((prev) => [newCategory, ...prev]);
       return newCategory;
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to add category.');
+      setError(err.response?.data?.detail || "Failed to add category.");
       throw err;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const updateCategory = async (id: string, category: Partial<Omit<Category, 'id' | 'created_at' | 'updated_at' | 'user_id'>>) => {
+  const updateCategory = async (
+    id: string,
+    category: Partial<
+      Omit<
+        Category,
+        "id" | "created_at" | "updated_at" | "user_id" | "category"
+      >
+    >,
+  ) => {
     setIsLoading(true);
     setError(null);
     try {
       const updatedCategory = await categoryService.update(id, category);
       setCategories((prev) =>
-        prev.map((item) => (item.id === id ? updatedCategory : item))
+        prev.map((item) => (item.id === id ? updatedCategory : item)),
       );
       return updatedCategory;
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to update category.');
+      setError(err.response?.data?.detail || "Failed to update category.");
       throw err;
     } finally {
       setIsLoading(false);
@@ -64,7 +74,7 @@ export const useCategories = (type?: 'expense' | 'income') => {
       await categoryService.delete(id);
       setCategories((prev) => prev.filter((item) => item.id !== id));
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to delete category.');
+      setError(err.response?.data?.detail || "Failed to delete category.");
       throw err;
     } finally {
       setIsLoading(false);

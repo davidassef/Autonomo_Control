@@ -1,10 +1,10 @@
 // React Performance Utilities para Autônomo Control
-import React, { useCallback, useMemo, useRef, useEffect } from 'react';
+import React, { useCallback, useMemo, useRef, useEffect } from "react";
 
 // Hook para debounce de funções (evita execuções desnecessárias)
 export const useDebounce = <T extends (...args: any[]) => void>(
   callback: T,
-  delay: number
+  delay: number,
 ): T => {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -15,7 +15,7 @@ export const useDebounce = <T extends (...args: any[]) => void>(
       }
       timeoutRef.current = setTimeout(() => callback(...args), delay);
     },
-    [callback, delay]
+    [callback, delay],
   );
 
   return debouncedCallback as T;
@@ -29,7 +29,7 @@ export const useStableObject = <T extends Record<string, any>>(obj: T): T => {
 // Hook para throttle de funções (limita execuções por tempo)
 export const useThrottle = <T extends (...args: any[]) => void>(
   callback: T,
-  delay: number
+  delay: number,
 ): T => {
   const lastRun = useRef(Date.now());
 
@@ -40,7 +40,7 @@ export const useThrottle = <T extends (...args: any[]) => void>(
         lastRun.current = Date.now();
       }
     },
-    [callback, delay]
+    [callback, delay],
   );
 
   return throttledCallback as T;
@@ -52,7 +52,10 @@ export const useStableArray = <T>(array: T[]): T[] => {
 };
 
 // Hook para detectar mudanças e logar (debug)
-export const useWhyDidYouUpdate = (name: string, props: Record<string, any>) => {
+export const useWhyDidYouUpdate = (
+  name: string,
+  props: Record<string, any>,
+) => {
   const previous = useRef<Record<string, any> | null>(null);
 
   useEffect(() => {
@@ -70,7 +73,7 @@ export const useWhyDidYouUpdate = (name: string, props: Record<string, any>) => 
       });
 
       if (Object.keys(changedProps).length) {
-        console.log('[why-did-you-update]', name, changedProps);
+        console.log("[why-did-you-update]", name, changedProps);
       }
     }
 
@@ -80,7 +83,7 @@ export const useWhyDidYouUpdate = (name: string, props: Record<string, any>) => 
 
 // Higher-order component para memoização automática
 export const withMemo = <T extends Record<string, any>>(
-  Component: React.ComponentType<T>
+  Component: React.ComponentType<T>,
 ): React.ComponentType<T> => {
   return React.memo(Component);
 };

@@ -18,9 +18,15 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "types": [
+      "jest",
+      "@testing-library/jest-dom",
+      "@types/testing-library__jest-dom"
+    ]
   },
   "include": [
-    "src"
+    "src",
+    "src/setupTests.ts"
   ]
 }

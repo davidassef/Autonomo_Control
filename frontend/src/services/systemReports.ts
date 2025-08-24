@@ -1,4 +1,4 @@
-import api from './api';
+import api from "./api";
 
 export interface UserStatistics {
   period_days: number;
@@ -92,7 +92,7 @@ export interface UserEngagementReport {
     inactive: number;
   };
   highly_engaged_users: Array<{
-    user_id: string;
+    user_id: number;
     email: string;
     name: string;
     entries_count: number;
@@ -100,7 +100,7 @@ export interface UserEngagementReport {
     first_entry: string | null;
   }>;
   inactive_users: Array<{
-    user_id: string;
+    user_id: number;
     email: string;
     name: string;
     entries_count: number;
@@ -166,7 +166,9 @@ class SystemReportsService {
   /**
    * Obtém estatísticas de uso do sistema
    */
-  async getSystemUsageStatistics(days: number = 30): Promise<SystemUsageStatistics> {
+  async getSystemUsageStatistics(
+    days: number = 30,
+  ): Promise<SystemUsageStatistics> {
     const response = await api.get(`/system-reports/usage?days=${days}`);
     return response.data;
   }
@@ -183,14 +185,16 @@ class SystemReportsService {
    * Obtém métricas de saúde do sistema (apenas MASTER)
    */
   async getSystemHealthMetrics(): Promise<SystemHealthMetrics> {
-    const response = await api.get('/system-reports/health');
+    const response = await api.get("/system-reports/health");
     return response.data;
   }
 
   /**
    * Obtém relatório de engajamento dos usuários
    */
-  async getUserEngagementReport(days: number = 30): Promise<UserEngagementReport> {
+  async getUserEngagementReport(
+    days: number = 30,
+  ): Promise<UserEngagementReport> {
     const response = await api.get(`/system-reports/engagement?days=${days}`);
     return response.data;
   }
@@ -199,7 +203,7 @@ class SystemReportsService {
    * Obtém dados consolidados para o dashboard administrativo
    */
   async getAdminDashboardData(): Promise<AdminDashboardData> {
-    const response = await api.get('/system-reports/dashboard');
+    const response = await api.get("/system-reports/dashboard");
     return response.data;
   }
 }

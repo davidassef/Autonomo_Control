@@ -1,7 +1,9 @@
 /* Anti-flicker styles for Autônomo Control */
 
 /* Prevenir flickering durante transições */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
   -webkit-transform: translate3d(0, 0, 0);

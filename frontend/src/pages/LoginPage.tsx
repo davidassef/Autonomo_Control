@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login, error, clearError } = useAuth();
   const navigate = useNavigate();
@@ -15,9 +15,9 @@ const LoginPage: React.FC = () => {
 
     try {
       await login(email, password);
-      navigate('/');
+      navigate("/");
     } catch (err) {
-      console.error('Login failed:', err);
+      console.error("Login failed:", err);
     } finally {
       setIsSubmitting(false);
     }
@@ -27,15 +27,30 @@ const LoginPage: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-lg shadow-md">
         <div>
-          <h1 className="text-center text-3xl font-extrabold text-gray-900">Autônomo Control</h1>
-          <h2 className="mt-6 text-center text-xl font-bold text-gray-900">Entrar na sua conta</h2>
+          <h1 className="text-center text-3xl font-extrabold text-gray-900">
+            Autônomo Control
+          </h1>
+          <h2 className="mt-6 text-center text-xl font-bold text-gray-900">
+            Entrar na sua conta
+          </h2>
         </div>
 
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <div
+            className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+            role="alert"
+          >
             <span className="block sm:inline">{error}</span>
-            <span className="absolute top-0 bottom-0 right-0 px-4 py-3" onClick={clearError}>
-              <svg className="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+            <span
+              className="absolute top-0 bottom-0 right-0 px-4 py-3"
+              onClick={clearError}
+            >
+              <svg
+                className="fill-current h-6 w-6 text-red-500"
+                role="button"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+              >
                 <title>Fechar</title>
                 <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z" />
               </svg>
@@ -46,7 +61,9 @@ const LoginPage: React.FC = () => {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
-              <label htmlFor="email-address" className="sr-only">E-mail</label>
+              <label htmlFor="email-address" className="sr-only">
+                E-mail
+              </label>
               <input
                 id="email-address"
                 name="email"
@@ -60,7 +77,9 @@ const LoginPage: React.FC = () => {
               />
             </div>
             <div>
-              <label htmlFor="password" className="sr-only">Senha</label>
+              <label htmlFor="password" className="sr-only">
+                Senha
+              </label>
               <input
                 id="password"
                 name="password"
@@ -81,18 +100,24 @@ const LoginPage: React.FC = () => {
               disabled={isSubmitting}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
             >
-              {isSubmitting ? 'Entrando...' : 'Entrar'}
+              {isSubmitting ? "Entrando..." : "Entrar"}
             </button>
           </div>
 
           <div className="flex items-center justify-between">
             <div className="text-sm">
-              <Link to="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500">
+              <Link
+                to="/forgot-password"
+                className="font-medium text-indigo-600 hover:text-indigo-500"
+              >
                 Esqueci minha senha
               </Link>
             </div>
             <div className="text-sm">
-              <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
+              <Link
+                to="/register"
+                className="font-medium text-indigo-600 hover:text-indigo-500"
+              >
                 Não tem uma conta? Registre-se
               </Link>
             </div>
@@ -105,7 +130,9 @@ const LoginPage: React.FC = () => {
               <div className="w-full border-t border-gray-300"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Ou continue com</span>
+              <span className="px-2 bg-white text-gray-500">
+                Ou continue com
+              </span>
             </div>
           </div>
 

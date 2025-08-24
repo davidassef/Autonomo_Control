@@ -10,7 +10,7 @@ import {
   Title,
   Tooltip,
   Legend,
-} from 'chart.js';
+} from "chart.js";
 
 // Registrar apenas os componentes necessários
 ChartJS.register(
@@ -22,13 +22,13 @@ ChartJS.register(
   ArcElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
 );
 
 // Configurações globais para melhor performance
 ChartJS.defaults.animation = {
   duration: 300, // Reduzir duração da animação
-  easing: 'easeInOutQuart',
+  easing: "easeInOutQuart",
 };
 
 ChartJS.defaults.responsive = true;
@@ -36,9 +36,9 @@ ChartJS.defaults.maintainAspectRatio = false;
 
 // Configurações para reduzir re-renders
 ChartJS.defaults.interaction = {
-  mode: 'index' as const,
+  mode: "index" as const,
   intersect: false,
-  axis: 'x' as const,
+  axis: "x" as const,
   includeInvisible: false,
 };
 

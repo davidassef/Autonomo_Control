@@ -1,30 +1,34 @@
-import React, { useState } from 'react';
-import { useEntries } from '../hooks/useEntries';
-import { useCategories } from '../hooks/useCategories';
-import { Entry } from '../types';
-import Layout from '../components/Layout';
-import EntryForm from '../components/EntryForm';
-import EntryList from '../components/EntryList';
-import EntryFilters from '../components/EntryFilters';
+import React, { useState } from "react";
+import { useEntries } from "../hooks/useEntries";
+import { useCategories } from "../hooks/useCategories";
+import { Entry } from "../types";
+import Layout from "../components/Layout";
+import EntryForm from "../components/EntryForm";
+import EntryList from "../components/EntryList";
+import EntryFilters from "../components/EntryFilters";
 
 const EntriesPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
 
   const [filters, setFilters] = useState({
-    startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
-    endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0],
-    type: '' as '' | 'INCOME' | 'EXPENSE',
-    categoryId: '',
-    platform: '',
-    shift_tag: '',
-    city: '',
+    startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+      .toISOString()
+      .split("T")[0],
+    endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)
+      .toISOString()
+      .split("T")[0],
+    type: "" as "" | "INCOME" | "EXPENSE",
+    categoryId: 0,
+    platform: "",
+    shift_tag: "",
+    city: "",
   });
 
   // Converter filtros para o formato esperado pelo useEntries
   const useEntriesFilters = {
     ...filters,
-    type: filters.type === '' ? undefined : filters.type,
+    type: filters.type === "" ? undefined : filters.type,
     platform: filters.platform || undefined,
     shift_tag: filters.shift_tag || undefined,
     city: filters.city || undefined,
@@ -36,7 +40,7 @@ const EntriesPage: React.FC = () => {
     refreshEntries,
     addEntry,
     updateEntry,
-    deleteEntry
+    deleteEntry,
   } = useEntries(useEntriesFilters);
 
   const { categories, isLoading: categoriesLoading } = useCategories();
@@ -55,26 +59,31 @@ const EntriesPage: React.FC = () => {
     setSelectedEntry(null);
   };
 
-  const handleSaveEntry = async (entry: Omit<Entry, 'id' | 'created_at' | 'updated_at' | 'user_id' | 'category'>) => {
+  const handleSaveEntry = async (
+    entry: Omit<
+      Entry,
+      "id" | "created_at" | "updated_at" | "user_id" | "category"
+    >,
+  ) => {
     try {
       if (selectedEntry) {
-        await updateEntry(selectedEntry.id, entry);
+        await updateEntry(Number(selectedEntry.id), entry);
       } else {
         await addEntry(entry);
       }
       handleCloseModal();
       refreshEntries();
     } catch (error) {
-      console.error('Error saving entry:', error);
+      console.error("Error saving entry:", error);
     }
   };
 
   const handleDeleteEntry = async (id: string) => {
-    if (window.confirm('Tem certeza que deseja excluir este lançamento?')) {
+    if (window.confirm("Tem certeza que deseja excluir este lançamento?")) {
       try {
-        await deleteEntry(id);
+        await deleteEntry(Number(id));
       } catch (error) {
-        console.error('Error deleting entry:', error);
+        console.error("Error deleting entry:", error);
       }
     }
   };
@@ -97,7 +106,10 @@ const EntriesPage: React.FC = () => {
         </div>
 
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <div
+            className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+            role="alert"
+          >
             <strong className="font-bold">Erro: </strong>
             <span className="block sm:inline">{error}</span>
           </div>

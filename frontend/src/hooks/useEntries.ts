@@ -1,12 +1,12 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Entry, EntrySummary, MonthlySummary } from '../types';
-import { entryService } from '../services/entries';
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { Entry, EntrySummary, MonthlySummary } from "../types";
+import { entryService } from "../services/entries";
 
 interface UseEntriesOptions {
   startDate?: string;
   endDate?: string;
-  type?: 'EXPENSE' | 'INCOME';
-  categoryId?: string;
+  type?: "EXPENSE" | "INCOME";
+  categoryId?: number;
   platform?: string;
   shift_tag?: string;
   city?: string;
@@ -15,36 +15,47 @@ interface UseEntriesOptions {
 export const useEntries = (options: UseEntriesOptions = {}) => {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [summary, setSummary] = useState<EntrySummary | null>(null);
-  const [monthlySummaries, setMonthlySummaries] = useState<MonthlySummary[]>([]);
+  const [monthlySummaries, setMonthlySummaries] = useState<MonthlySummary[]>(
+    [],
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [isSummaryLoading, setIsSummaryLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Memoizar as opções para evitar re-execuções desnecessárias
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const memoizedOptions = useMemo(() => options, [
-    options.startDate,
-    options.endDate,
-    options.type,
-    options.categoryId
-  ]);
+
+  const memoizedOptions = useMemo(
+    () => ({
+      startDate: options.startDate,
+      endDate: options.endDate,
+      type: options.type,
+      categoryId: options.categoryId,
+      platform: options.platform,
+      shift_tag: options.shift_tag,
+      city: options.city,
+    }),
+    [options],
+  );
   const fetchEntries = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
       const params: Record<string, string> = {};
-      if (memoizedOptions.startDate) params.start_date = memoizedOptions.startDate;
+      if (memoizedOptions.startDate)
+        params.start_date = memoizedOptions.startDate;
       if (memoizedOptions.endDate) params.end_date = memoizedOptions.endDate;
-  if (memoizedOptions.type) params.type = memoizedOptions.type;
-      if (memoizedOptions.categoryId) params.category_id = memoizedOptions.categoryId;
-  if (memoizedOptions.platform) params.platform = memoizedOptions.platform;
-  if (memoizedOptions.shift_tag) params.shift_tag = memoizedOptions.shift_tag;
-  if (memoizedOptions.city) params.city = memoizedOptions.city;
+      if (memoizedOptions.type) params.type = memoizedOptions.type;
+      if (memoizedOptions.categoryId)
+        params.category_id = memoizedOptions.categoryId.toString();
+      if (memoizedOptions.platform) params.platform = memoizedOptions.platform;
+      if (memoizedOptions.shift_tag)
+        params.shift_tag = memoizedOptions.shift_tag;
+      if (memoizedOptions.city) params.city = memoizedOptions.city;
 
       const data = await entryService.getAll(params);
       setEntries(data);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Falha ao buscar lançamentos.');
-      console.error('Erro ao buscar lançamentos:', err);
+      setError(err.response?.data?.detail || "Falha ao buscar lançamentos.");
+      console.error("Erro ao buscar lançamentos:", err);
     } finally {
       setIsLoading(false);
     }
@@ -55,13 +66,15 @@ export const useEntries = (options: UseEntriesOptions = {}) => {
     setIsSummaryLoading(true);
     try {
       const params: Record<string, string> = {};
-      if (memoizedOptions.startDate) params.start_date = memoizedOptions.startDate;
+      if (memoizedOptions.startDate)
+        params.start_date = memoizedOptions.startDate;
       if (memoizedOptions.endDate) params.end_date = memoizedOptions.endDate;
 
       const data = await entryService.getSummary(params);
       setSummary(data);
     } catch (err: any) {
-      console.error('Erro ao buscar resumo:', err);    } finally {
+      console.error("Erro ao buscar resumo:", err);
+    } finally {
       setIsSummaryLoading(false);
     }
   }, [memoizedOptions.startDate, memoizedOptions.endDate]);
@@ -78,10 +91,11 @@ export const useEntries = (options: UseEntriesOptions = {}) => {
         const year = monthDate.getFullYear();
         const month = monthDate.getMonth() + 1; // getMonth() é 0-indexed
         promises.push(entryService.getMonthlySummary(year, month));
-      }      const results: MonthlySummary[] = await Promise.all(promises);
+      }
+      const results: MonthlySummary[] = await Promise.all(promises);
       setMonthlySummaries(results.reverse()); // Reverter para ordem cronológica
     } catch (err: any) {
-      console.error('Erro ao buscar resumos mensais:', err);
+      console.error("Erro ao buscar resumos mensais:", err);
     } finally {
       setIsSummaryLoading(false);
     }
@@ -97,7 +111,12 @@ export const useEntries = (options: UseEntriesOptions = {}) => {
     }
   }, [fetchSummary, options.startDate, options.endDate]);
 
-  const addEntry = async (entry: Omit<Entry, 'id' | 'created_at' | 'updated_at' | 'user_id' | 'category'>) => {
+  const addEntry = async (
+    entry: Omit<
+      Entry,
+      "id" | "created_at" | "updated_at" | "user_id" | "category"
+    >,
+  ) => {
     setIsLoading(true);
     setError(null);
     try {
@@ -110,20 +129,25 @@ export const useEntries = (options: UseEntriesOptions = {}) => {
       fetchLastSixMonthsSummaries();
       return newEntry;
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Falha ao adicionar lançamento.');
+      setError(err.response?.data?.detail || "Falha ao adicionar lançamento.");
       throw err;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const updateEntry = async (id: string, entry: Partial<Omit<Entry, 'id' | 'created_at' | 'updated_at' | 'user_id' | 'category'>>) => {
+  const updateEntry = async (
+    id: number,
+    entry: Partial<
+      Omit<Entry, "id" | "created_at" | "updated_at" | "user_id" | "category">
+    >,
+  ) => {
     setIsLoading(true);
     setError(null);
     try {
       const updatedEntry = await entryService.update(id, entry);
       setEntries((prev) =>
-        prev.map((item) => (item.id === id ? updatedEntry : item))
+        prev.map((item) => (Number(item.id) === id ? updatedEntry : item)),
       );
       // Atualizar resumos após editar um lançamento
       if (options.startDate && options.endDate) {
@@ -132,26 +156,26 @@ export const useEntries = (options: UseEntriesOptions = {}) => {
       fetchLastSixMonthsSummaries();
       return updatedEntry;
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Falha ao atualizar lançamento.');
+      setError(err.response?.data?.detail || "Falha ao atualizar lançamento.");
       throw err;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const deleteEntry = async (id: string) => {
+  const deleteEntry = async (id: number) => {
     setIsLoading(true);
     setError(null);
     try {
       await entryService.delete(id);
-      setEntries((prev) => prev.filter((item) => item.id !== id));
+      setEntries((prev) => prev.filter((item) => Number(item.id) !== id));
       // Atualizar resumos após excluir um lançamento
       if (options.startDate && options.endDate) {
         fetchSummary();
       }
       fetchLastSixMonthsSummaries();
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Falha ao excluir lançamento.');
+      setError(err.response?.data?.detail || "Falha ao excluir lançamento.");
       throw err;
     } finally {
       setIsLoading(false);

@@ -1,36 +1,54 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import Layout from '../components/Layout';
-import { useEntries } from '../hooks/useEntries';
-import MonthlyEvolutionChart from '../components/charts/MonthlyEvolutionChart';
-import CategoryDistributionChart from '../components/charts/CategoryDistributionChart';
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import Layout from "../components/Layout";
+import { useEntries } from "../hooks/useEntries";
+import MonthlyEvolutionChart from "../components/charts/MonthlyEvolutionChart";
+import CategoryDistributionChart from "../components/charts/CategoryDistributionChart";
 
 const DashboardPage: React.FC = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState<'month' | 'year'>('month');
+  const [selectedPeriod, setSelectedPeriod] = useState<"month" | "year">(
+    "month",
+  );
 
   // Get current month range
   const now = new Date();
   const getDateRange = () => {
-    if (selectedPeriod === 'month') {
+    if (selectedPeriod === "month") {
       return {
-        startDate: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0],
-        endDate: new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0]
+        startDate: new Date(now.getFullYear(), now.getMonth(), 1)
+          .toISOString()
+          .split("T")[0],
+        endDate: new Date(now.getFullYear(), now.getMonth() + 1, 0)
+          .toISOString()
+          .split("T")[0],
       };
     } else {
       return {
-        startDate: new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0],
-        endDate: new Date(now.getFullYear(), 11, 31).toISOString().split('T')[0]
+        startDate: new Date(now.getFullYear(), 0, 1)
+          .toISOString()
+          .split("T")[0],
+        endDate: new Date(now.getFullYear(), 11, 31)
+          .toISOString()
+          .split("T")[0],
       };
     }
   };
 
-  const { entries, summary, monthlySummaries, isLoading, isSummaryLoading, error, fetchLastSixMonthsSummaries } = useEntries(getDateRange());
+  const {
+    entries,
+    summary,
+    monthlySummaries,
+    isLoading,
+    isSummaryLoading,
+    error,
+    fetchLastSixMonthsSummaries,
+  } = useEntries(getDateRange());
 
   useEffect(() => {
     fetchLastSixMonthsSummaries();
   }, [fetchLastSixMonthsSummaries]);
 
-  const handlePeriodChange = (period: 'month' | 'year') => {
+  const handlePeriodChange = (period: "month" | "year") => {
     setSelectedPeriod(period);
   };
 
@@ -43,64 +61,75 @@ const DashboardPage: React.FC = () => {
           <div className="inline-flex rounded-md shadow-sm">
             <button
               type="button"
-              onClick={() => handlePeriodChange('month')}
+              onClick={() => handlePeriodChange("month")}
               className={`px-4 py-2 text-sm font-medium rounded-l-md ${
-                selectedPeriod === 'month'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
+                selectedPeriod === "month"
+                  ? "bg-indigo-600 text-white"
+                  : "bg-white text-gray-700 hover:bg-gray-50"
               } border border-gray-300`}
             >
               Este Mês
             </button>
             <button
               type="button"
-              onClick={() => handlePeriodChange('year')}
+              onClick={() => handlePeriodChange("year")}
               className={`px-4 py-2 text-sm font-medium rounded-r-md ${
-                selectedPeriod === 'year'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
+                selectedPeriod === "year"
+                  ? "bg-indigo-600 text-white"
+                  : "bg-white text-gray-700 hover:bg-gray-50"
               } border border-l-0 border-gray-300`}
             >
               Este Ano
             </button>
           </div>
         </div>
-
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <div
+            className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+            role="alert"
+          >
             <strong className="font-bold">Erro: </strong>
             <span className="block sm:inline">{error}</span>
           </div>
-        )}        {/* Summary Cards */}
+        )}{" "}
+        {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white overflow-hidden shadow rounded-lg content-loader">
             <div className="px-4 py-5 sm:p-6">
-              <dt className="text-sm font-medium text-gray-500 truncate">Receitas {selectedPeriod === 'month' ? 'do Mês' : 'do Ano'}</dt>
+              <dt className="text-sm font-medium text-gray-500 truncate">
+                Receitas {selectedPeriod === "month" ? "do Mês" : "do Ano"}
+              </dt>
               <dd className="mt-1 text-3xl font-semibold text-green-600">
                 {isSummaryLoading ? (
                   <div className="animate-pulse h-8 w-24 bg-gray-200 rounded"></div>
                 ) : (
-                  `R$ ${summary?.total_income.toFixed(2) || '0.00'}`
+                  `R$ ${summary?.total_income.toFixed(2) || "0.00"}`
                 )}
               </dd>
             </div>
           </div>
-
           <div className="bg-white overflow-hidden shadow rounded-lg content-loader">
             <div className="px-4 py-5 sm:p-6">
-              <dt className="text-sm font-medium text-gray-500 truncate">Despesas {selectedPeriod === 'month' ? 'do Mês' : 'do Ano'}</dt>
+              <dt className="text-sm font-medium text-gray-500 truncate">
+                Despesas {selectedPeriod === "month" ? "do Mês" : "do Ano"}
+              </dt>
               <dd className="mt-1 text-3xl font-semibold text-red-600">
                 {isSummaryLoading ? (
                   <div className="animate-pulse h-8 w-24 bg-gray-200 rounded"></div>
                 ) : (
-                  `R$ ${summary?.total_expense.toFixed(2) || '0.00'}`
+                  `R$ ${summary?.total_expense.toFixed(2) || "0.00"}`
                 )}
               </dd>
             </div>
-          </div>          <div className="bg-white overflow-hidden shadow rounded-lg content-loader">
+          </div>{" "}
+          <div className="bg-white overflow-hidden shadow rounded-lg content-loader">
             <div className="px-4 py-5 sm:p-6">
-              <dt className="text-sm font-medium text-gray-500 truncate">Saldo {selectedPeriod === 'month' ? 'do Mês' : 'do Ano'}</dt>
-              <dd className={`mt-1 text-3xl font-semibold ${(summary?.balance || 0) >= 0 ? 'text-indigo-600' : 'text-red-600'}`}>
+              <dt className="text-sm font-medium text-gray-500 truncate">
+                Saldo {selectedPeriod === "month" ? "do Mês" : "do Ano"}
+              </dt>
+              <dd
+                className={`mt-1 text-3xl font-semibold ${(summary?.balance || 0) >= 0 ? "text-indigo-600" : "text-red-600"}`}
+              >
                 {isSummaryLoading ? (
                   <div className="animate-pulse h-8 w-24 bg-gray-200 rounded"></div>
                 ) : (
@@ -110,7 +139,6 @@ const DashboardPage: React.FC = () => {
             </div>
           </div>
         </div>
-
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Monthly Evolution Chart */}
@@ -129,7 +157,8 @@ const DashboardPage: React.FC = () => {
               entries={entries}
               type="EXPENSE"
               isLoading={isLoading}
-            />          </div>
+            />{" "}
+          </div>
 
           <div className="bg-white shadow rounded-lg overflow-hidden chart-container">
             <CategoryDistributionChart
@@ -139,7 +168,6 @@ const DashboardPage: React.FC = () => {
             />
           </div>
         </div>
-
         {/* Recent Transactions */}
         <div className="bg-white shadow rounded-lg layout-stable">
           <div className="px-4 py-5 border-b border-gray-200 sm:px-6 flex justify-between items-center">
@@ -172,30 +200,64 @@ const DashboardPage: React.FC = () => {
                   <li key={entry.id} className="px-4 py-4 sm:px-6">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
-                        <div className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center ${
-                          entry.type === 'INCOME' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
-                        }`}>
-                          {entry.type === 'INCOME' ? (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                        <div
+                          className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center ${
+                            entry.type === "INCOME"
+                              ? "bg-green-100 text-green-600"
+                              : "bg-red-100 text-red-600"
+                          }`}
+                        >
+                          {entry.type === "INCOME" ? (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-6 w-6"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M7 11l5-5m0 0l5 5m-5-5v12"
+                              />
                             </svg>
                           ) : (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-6 w-6"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M17 13l-5 5m0 0l-5-5m5 5V6"
+                              />
                             </svg>
                           )}
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{entry.description}</div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {entry.description}
+                          </div>
                           <div className="text-sm text-gray-500">
-                            {entry.category?.name || 'Sem categoria'} • {new Date(entry.date).toLocaleDateString()}
+                            {entry.category?.name || "Sem categoria"} •{" "}
+                            {new Date(entry.date).toLocaleDateString()}
                           </div>
                         </div>
                       </div>
-                      <div className={`text-sm font-medium ${
-                        entry.type === 'INCOME' ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        {entry.type === 'INCOME' ? '+' : '-'} R$ {entry.amount.toFixed(2)}
+                      <div
+                        className={`text-sm font-medium ${
+                          entry.type === "INCOME"
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }`}
+                      >
+                        {entry.type === "INCOME" ? "+" : "-"} R${" "}
+                        {entry.amount.toFixed(2)}
                       </div>
                     </div>
                   </li>
@@ -205,7 +267,8 @@ const DashboardPage: React.FC = () => {
               <div className="px-4 py-5 text-center text-gray-500">
                 Nenhuma transação encontrada neste período.
               </div>
-            )}          </div>
+            )}{" "}
+          </div>
         </div>
       </div>
     </Layout>

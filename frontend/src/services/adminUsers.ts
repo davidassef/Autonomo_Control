@@ -1,10 +1,10 @@
-import api from './api';
+import api from "./api";
 
 export interface AdminUser {
-  id: string;
+  id: number;
   email: string;
   name: string;
-  role: 'USER' | 'ADMIN' | 'MASTER';
+  role: "USER" | "ADMIN" | "MASTER";
   is_active: boolean;
   created_at?: string;
   blocked_at?: string;
@@ -15,31 +15,78 @@ export interface AdminUser {
   demoted_at?: string;
 }
 
-export interface CreateUserPayload { email: string; name: string; }
-export interface ChangeRolePayload { role: 'USER' | 'ADMIN'; }
-export interface ChangeStatusPayload { is_active: boolean; }
+export interface CreateUserPayload {
+  email: string;
+  name: string;
+}
+export interface ChangeRolePayload {
+  role: "USER" | "ADMIN" | "MASTER";
+}
+export interface ChangeStatusPayload {
+  is_active: boolean;
+}
 
 export async function listUsers(params?: { role?: string; active?: boolean }) {
-  const res = await api.get<AdminUser[]>('/admin/users', { params });
+  const res = await api.get<AdminUser[]>("/admin/users/", { params });
   return res.data;
 }
 
-export async function createUser(payload: CreateUserPayload, options?: { role?: 'USER' | 'ADMIN'; masterKey?: string }) {
-  const res = await api.post<AdminUser>(`/admin/users${options?.role ? `?role=${options.role}` : ''}`,
+export async function createUser(
+  payload: CreateUserPayload,
+  options?: { role?: "USER" | "ADMIN"; masterKey?: string },
+) {
+  const res = await api.post<AdminUser>(
+    `/admin/users/${options?.role ? `?role=${options.role}` : ""}`,
     payload,
-    { headers: options?.masterKey ? { 'X-Master-Key': options.masterKey } : undefined }
+    {
+      headers: options?.masterKey
+        ? { "X-Master-Key": options.masterKey }
+        : undefined,
+    },
   );
   return res.data;
 }
 
-export async function changeRole(userId: string, payload: ChangeRolePayload, masterKey: string) {
-  const res = await api.patch<AdminUser>(`/admin/users/${userId}/role`, payload, { headers: { 'X-Master-Key': masterKey } });
+export async function changeRole(
+  userId: number,
+  payload: ChangeRolePayload,
+  masterKey: string,
+) {
+  const res = await api.patch<AdminUser>(
+    `/admin/users/${userId}/role`,
+    { role: payload.role, reason: `Alteração de role para ${payload.role}` },
+    { headers: { "X-Master-Key": masterKey } },
+  );
   return res.data;
 }
 
-export async function changeStatus(userId: string, payload: ChangeStatusPayload, masterKey?: string) {
-  const headers = masterKey ? { 'X-Master-Key': masterKey } : undefined;
-  const res = await api.patch<AdminUser>(`/admin/users/${userId}/status`, payload, { headers });
+// Manter função antiga para compatibilidade
+export async function changeRoleLegacy(
+  userId: number,
+  payload: ChangeRolePayload,
+  masterKey: string,
+) {
+  // Usar o endpoint de hierarquia que tem a lógica completa de promoção/rebaixamento
+  const action = payload.role === "ADMIN" ? "promote" : "demote";
+  const res = await api.post<AdminUser>(
+    `/admin/users/${userId}/hierarchy`,
+    { action, reason: `Alteração de role para ${payload.role}` },
+    { headers: { "X-Master-Key": masterKey } },
+  );
+  return res.data;
+}
+
+export async function changeStatus(
+  userId: number,
+  payload: ChangeStatusPayload,
+  masterKey?: string,
+) {
+  const headers = masterKey ? { "X-Master-Key": masterKey } : undefined;
+  const res = await api.patch<AdminUser>(
+    `/admin/users/${userId}/status`,
+    payload,
+    { headers },
+  );
   return res.data;
 }
 
@@ -49,8 +96,10 @@ export interface ResetPasswordResponse {
   expires_at: string;
 }
 
-export async function resetUserPassword(userId: string) {
-  const res = await api.post<ResetPasswordResponse>(`/admin/users/${userId}/reset-password`);
+export async function resetUserPassword(userId: number) {
+  const res = await api.post<ResetPasswordResponse>(
+    `/admin/users/${userId}/reset-password`,
+  );
   return res.data;
 }
 
@@ -66,13 +115,15 @@ export interface UnblockUserResponse {
   unblocked_by: string;
 }
 
-export async function blockUser(userId: string) {
+export async function blockUser(userId: number) {
   const res = await api.post<BlockUserResponse>(`/admin/users/${userId}/block`);
   return res.data;
 }
 
-export async function unblockUser(userId: string) {
-  const res = await api.post<UnblockUserResponse>(`/admin/users/${userId}/unblock`);
+export async function unblockUser(userId: number) {
+  const res = await api.post<UnblockUserResponse>(
+    `/admin/users/${userId}/unblock`,
+  );
   return res.data;
 }
 
@@ -80,17 +131,25 @@ export interface ToggleAdminVisibilityPayload {
   can_view_admins: boolean;
 }
 
-export async function toggleAdminVisibility(userId: string, payload: ToggleAdminVisibilityPayload, masterKey: string) {
-  const res = await api.patch<AdminUser>(`/admin/users/${userId}/admin-visibility`, payload, {
-    headers: { 'X-Master-Key': masterKey }
-  });
+export async function toggleAdminVisibility(
+  userId: number,
+  payload: ToggleAdminVisibilityPayload,
+  masterKey: string,
+) {
+  const res = await api.patch<AdminUser>(
+    `/admin/users/${userId}/admin-visibility`,
+    payload,
+    {
+      headers: { "X-Master-Key": masterKey },
+    },
+  );
   return res.data;
 }
 
 export interface DeleteUserResponse {
   message: string;
   deleted_user_data: {
-    id: string;
+    id: number;
     name: string;
     email: string;
     role: string;
@@ -99,7 +158,7 @@ export interface DeleteUserResponse {
   };
 }
 
-export async function deleteUser(userId: string) {
+export async function deleteUser(userId: number) {
   const res = await api.delete<DeleteUserResponse>(`/admin/users/${userId}`);
   return res.data;
 }

@@ -1,11 +1,11 @@
-import api from './api';
+import api from "./api";
 
 export interface AuditLog {
   id: number;
   action: string;
   resource_type: string;
-  resource_id?: string;
-  performed_by: string;
+  resource_id?: number;
+  performed_by: number; // ID do usuário que realizou a ação
   description: string;
   details?: Record<string, any>;
   ip_address?: string;
@@ -16,7 +16,7 @@ export interface AuditLog {
 export interface AuditLogFilter {
   action?: string;
   resource_type?: string;
-  performed_by?: string;
+  performed_by?: number;
   start_date?: string;
   end_date?: string;
   skip?: number;
@@ -44,15 +44,19 @@ class AuditLogsService {
    */
   async getAuditLogs(filters: AuditLogFilter = {}): Promise<AuditLog[]> {
     const params = new URLSearchParams();
-    
-    if (filters.skip !== undefined) params.append('skip', filters.skip.toString());
-    if (filters.limit !== undefined) params.append('limit', filters.limit.toString());
-    if (filters.action) params.append('action', filters.action);
-    if (filters.resource_type) params.append('resource_type', filters.resource_type);
-    if (filters.performed_by) params.append('performed_by', filters.performed_by);
-    if (filters.start_date) params.append('start_date', filters.start_date);
-    if (filters.end_date) params.append('end_date', filters.end_date);
-    
+
+    if (filters.skip !== undefined)
+      params.append("skip", filters.skip.toString());
+    if (filters.limit !== undefined)
+      params.append("limit", filters.limit.toString());
+    if (filters.action) params.append("action", filters.action);
+    if (filters.resource_type)
+      params.append("resource_type", filters.resource_type);
+    if (filters.performed_by)
+      params.append("performed_by", filters.performed_by.toString());
+    if (filters.start_date) params.append("start_date", filters.start_date);
+    if (filters.end_date) params.append("end_date", filters.end_date);
+
     const response = await api.get(`/audit-logs/?${params.toString()}`);
     return response.data;
   }
@@ -61,7 +65,7 @@ class AuditLogsService {
    * Obtém lista de ações disponíveis para filtro
    */
   async getAvailableActions(): Promise<string[]> {
-    const response = await api.get('/audit-logs/actions');
+    const response = await api.get("/audit-logs/actions");
     return response.data;
   }
 
@@ -69,7 +73,7 @@ class AuditLogsService {
    * Obtém lista de tipos de recursos disponíveis para filtro
    */
   async getAvailableResourceTypes(): Promise<string[]> {
-    const response = await api.get('/audit-logs/resource-types');
+    const response = await api.get("/audit-logs/resource-types");
     return response.data;
   }
 
@@ -85,7 +89,9 @@ class AuditLogsService {
    * Remove logs antigos (apenas MASTER)
    */
   async cleanupOldLogs(daysToKeep: number = 90): Promise<CleanupResponse> {
-    const response = await api.delete(`/audit-logs/cleanup?days_to_keep=${daysToKeep}`);
+    const response = await api.delete(
+      `/audit-logs/cleanup?days_to_keep=${daysToKeep}`,
+    );
     return response.data;
   }
 
@@ -93,13 +99,13 @@ class AuditLogsService {
    * Formata a data para exibição
    */
   formatDate(dateString: string): string {
-    return new Date(dateString).toLocaleString('pt-BR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
+    return new Date(dateString).toLocaleString("pt-BR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
     });
   }
 
@@ -108,30 +114,30 @@ class AuditLogsService {
    */
   formatAction(action: string): string {
     const actionMap: Record<string, string> = {
-      'CREATE_USER': 'Criar Usuário',
-      'UPDATE_USER': 'Atualizar Usuário',
-      'DELETE_USER': 'Excluir Usuário',
-      'BLOCK_USER': 'Bloquear Usuário',
-      'UNBLOCK_USER': 'Desbloquear Usuário',
-      'CHANGE_USER_ROLE': 'Alterar Role',
-      'CHANGE_USER_STATUS': 'Alterar Status',
-      'RESET_USER_PASSWORD': 'Resetar Senha',
-      'LOGIN_SUCCESS': 'Login Bem-sucedido',
-      'LOGIN_FAILED': 'Falha no Login',
-      'LOGOUT': 'Logout',
-      'TOKEN_REFRESH': 'Renovar Token',
-      'SYSTEM_BACKUP': 'Backup do Sistema',
-      'SYSTEM_RESTORE': 'Restaurar Sistema',
-      'CLEANUP_LOGS': 'Limpeza de Logs',
-      'SYSTEM_CONFIG_CHANGE': 'Alterar Configuração',
-      'CREATE_ENTRY': 'Criar Lançamento',
-      'UPDATE_ENTRY': 'Atualizar Lançamento',
-      'DELETE_ENTRY': 'Excluir Lançamento',
-      'CREATE_CATEGORY': 'Criar Categoria',
-      'UPDATE_CATEGORY': 'Atualizar Categoria',
-      'DELETE_CATEGORY': 'Excluir Categoria'
+      CREATE_USER: "Criar Usuário",
+      UPDATE_USER: "Atualizar Usuário",
+      DELETE_USER: "Excluir Usuário",
+      BLOCK_USER: "Bloquear Usuário",
+      UNBLOCK_USER: "Desbloquear Usuário",
+      CHANGE_USER_ROLE: "Alterar Role",
+      CHANGE_USER_STATUS: "Alterar Status",
+      RESET_USER_PASSWORD: "Resetar Senha",
+      LOGIN_SUCCESS: "Login Bem-sucedido",
+      LOGIN_FAILED: "Falha no Login",
+      LOGOUT: "Logout",
+      TOKEN_REFRESH: "Renovar Token",
+      SYSTEM_BACKUP: "Backup do Sistema",
+      SYSTEM_RESTORE: "Restaurar Sistema",
+      CLEANUP_LOGS: "Limpeza de Logs",
+      SYSTEM_CONFIG_CHANGE: "Alterar Configuração",
+      CREATE_ENTRY: "Criar Lançamento",
+      UPDATE_ENTRY: "Atualizar Lançamento",
+      DELETE_ENTRY: "Excluir Lançamento",
+      CREATE_CATEGORY: "Criar Categoria",
+      UPDATE_CATEGORY: "Atualizar Categoria",
+      DELETE_CATEGORY: "Excluir Categoria",
     };
-    
+
     return actionMap[action] || action;
   }
 
@@ -140,14 +146,14 @@ class AuditLogsService {
    */
   formatResourceType(resourceType: string): string {
     const resourceMap: Record<string, string> = {
-      'user': 'Usuário',
-      'entry': 'Lançamento',
-      'category': 'Categoria',
-      'auth': 'Autenticação',
-      'system': 'Sistema',
-      'audit_log': 'Log de Auditoria'
+      user: "Usuário",
+      entry: "Lançamento",
+      category: "Categoria",
+      auth: "Autenticação",
+      system: "Sistema",
+      audit_log: "Log de Auditoria",
     };
-    
+
     return resourceMap[resourceType] || resourceType;
   }
 
@@ -155,14 +161,16 @@ class AuditLogsService {
    * Obtém a cor do badge baseada na ação
    */
   getActionColor(action: string): string {
-    if (action.includes('CREATE')) return 'bg-green-100 text-green-800';
-    if (action.includes('UPDATE') || action.includes('CHANGE')) return 'bg-blue-100 text-blue-800';
-    if (action.includes('DELETE') || action.includes('BLOCK')) return 'bg-red-100 text-red-800';
-    if (action.includes('LOGIN_SUCCESS')) return 'bg-green-100 text-green-800';
-    if (action.includes('LOGIN_FAILED')) return 'bg-red-100 text-red-800';
-    if (action.includes('UNBLOCK')) return 'bg-yellow-100 text-yellow-800';
-    if (action.includes('SYSTEM')) return 'bg-purple-100 text-purple-800';
-    return 'bg-gray-100 text-gray-800';
+    if (action.includes("CREATE")) return "bg-green-100 text-green-800";
+    if (action.includes("UPDATE") || action.includes("CHANGE"))
+      return "bg-blue-100 text-blue-800";
+    if (action.includes("DELETE") || action.includes("BLOCK"))
+      return "bg-red-100 text-red-800";
+    if (action.includes("LOGIN_SUCCESS")) return "bg-green-100 text-green-800";
+    if (action.includes("LOGIN_FAILED")) return "bg-red-100 text-red-800";
+    if (action.includes("UNBLOCK")) return "bg-yellow-100 text-yellow-800";
+    if (action.includes("SYSTEM")) return "bg-purple-100 text-purple-800";
+    return "bg-gray-100 text-gray-800";
   }
 
   /**
