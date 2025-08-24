@@ -1,20 +1,20 @@
 export interface User {
-  id: string;
+  id: string; // UUID string do usuário
   name: string;
   email: string;
   created_at: string;
   updated_at: string;
-  role?: 'USER' | 'ADMIN' | 'MASTER';
+  role?: "USER" | "ADMIN" | "MASTER";
   is_active?: boolean;
 }
 
 export interface Category {
-  id: string;
+  id: string; // UUID string da categoria
   name: string;
-  type: 'expense' | 'income' | 'EXPENSE' | 'INCOME';
+  type: "expense" | "income" | "EXPENSE" | "INCOME";
   created_at: string;
   updated_at: string;
-  user_id?: string;
+  user_id?: string; // UUID string do usuário
   subcategories?: string[];
   icon?: string;
   color?: string;
@@ -22,26 +22,26 @@ export interface Category {
 }
 
 export interface Entry {
-  id: string;
+  id: string; // UUID string do lançamento
   amount: number; // Para receitas de corrida representa valor líquido (net)
   date: string;
-  type: 'INCOME' | 'EXPENSE';
+  type: "INCOME" | "EXPENSE";
   description: string;
-  category_id: string;
-  user_id: string;
+  category_id: string; // UUID string da categoria
+  user_id: string; // UUID string do usuário
   created_at: string;
   updated_at: string;
   category?: Category;
   // Campos opcionais de corrida
-  platform?: string;              // UBER | 99 | INDRIVE | OUTRA
+  platform?: string; // UBER | 99 | INDRIVE | OUTRA
   distance_km?: number;
   duration_min?: number;
   gross_amount?: number;
   platform_fee?: number;
   tips_amount?: number;
-  net_amount?: number;            // Pode vir do backend; geralmente = amount quando receita de corrida
+  net_amount?: number; // Pode vir do backend; geralmente = amount quando receita de corrida
   vehicle_id?: string;
-  shift_tag?: string;             // MANHA | TARDE | NOITE | MADRUGADA
+  shift_tag?: string; // MANHA | TARDE | NOITE | MADRUGADA
   city?: string;
   is_trip_expense?: boolean;
   linked_entry_id?: string;
