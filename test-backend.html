@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Backend - Sistema Autonomo Control</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        input {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Teste Backend - Sistema Autonomo Control</h1>
+        <p>Validação dos endpoints do backend (porta 8000)</p>
+
+        <div class="test-section">
+            <h3>📡 Conectividade</h3>
+            <button onclick="testHealth()">Testar Health Check</button>
+            <button onclick="testDocs()">Testar Documentação</button>
+            <div id="connectivity-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔐 Autenticação</h3>
+            <input type="text" id="username" placeholder="Username" value="masterautonomocontrol">
+            <input type="password" id="password" placeholder="Password" value="Senhamaster123">
+            <button onclick="testLogin()">Testar Login</button>
+            <div id="auth-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>⚙️ Configurações do Sistema</h3>
+            <button onclick="testSystemConfig()">Listar Configurações</button>
+            <div id="config-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Status Geral</h3>
+            <div id="status-summary" class="result">
+                <strong>Status dos Serviços:</strong><br>
+                Backend: <span id="backend-status">🔄 Verificando...</span><br>
+                Frontend: <span id="frontend-status">❌ Não compilando (145 erros TypeScript)</span><br>
+                Banco de Dados: <span id="db-status">🔄 Verificando...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        let authToken = null;
+
+        function updateResult(elementId, content, isSuccess = true) {
+            const element = document.getElementById(elementId);
+            element.textContent = content;
+            element.className = `result ${isSuccess ? 'success' : 'error'}`;
+        }
+
+        async function testHealth() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                if (response.ok) {
+                    const data = await response.json();
+                    updateResult('connectivity-result', `✅ Health Check OK\nStatus: ${data.status}\nTimestamp: ${data.timestamp}`, true);
+                    document.getElementById('backend-status').textContent = '✅ Operacional';
+                } else {
+                    updateResult('connectivity-result', `❌ Health Check falhou\nStatus: ${response.status}`, false);
+                }
+            } catch (error) {
+                updateResult('connectivity-result', `❌ Erro de conectividade: ${error.message}`, false);
+                document.getElementById('backend-status').textContent = '❌ Não acessível';
+            }
+        }
+
+        async function testDocs() {
+            try {
+                const response = await fetch(`${API_BASE}/docs`);
+                if (response.ok) {
+                    updateResult('connectivity-result', '✅ Documentação acessível em /docs', true);
+                } else {
+                    updateResult('connectivity-result', `❌ Documentação não acessível: ${response.status}`, false);
+                }
+            } catch (error) {
+                updateResult('connectivity-result', `❌ Erro ao acessar docs: ${error.message}`, false);
+            }
+        }
+
+        async function testLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/auth/token`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    authToken = data.access_token;
+                    updateResult('auth-result', `✅ Login realizado com sucesso\nToken: ${data.access_token.substring(0, 50)}...\nTipo: ${data.token_type}`, true);
+                } else {
+                    const error = await response.json();
+                    updateResult('auth-result', `❌ Login falhou\nStatus: ${response.status}\nErro: ${error.detail}`, false);
+                }
+            } catch (error) {
+                updateResult('auth-result', `❌ Erro na autenticação: ${error.message}`, false);
+            }
+        }
+
+        async function testSystemConfig() {
+            if (!authToken) {
+                updateResult('config-result', '❌ Faça login primeiro para testar as configurações', false);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/system-config/`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    updateResult('config-result', `✅ Configurações carregadas\nTotal: ${data.length} configurações\nPrimeiras: ${JSON.stringify(data.slice(0, 3), null, 2)}`, true);
+                    document.getElementById('db-status').textContent = '✅ Conectado';
+                } else {
+                    const error = await response.json();
+                    updateResult('config-result', `❌ Erro ao carregar configurações\nStatus: ${response.status}\nErro: ${error.detail}`, false);
+                }
+            } catch (error) {
+                updateResult('config-result', `❌ Erro na requisição: ${error.message}`, false);
+            }
+        }
+
+        // Teste inicial de conectividade
+        window.onload = function() {
+            testHealth();
+        };
+    </script>
+</body>
+</html>
