@@ -1,6 +1,6 @@
-import React from 'react';
-import { AuditLog, auditLogsService } from '../../services/auditLogs';
-import { Eye, Calendar, User, Activity, Globe } from 'lucide-react';
+import React from "react";
+import { AuditLog, auditLogsService } from "../../services/auditLogs";
+import { Eye, Calendar, User, Activity, Globe } from "lucide-react";
 
 interface AuditLogsTableProps {
   logs: AuditLog[];
@@ -8,7 +8,11 @@ interface AuditLogsTableProps {
   onViewDetails: (log: AuditLog) => void;
 }
 
-export function AuditLogsTable({ logs, loading, onViewDetails }: AuditLogsTableProps) {
+export function AuditLogsTable({
+  logs,
+  loading,
+  onViewDetails,
+}: AuditLogsTableProps) {
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -28,7 +32,9 @@ export function AuditLogsTable({ logs, loading, onViewDetails }: AuditLogsTableP
       <div className="bg-white rounded-lg shadow p-6">
         <div className="text-center py-8">
           <Activity className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhum log encontrado</h3>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">
+            Nenhum log encontrado
+          </h3>
           <p className="mt-1 text-sm text-gray-500">
             Não há logs de auditoria para os filtros selecionados.
           </p>
@@ -85,9 +91,11 @@ export function AuditLogsTable({ logs, loading, onViewDetails }: AuditLogsTableP
                   {auditLogsService.formatDate(log.timestamp)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                    auditLogsService.getActionBadgeColor(log.action)
-                  }`}>
+                  <span
+                    className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${auditLogsService.getActionBadgeColor(
+                      log.action,
+                    )}`}
+                  >
                     {auditLogsService.formatAction(log.action)}
                   </span>
                 </td>
@@ -97,7 +105,10 @@ export function AuditLogsTable({ logs, loading, onViewDetails }: AuditLogsTableP
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   <div className="flex items-center">
                     <User className="h-4 w-4 text-gray-400 mr-2" />
-                    <span className="truncate max-w-32" title={log.performed_by}>
+                    <span
+                      className="truncate max-w-32"
+                      title={log.performed_by.toString()}
+                    >
                       {log.performed_by}
                     </span>
                   </div>
@@ -111,7 +122,7 @@ export function AuditLogsTable({ logs, loading, onViewDetails }: AuditLogsTableP
                   <div className="flex items-center">
                     <Globe className="h-4 w-4 text-gray-400 mr-2" />
                     <span className="font-mono text-xs">
-                      {log.ip_address || 'N/A'}
+                      {log.ip_address || "N/A"}
                     </span>
                   </div>
                 </td>

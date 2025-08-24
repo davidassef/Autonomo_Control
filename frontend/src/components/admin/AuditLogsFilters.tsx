@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { AuditLogFilter } from '../../services/auditLogs';
-import { Search, Filter, Calendar, X } from 'lucide-react';
+import React, { useState } from "react";
+import { AuditLogFilter } from "../../services/auditLogs";
+import { Search, Filter, Calendar, X } from "lucide-react";
 
 interface AuditLogsFiltersProps {
   filters: AuditLogFilter;
@@ -15,12 +15,15 @@ export function AuditLogsFilters({
   onFiltersChange,
   availableActions,
   availableResourceTypes,
-  loading
+  loading,
 }: AuditLogsFiltersProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [localFilters, setLocalFilters] = useState<AuditLogFilter>(filters);
 
-  const handleFilterChange = (key: keyof AuditLogFilter, value: string | number | undefined) => {
+  const handleFilterChange = (
+    key: keyof AuditLogFilter,
+    value: string | number | undefined,
+  ) => {
     const newFilters = { ...localFilters, [key]: value || undefined };
     setLocalFilters(newFilters);
   };
@@ -32,14 +35,15 @@ export function AuditLogsFilters({
   const clearFilters = () => {
     const clearedFilters: AuditLogFilter = {
       skip: 0,
-      limit: 100
+      limit: 100,
     };
     setLocalFilters(clearedFilters);
     onFiltersChange(clearedFilters);
   };
 
   const hasActiveFilters = Object.entries(localFilters).some(
-    ([key, value]) => key !== 'skip' && key !== 'limit' && value !== undefined && value !== ''
+    ([key, value]) =>
+      key !== "skip" && key !== "limit" && value !== undefined && value !== "",
   );
 
   return (
@@ -59,7 +63,7 @@ export function AuditLogsFilters({
             onClick={() => setIsExpanded(!isExpanded)}
             className="text-gray-500 hover:text-gray-700"
           >
-            {isExpanded ? 'Ocultar' : 'Expandir'}
+            {isExpanded ? "Ocultar" : "Expandir"}
           </button>
         </div>
       </div>
@@ -74,8 +78,10 @@ export function AuditLogsFilters({
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
-              value={localFilters.performed_by || ''}
-              onChange={(e) => handleFilterChange('performed_by', e.target.value)}
+              value={localFilters.performed_by || ""}
+              onChange={(e) =>
+                handleFilterChange("performed_by", e.target.value)
+              }
               placeholder="Email do usuário..."
               className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
@@ -87,8 +93,8 @@ export function AuditLogsFilters({
             Ação
           </label>
           <select
-            value={localFilters.action || ''}
-            onChange={(e) => handleFilterChange('action', e.target.value)}
+            value={localFilters.action || ""}
+            onChange={(e) => handleFilterChange("action", e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">Todas as ações</option>
@@ -105,8 +111,10 @@ export function AuditLogsFilters({
             Tipo de Recurso
           </label>
           <select
-            value={localFilters.resource_type || ''}
-            onChange={(e) => handleFilterChange('resource_type', e.target.value)}
+            value={localFilters.resource_type || ""}
+            onChange={(e) =>
+              handleFilterChange("resource_type", e.target.value)
+            }
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">Todos os tipos</option>
@@ -131,8 +139,8 @@ export function AuditLogsFilters({
             </label>
             <input
               type="date"
-              value={localFilters.start_date || ''}
-              onChange={(e) => handleFilterChange('start_date', e.target.value)}
+              value={localFilters.start_date || ""}
+              onChange={(e) => handleFilterChange("start_date", e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -146,8 +154,8 @@ export function AuditLogsFilters({
             </label>
             <input
               type="date"
-              value={localFilters.end_date || ''}
-              onChange={(e) => handleFilterChange('end_date', e.target.value)}
+              value={localFilters.end_date || ""}
+              onChange={(e) => handleFilterChange("end_date", e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -163,7 +171,7 @@ export function AuditLogsFilters({
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Search className="h-4 w-4 mr-2" />
-            {loading ? 'Buscando...' : 'Aplicar Filtros'}
+            {loading ? "Buscando..." : "Aplicar Filtros"}
           </button>
 
           {hasActiveFilters && (
@@ -181,7 +189,9 @@ export function AuditLogsFilters({
           <label className="text-sm text-gray-700">Limite:</label>
           <select
             value={localFilters.limit || 100}
-            onChange={(e) => handleFilterChange('limit', parseInt(e.target.value))}
+            onChange={(e) =>
+              handleFilterChange("limit", parseInt(e.target.value))
+            }
             className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value={50}>50</option>

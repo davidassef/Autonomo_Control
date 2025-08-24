@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { Category } from '../types';
-import ColorPicker from './ColorPicker';
-import IconPicker from './IconPicker';
+import React, { useState, useEffect } from "react";
+import { Category } from "../types";
+import ColorPicker from "./ColorPicker";
+import IconPicker from "./IconPicker";
 
 interface CategoryFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (category: Omit<Category, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => void;
+  onSave: (
+    category: Omit<Category, "id" | "created_at" | "updated_at" | "user_id">,
+  ) => void;
   category: Category | null;
-  defaultType: 'income' | 'expense';
+  defaultType: "income" | "expense";
 }
 
 const CategoryForm: React.FC<CategoryFormProps> = ({
@@ -18,40 +20,44 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
   category,
   defaultType,
 }) => {
-  const [formData, setFormData] = useState<Omit<Category, 'id' | 'created_at' | 'updated_at' | 'user_id'>>({
-    name: '',
+  const [formData, setFormData] = useState<
+    Omit<Category, "id" | "created_at" | "updated_at" | "user_id">
+  >({
+    name: "",
     type: defaultType,
     subcategories: [],
-    icon: '',
-    color: '',
+    icon: "",
+    color: "",
   });
 
-  const [subcategoryInput, setSubcategoryInput] = useState('');
+  const [subcategoryInput, setSubcategoryInput] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (category) {
       setFormData({
         name: category.name,
-        type: category.type.toLowerCase() as 'income' | 'expense',
+        type: category.type.toLowerCase() as "income" | "expense",
         subcategories: category.subcategories || [],
-        icon: category.icon || '',
-        color: category.color || '',
+        icon: category.icon || "",
+        color: category.color || "",
       });
     } else {
       setFormData({
-        name: '',
+        name: "",
         type: defaultType,
         subcategories: [],
-        icon: '',
-        color: '',
+        icon: "",
+        color: "",
       });
     }
-    setSubcategoryInput('');
+    setSubcategoryInput("");
     setError(null);
   }, [category, defaultType, isOpen]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
@@ -65,15 +71,18 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
     }
 
     if (formData.subcategories?.includes(subcategoryInput.trim())) {
-      setError('Esta subcategoria já existe');
+      setError("Esta subcategoria já existe");
       return;
     }
 
     setFormData({
       ...formData,
-      subcategories: [...(formData.subcategories || []), subcategoryInput.trim()],
+      subcategories: [
+        ...(formData.subcategories || []),
+        subcategoryInput.trim(),
+      ],
     });
-    setSubcategoryInput('');
+    setSubcategoryInput("");
     setError(null);
   };
 
@@ -91,7 +100,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
     setError(null);
 
     if (!formData.name.trim()) {
-      setError('O nome da categoria é obrigatório');
+      setError("O nome da categoria é obrigatório");
       return;
     }
 
@@ -99,7 +108,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       handleAddSubcategory();
     }
@@ -114,7 +123,12 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
           <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
         </div>
 
-        <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <span
+          className="hidden sm:inline-block sm:align-middle sm:h-screen"
+          aria-hidden="true"
+        >
+          &#8203;
+        </span>
 
         <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
           <form onSubmit={handleSubmit}>
@@ -122,18 +136,24 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
               <div className="sm:flex sm:items-start">
                 <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
                   <h3 className="text-lg leading-6 font-medium text-gray-900">
-                    {category ? 'Editar Categoria' : 'Nova Categoria'}
+                    {category ? "Editar Categoria" : "Nova Categoria"}
                   </h3>
 
                   {error && (
-                    <div className="mt-2 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    <div
+                      className="mt-2 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+                      role="alert"
+                    >
                       <span className="block sm:inline">{error}</span>
                     </div>
                   )}
 
                   <div className="mt-4 space-y-4">
                     <div>
-                      <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                      <label
+                        htmlFor="name"
+                        className="block text-sm font-medium text-gray-700"
+                      >
                         Nome
                       </label>
                       <input
@@ -148,7 +168,10 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
                     </div>
 
                     <div>
-                      <label htmlFor="type" className="block text-sm font-medium text-gray-700">
+                      <label
+                        htmlFor="type"
+                        className="block text-sm font-medium text-gray-700"
+                      >
                         Tipo
                       </label>
                       <select
@@ -184,10 +207,14 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
                           Adicionar
                         </button>
                       </div>
-                      {formData.subcategories && formData.subcategories.length > 0 ? (
+                      {formData.subcategories &&
+                      formData.subcategories.length > 0 ? (
                         <div className="mt-2 flex flex-wrap gap-2">
                           {formData.subcategories.map((subcategory, index) => (
-                            <div key={index} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            <div
+                              key={index}
+                              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                            >
                               {subcategory}
                               <button
                                 type="button"
@@ -200,31 +227,43 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
                           ))}
                         </div>
                       ) : (
-                        <p className="mt-2 text-sm text-gray-500">Nenhuma subcategoria adicionada</p>
+                        <p className="mt-2 text-sm text-gray-500">
+                          Nenhuma subcategoria adicionada
+                        </p>
                       )}
                     </div>
 
                     {/* Campos para ícone e cor com os novos componentes */}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label htmlFor="icon" className="block text-sm font-medium text-gray-700">
+                        <label
+                          htmlFor="icon"
+                          className="block text-sm font-medium text-gray-700"
+                        >
                           Ícone
                         </label>
                         <div className="mt-1">
                           <IconPicker
-                            value={formData.icon || ''}
-                            onChange={(value) => setFormData({...formData, icon: value})}
+                            value={formData.icon || ""}
+                            onChange={(value) =>
+                              setFormData({ ...formData, icon: value })
+                            }
                           />
                         </div>
                       </div>
                       <div>
-                        <label htmlFor="color" className="block text-sm font-medium text-gray-700">
+                        <label
+                          htmlFor="color"
+                          className="block text-sm font-medium text-gray-700"
+                        >
                           Cor
                         </label>
                         <div className="mt-1">
                           <ColorPicker
-                            value={formData.color || ''}
-                            onChange={(value) => setFormData({...formData, color: value})}
+                            value={formData.color || ""}
+                            onChange={(value) =>
+                              setFormData({ ...formData, color: value })
+                            }
                           />
                         </div>
                       </div>

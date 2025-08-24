@@ -1,21 +1,21 @@
-import React, { useState } from 'react';
-import { Trash2 } from 'lucide-react';
-import { AdminUser } from '../../services/adminUsers';
+import React, { useState } from "react";
+import { Trash2 } from "lucide-react";
+import { AdminUser } from "../../services/adminUsers";
 
 interface Props {
   user: AdminUser;
   loading: boolean;
   onDelete: (user: AdminUser) => Promise<void>;
-  currentUserRole?: AdminUser['role'];
-  currentUserId?: string;
+  currentUserRole?: AdminUser["role"];
+  currentUserId?: number;
 }
 
-export const DeleteUserButton: React.FC<Props> = ({ 
-  user, 
-  loading, 
-  onDelete, 
+export const DeleteUserButton: React.FC<Props> = ({
+  user,
+  loading,
+  onDelete,
   currentUserRole,
-  currentUserId 
+  currentUserId,
 }) => {
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -23,17 +23,17 @@ export const DeleteUserButton: React.FC<Props> = ({
   const canDelete = () => {
     // Não pode excluir a própria conta
     if (user.id === currentUserId) return false;
-    
+
     // MASTER pode excluir qualquer usuário exceto outros MASTERs
-    if (currentUserRole === 'MASTER') {
-      return user.role !== 'MASTER';
+    if (currentUserRole === "MASTER") {
+      return user.role !== "MASTER";
     }
-    
+
     // ADMIN pode excluir apenas usuários USER
-    if (currentUserRole === 'ADMIN') {
-      return user.role === 'USER';
+    if (currentUserRole === "ADMIN") {
+      return user.role === "USER";
     }
-    
+
     return false;
   };
 
@@ -60,7 +60,7 @@ export const DeleteUserButton: React.FC<Props> = ({
           disabled={loading}
           className="text-xs bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 disabled:opacity-50"
         >
-          {loading ? 'Excluindo...' : 'Sim'}
+          {loading ? "Excluindo..." : "Sim"}
         </button>
         <button
           onClick={() => setShowConfirm(false)}

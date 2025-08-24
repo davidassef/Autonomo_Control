@@ -1,6 +1,14 @@
-import React from 'react';
-import { AuditLog, auditLogsService } from '../../services/auditLogs';
-import { X, User, Calendar, Globe, FileText, Tag, Activity } from 'lucide-react';
+import React from "react";
+import { AuditLog, auditLogsService } from "../../services/auditLogs";
+import {
+  X,
+  User,
+  Calendar,
+  Globe,
+  FileText,
+  Tag,
+  Activity,
+} from "lucide-react";
 
 interface AuditLogDetailsModalProps {
   log: AuditLog | null;
@@ -8,15 +16,19 @@ interface AuditLogDetailsModalProps {
   onClose: () => void;
 }
 
-export function AuditLogDetailsModal({ log, isOpen, onClose }: AuditLogDetailsModalProps) {
+export function AuditLogDetailsModal({
+  log,
+  isOpen,
+  onClose,
+}: AuditLogDetailsModalProps) {
   if (!isOpen || !log) {
     return null;
   }
 
   const formatDetails = (details: any) => {
-    if (!details) return 'N/A';
-    
-    if (typeof details === 'string') {
+    if (!details) return "N/A";
+
+    if (typeof details === "string") {
       try {
         const parsed = JSON.parse(details);
         return JSON.stringify(parsed, null, 2);
@@ -24,7 +36,7 @@ export function AuditLogDetailsModal({ log, isOpen, onClose }: AuditLogDetailsMo
         return details;
       }
     }
-    
+
     return JSON.stringify(details, null, 2);
   };
 
@@ -32,13 +44,13 @@ export function AuditLogDetailsModal({ log, isOpen, onClose }: AuditLogDetailsMo
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         {/* Overlay */}
-        <div 
+        <div
           className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
           onClick={onClose}
         ></div>
 
         {/* Modal */}
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full" data-testid="audit-log-modal">
           {/* Header */}
           <div className="bg-white px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
@@ -49,7 +61,7 @@ export function AuditLogDetailsModal({ log, isOpen, onClose }: AuditLogDetailsMo
                 onClick={onClose}
                 className="text-gray-400 hover:text-gray-600 focus:outline-none focus:text-gray-600"
               >
-                <X className="h-6 w-6" />
+                <X className="h-6 w-6" data-testid="close-icon" />
               </button>
             </div>
           </div>
@@ -61,13 +73,15 @@ export function AuditLogDetailsModal({ log, isOpen, onClose }: AuditLogDetailsMo
               <div className="space-y-4">
                 <div>
                   <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-1">
-                    <Activity className="h-4 w-4" />
+                    <Activity className="h-4 w-4" data-testid="activity-field-icon" />
                     <span>Ação</span>
                   </label>
                   <div className="flex items-center space-x-2">
-                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                      auditLogsService.getActionBadgeColor(log.action)
-                    }`}>
+                    <span
+                      className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${auditLogsService.getActionBadgeColor(
+                        log.action,
+                      )}`}
+                    >
                       {auditLogsService.formatAction(log.action)}
                     </span>
                   </div>
@@ -75,7 +89,7 @@ export function AuditLogDetailsModal({ log, isOpen, onClose }: AuditLogDetailsMo
 
                 <div>
                   <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-1">
-                    <Tag className="h-4 w-4" />
+                    <Tag className="h-4 w-4" data-testid="tag-field-icon" />
                     <span>Tipo de Recurso</span>
                   </label>
                   <span className="text-sm text-gray-900">
@@ -85,17 +99,17 @@ export function AuditLogDetailsModal({ log, isOpen, onClose }: AuditLogDetailsMo
 
                 <div>
                   <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-1">
-                    <User className="h-4 w-4" />
+                    <User className="h-4 w-4" data-testid="user-field-icon" />
                     <span>Usuário</span>
                   </label>
                   <span className="text-sm text-gray-900">
-                    {log.performed_by || 'Sistema'}
+                    {log.performed_by || "Sistema"}
                   </span>
                 </div>
 
                 <div>
                   <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-1">
-                    <Calendar className="h-4 w-4" />
+                    <Calendar className="h-4 w-4" data-testid="calendar-field-icon" />
                     <span>Data e Hora</span>
                   </label>
                   <span className="text-sm text-gray-900">
@@ -105,11 +119,11 @@ export function AuditLogDetailsModal({ log, isOpen, onClose }: AuditLogDetailsMo
 
                 <div>
                   <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-1">
-                    <Globe className="h-4 w-4" />
+                    <Globe className="h-4 w-4" data-testid="globe-field-icon" />
                     <span>Endereço IP</span>
                   </label>
                   <span className="text-sm text-gray-900 font-mono">
-                    {log.ip_address || 'N/A'}
+                    {log.ip_address || "N/A"}
                   </span>
                 </div>
 
@@ -129,11 +143,11 @@ export function AuditLogDetailsModal({ log, isOpen, onClose }: AuditLogDetailsMo
               <div className="space-y-4">
                 <div>
                   <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-1">
-                    <FileText className="h-4 w-4" />
+                    <FileText className="h-4 w-4" data-testid="filetext-field-icon" />
                     <span>Descrição</span>
                   </label>
                   <p className="text-sm text-gray-900 bg-gray-50 p-3 rounded-md">
-                    {log.description || 'Nenhuma descrição disponível'}
+                    {log.description || "Nenhuma descrição disponível"}
                   </p>
                 </div>
 

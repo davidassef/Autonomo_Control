@@ -1,7 +1,7 @@
-import React from 'react';
+import React from "react";
 
 interface LoadingSpinnerProps {
-  size?: 'small' | 'medium' | 'large';
+  size?: "small" | "medium" | "large";
   color?: string;
   className?: string;
   fullScreen?: boolean;
@@ -11,27 +11,27 @@ interface LoadingSpinnerProps {
 }
 
 const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
-  size = 'medium',
-  color = 'indigo',
-  className = '',
+  size = "medium",
+  color = "indigo",
+  className = "",
   fullScreen = false,
   text,
   centralized = false,
-  ariaLabel = 'Carregando'
+  ariaLabel = "Carregando",
 }) => {
   const sizeClasses = {
-    small: 'w-4 h-4',
-    medium: 'w-8 h-8',
-    large: 'w-12 h-12'
+    small: "w-4 h-4",
+    medium: "w-8 h-8",
+    large: "w-12 h-12",
   };
 
-  const colorClasses = color ? `border-${color}-500` : 'border-indigo-500';
+  const colorClasses = color ? `border-${color}-500` : "border-indigo-500";
 
   const containerClasses = fullScreen
-    ? 'fixed inset-0 flex justify-center items-center bg-white bg-opacity-75 z-50'
+    ? "fixed inset-0 flex justify-center items-center bg-white bg-opacity-75 z-50"
     : centralized
-    ? 'flex justify-center items-center'
-    : '';
+      ? "flex justify-center items-center"
+      : "";
 
   return (
     <div className={`${containerClasses}`}>
@@ -43,9 +43,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
       >
         <span className="sr-only">Carregando...</span>
       </div>
-      {text && (
-        <span className="ml-2 text-gray-600">{text}</span>
-      )}
+      {text && <span className="ml-2 text-gray-600">{text}</span>}
     </div>
   );
 };

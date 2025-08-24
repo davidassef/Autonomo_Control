@@ -1,27 +1,27 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from "react";
 
 // Lista de ícones comuns para finanças
 const COMMON_ICONS = [
-  { name: 'home', icon: '🏠' },
-  { name: 'food', icon: '🍽️' },
-  { name: 'grocery', icon: '🛒' },
-  { name: 'transport', icon: '🚗' },
-  { name: 'health', icon: '💊' },
-  { name: 'education', icon: '📚' },
-  { name: 'entertainment', icon: '🎬' },
-  { name: 'shopping', icon: '👜' },
-  { name: 'utilities', icon: '💡' },
-  { name: 'travel', icon: '✈️' },
-  { name: 'sports', icon: '⚽' },
-  { name: 'pets', icon: '🐾' },
-  { name: 'gifts', icon: '🎁' },
-  { name: 'salary', icon: '💰' },
-  { name: 'investment', icon: '📈' },
-  { name: 'savings', icon: '💲' },
-  { name: 'other', icon: '📋' },
-  { name: 'bills', icon: '📄' },
-  { name: 'tax', icon: '💼' },
-  { name: 'car', icon: '🚙' },
+  { name: "home", icon: "🏠" },
+  { name: "food", icon: "🍽️" },
+  { name: "grocery", icon: "🛒" },
+  { name: "transport", icon: "🚗" },
+  { name: "health", icon: "💊" },
+  { name: "education", icon: "📚" },
+  { name: "entertainment", icon: "🎬" },
+  { name: "shopping", icon: "👜" },
+  { name: "utilities", icon: "💡" },
+  { name: "travel", icon: "✈️" },
+  { name: "sports", icon: "⚽" },
+  { name: "pets", icon: "🐾" },
+  { name: "gifts", icon: "🎁" },
+  { name: "salary", icon: "💰" },
+  { name: "investment", icon: "📈" },
+  { name: "savings", icon: "💲" },
+  { name: "other", icon: "📋" },
+  { name: "bills", icon: "📄" },
+  { name: "tax", icon: "💼" },
+  { name: "car", icon: "🚙" },
 ];
 
 interface IconPickerProps {
@@ -31,19 +31,22 @@ interface IconPickerProps {
 
 const IconPicker: React.FC<IconPickerProps> = ({ value, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const popoverRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+      if (
+        popoverRef.current &&
+        !popoverRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -53,12 +56,14 @@ const IconPicker: React.FC<IconPickerProps> = ({ value, onChange }) => {
   };
 
   const filteredIcons = searchTerm
-    ? COMMON_ICONS.filter(icon =>
-        icon.name.toLowerCase().includes(searchTerm.toLowerCase()))
+    ? COMMON_ICONS.filter((icon) =>
+        icon.name.toLowerCase().includes(searchTerm.toLowerCase()),
+      )
     : COMMON_ICONS;
 
   // Encontrar o emoji atual com base no nome
-  const currentIcon = COMMON_ICONS.find(icon => icon.name === value)?.icon || '📋';
+  const currentIcon =
+    COMMON_ICONS.find((icon) => icon.name === value)?.icon || "📋";
 
   return (
     <div className="relative">
@@ -70,7 +75,7 @@ const IconPicker: React.FC<IconPickerProps> = ({ value, onChange }) => {
           <span className="text-xl">{currentIcon}</span>
         </div>
         <span className="text-sm text-gray-700 flex-1">
-          {value ? value : 'Selecione um ícone'}
+          {value ? value : "Selecione um ícone"}
         </span>
       </div>
 
@@ -93,12 +98,16 @@ const IconPicker: React.FC<IconPickerProps> = ({ value, onChange }) => {
                 <div
                   key={icon.name}
                   className={`p-2 flex flex-col items-center justify-center rounded cursor-pointer hover:bg-gray-100 ${
-                    icon.name === value ? 'bg-indigo-100 border border-indigo-300' : ''
+                    icon.name === value
+                      ? "bg-indigo-100 border border-indigo-300"
+                      : ""
                   }`}
                   onClick={() => handleIconSelect(icon.name, icon.icon)}
                 >
                   <span className="text-2xl mb-1">{icon.icon}</span>
-                  <span className="text-xs text-gray-600 truncate w-full text-center">{icon.name}</span>
+                  <span className="text-xs text-gray-600 truncate w-full text-center">
+                    {icon.name}
+                  </span>
                 </div>
               ))}
             </div>

@@ -1,10 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { Entry, Category } from '../types';
+import React, { useState, useEffect } from "react";
+import { Entry, Category } from "../types";
 
 interface EntryFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (entry: Omit<Entry, 'id' | 'created_at' | 'updated_at' | 'user_id' | 'category'>) => void;
+  onSave: (
+    entry: Omit<
+      Entry,
+      "id" | "created_at" | "updated_at" | "user_id" | "category"
+    >,
+  ) => void;
   entry: Entry | null;
   categories: Category[];
   isLoading: boolean;
@@ -18,12 +23,14 @@ const EntryForm: React.FC<EntryFormProps> = ({
   categories,
   isLoading,
 }) => {
-  const [formData, setFormData] = useState<Omit<Entry, 'id' | 'created_at' | 'updated_at' | 'user_id' | 'category'>>({
+  const [formData, setFormData] = useState<
+    Omit<Entry, "id" | "created_at" | "updated_at" | "user_id" | "category">
+  >({
     amount: 0,
-    date: new Date().toISOString().split('T')[0],
-  type: 'EXPENSE',
-    description: '',
-    category_id: '',
+    date: new Date().toISOString().split("T")[0],
+    type: "EXPENSE",
+    description: "",
+    category_id: "",
   });
 
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +40,7 @@ const EntryForm: React.FC<EntryFormProps> = ({
     if (entry) {
       setFormData({
         amount: entry.amount,
-        date: entry.date.split('T')[0],
+        date: entry.date.split("T")[0],
         type: entry.type,
         description: entry.description,
         category_id: entry.category_id,
@@ -41,33 +48,40 @@ const EntryForm: React.FC<EntryFormProps> = ({
     } else {
       setFormData({
         amount: 0,
-        date: new Date().toISOString().split('T')[0],
-                type: 'EXPENSE',
-        description: '',
-        category_id: '',
+        date: new Date().toISOString().split("T")[0],
+        type: "EXPENSE",
+        description: "",
+        category_id: "",
       });
     }
   }, [entry, isOpen]);
 
   useEffect(() => {
     if (categories.length > 0) {
-            setFilteredCategories(categories.filter(cat => cat.type.toUpperCase() === formData.type));
+      setFilteredCategories(
+        categories.filter((cat) => cat.type.toUpperCase() === formData.type),
+      );
     }
   }, [categories, formData.type]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
+  ) => {
     const { name, value } = e.target;
 
-    if (name === 'amount') {
+    if (name === "amount") {
+      const numValue = value === "" ? 0 : parseFloat(value);
       setFormData({
         ...formData,
-        [name]: parseFloat(value) || 0,
+        [name]: isNaN(numValue) ? 0 : numValue,
       });
-    } else if (name === 'type') {
+    } else if (name === "type") {
       setFormData({
         ...formData,
-                [name]: value as 'INCOME' | 'EXPENSE',
-        category_id: '', // Reset category when type changes
+        [name]: value as "INCOME" | "EXPENSE",
+        category_id: "", // Reset category when type changes
       });
     } else {
       setFormData({
@@ -82,17 +96,17 @@ const EntryForm: React.FC<EntryFormProps> = ({
     setError(null);
 
     if (formData.amount <= 0) {
-      setError('O valor deve ser maior que zero.');
+      setError("O valor deve ser maior que zero.");
       return;
     }
 
     if (!formData.description.trim()) {
-      setError('A descrição é obrigatória.');
+      setError("A descrição é obrigatória.");
       return;
     }
 
     if (!formData.category_id) {
-      setError('Selecione uma categoria.');
+      setError("Selecione uma categoria.");
       return;
     }
 
@@ -108,7 +122,12 @@ const EntryForm: React.FC<EntryFormProps> = ({
           <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
         </div>
 
-        <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <span
+          className="hidden sm:inline-block sm:align-middle sm:h-screen"
+          aria-hidden="true"
+        >
+          &#8203;
+        </span>
 
         <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
           <form onSubmit={handleSubmit}>
@@ -116,11 +135,14 @@ const EntryForm: React.FC<EntryFormProps> = ({
               <div className="sm:flex sm:items-start">
                 <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
                   <h3 className="text-lg leading-6 font-medium text-gray-900">
-                    {entry ? 'Editar Lançamento' : 'Novo Lançamento'}
+                    {entry ? "Editar Lançamento" : "Novo Lançamento"}
                   </h3>
 
                   {error && (
-                    <div className="mt-2 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    <div
+                      className="mt-2 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+                      role="alert"
+                    >
                       <span className="block sm:inline">{error}</span>
                     </div>
                   )}
@@ -128,7 +150,10 @@ const EntryForm: React.FC<EntryFormProps> = ({
                   <div className="mt-4 space-y-4">
                     <div className="flex space-x-4">
                       <div className="flex-1">
-                        <label htmlFor="type" className="block text-sm font-medium text-gray-700">
+                        <label
+                          htmlFor="type"
+                          className="block text-sm font-medium text-gray-700"
+                        >
                           Tipo
                         </label>
                         <select
@@ -138,13 +163,15 @@ const EntryForm: React.FC<EntryFormProps> = ({
                           onChange={handleChange}
                           className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
                         >
-                          <option value="expense">Despesa</option>
                           <option value="EXPENSE">Despesa</option>
                           <option value="INCOME">Receita</option>
                         </select>
                       </div>
                       <div className="flex-1">
-                        <label htmlFor="amount" className="block text-sm font-medium text-gray-700">
+                        <label
+                          htmlFor="amount"
+                          className="block text-sm font-medium text-gray-700"
+                        >
                           Valor (R$)
                         </label>
                         <input
@@ -162,7 +189,10 @@ const EntryForm: React.FC<EntryFormProps> = ({
                     </div>
 
                     <div>
-                      <label htmlFor="date" className="block text-sm font-medium text-gray-700">
+                      <label
+                        htmlFor="date"
+                        className="block text-sm font-medium text-gray-700"
+                      >
                         Data
                       </label>
                       <input
@@ -177,7 +207,10 @@ const EntryForm: React.FC<EntryFormProps> = ({
                     </div>
 
                     <div>
-                      <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                      <label
+                        htmlFor="description"
+                        className="block text-sm font-medium text-gray-700"
+                      >
                         Descrição
                       </label>
                       <input
@@ -192,7 +225,10 @@ const EntryForm: React.FC<EntryFormProps> = ({
                     </div>
 
                     <div>
-                      <label htmlFor="category_id" className="block text-sm font-medium text-gray-700">
+                      <label
+                        htmlFor="category_id"
+                        className="block text-sm font-medium text-gray-700"
+                      >
                         Categoria
                       </label>
                       <select
@@ -212,16 +248,23 @@ const EntryForm: React.FC<EntryFormProps> = ({
                       </select>
                     </div>
 
-                    {formData.type === 'INCOME' && (
+                    {formData.type === "INCOME" && (
                       <div className="border-t pt-4 space-y-4">
-                        <h4 className="text-sm font-semibold text-gray-700">Dados de Corrida (opcional)</h4>
+                        <h4 className="text-sm font-semibold text-gray-700">
+                          Dados de Corrida (opcional)
+                        </h4>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-sm font-medium text-gray-700" htmlFor="platform">Plataforma</label>
+                            <label
+                              className="block text-sm font-medium text-gray-700"
+                              htmlFor="platform"
+                            >
+                              Plataforma
+                            </label>
                             <select
                               name="platform"
                               id="platform"
-                              value={(formData as any).platform || ''}
+                              value={(formData as any).platform || ""}
                               onChange={handleChange}
                               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                             >
@@ -233,81 +276,116 @@ const EntryForm: React.FC<EntryFormProps> = ({
                             </select>
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700" htmlFor="city">Cidade</label>
+                            <label
+                              className="block text-sm font-medium text-gray-700"
+                              htmlFor="city"
+                            >
+                              Cidade
+                            </label>
                             <input
                               type="text"
                               name="city"
                               id="city"
-                              value={(formData as any).city || ''}
+                              value={(formData as any).city || ""}
                               onChange={handleChange}
                               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700" htmlFor="distance_km">Distância (km)</label>
+                            <label
+                              className="block text-sm font-medium text-gray-700"
+                              htmlFor="distance_km"
+                            >
+                              Distância (km)
+                            </label>
                             <input
                               type="number"
                               step="0.01"
                               name="distance_km"
                               id="distance_km"
-                              value={(formData as any).distance_km || ''}
+                              value={(formData as any).distance_km || ""}
                               onChange={handleChange}
                               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700" htmlFor="duration_min">Duração (min)</label>
+                            <label
+                              className="block text-sm font-medium text-gray-700"
+                              htmlFor="duration_min"
+                            >
+                              Duração (min)
+                            </label>
                             <input
                               type="number"
                               name="duration_min"
                               id="duration_min"
-                              value={(formData as any).duration_min || ''}
+                              value={(formData as any).duration_min || ""}
                               onChange={handleChange}
                               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700" htmlFor="gross_amount">Valor Bruto</label>
+                            <label
+                              className="block text-sm font-medium text-gray-700"
+                              htmlFor="gross_amount"
+                            >
+                              Valor Bruto
+                            </label>
                             <input
                               type="number"
                               step="0.01"
                               name="gross_amount"
                               id="gross_amount"
-                              value={(formData as any).gross_amount || ''}
+                              value={(formData as any).gross_amount || ""}
                               onChange={handleChange}
                               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700" htmlFor="platform_fee">Taxa Plataforma</label>
+                            <label
+                              className="block text-sm font-medium text-gray-700"
+                              htmlFor="platform_fee"
+                            >
+                              Taxa Plataforma
+                            </label>
                             <input
                               type="number"
                               step="0.01"
                               name="platform_fee"
                               id="platform_fee"
-                              value={(formData as any).platform_fee || ''}
+                              value={(formData as any).platform_fee || ""}
                               onChange={handleChange}
                               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700" htmlFor="tips_amount">Gorjetas</label>
+                            <label
+                              className="block text-sm font-medium text-gray-700"
+                              htmlFor="tips_amount"
+                            >
+                              Gorjetas
+                            </label>
                             <input
                               type="number"
                               step="0.01"
                               name="tips_amount"
                               id="tips_amount"
-                              value={(formData as any).tips_amount || ''}
+                              value={(formData as any).tips_amount || ""}
                               onChange={handleChange}
                               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700" htmlFor="shift_tag">Turno</label>
+                            <label
+                              className="block text-sm font-medium text-gray-700"
+                              htmlFor="shift_tag"
+                            >
+                              Turno
+                            </label>
                             <select
                               name="shift_tag"
                               id="shift_tag"
-                              value={(formData as any).shift_tag || ''}
+                              value={(formData as any).shift_tag || ""}
                               onChange={handleChange}
                               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                             >
@@ -319,7 +397,11 @@ const EntryForm: React.FC<EntryFormProps> = ({
                             </select>
                           </div>
                         </div>
-                        <p className="text-xs text-gray-500">Preencha qualquer campo adicional para registrar detalhes da corrida. O valor líquido será calculado no backend se você informar bruto, taxa e gorjeta.</p>
+                        <p className="text-xs text-gray-500">
+                          Preencha qualquer campo adicional para registrar
+                          detalhes da corrida. O valor líquido será calculado no
+                          backend se você informar bruto, taxa e gorjeta.
+                        </p>
                       </div>
                     )}
                   </div>

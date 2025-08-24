@@ -1,6 +1,6 @@
-import React from 'react';
-import { AdminUser } from '../services/adminUsers';
-import { Ban, Shield } from 'lucide-react';
+import React from "react";
+import { AdminUser } from "../services/adminUsers";
+import { Ban, Shield } from "lucide-react";
 
 interface BlockUserButtonProps {
   user: AdminUser;
@@ -9,9 +9,14 @@ interface BlockUserButtonProps {
   loading?: boolean;
 }
 
-export function BlockUserButton({ user, onBlock, onUnblock, loading }: BlockUserButtonProps) {
+export function BlockUserButton({
+  user,
+  onBlock,
+  onUnblock,
+  loading,
+}: BlockUserButtonProps) {
   // Não mostrar botão para MASTER
-  if (user.role === 'MASTER') {
+  if (user.role === "MASTER") {
     return null;
   }
 
@@ -25,7 +30,7 @@ export function BlockUserButton({ user, onBlock, onUnblock, loading }: BlockUser
         await onBlock(user);
       }
     } catch (error) {
-      console.error('Erro ao alterar status de bloqueio:', error);
+      console.error("Erro ao alterar status de bloqueio:", error);
     }
   };
 
@@ -38,11 +43,11 @@ export function BlockUserButton({ user, onBlock, onUnblock, loading }: BlockUser
         transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed
         ${
           isBlocked
-            ? 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-300'
-            : 'bg-red-100 text-red-700 hover:bg-red-200 border border-red-300'
+            ? "bg-green-100 text-green-700 hover:bg-green-200 border border-green-300"
+            : "bg-red-100 text-red-700 hover:bg-red-200 border border-red-300"
         }
       `}
-      title={isBlocked ? 'Desbloquear usuário' : 'Bloquear usuário'}
+      title={isBlocked ? "Desbloquear usuário" : "Bloquear usuário"}
     >
       {isBlocked ? (
         <>

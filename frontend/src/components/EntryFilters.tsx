@@ -1,53 +1,64 @@
-import React from 'react';
-import { Category } from '../types';
+import React from "react";
+import { Category } from "../types";
 
 interface EntryFiltersProps {
   filters: {
     startDate: string;
     endDate: string;
-    type: '' | 'INCOME' | 'EXPENSE';
-    categoryId: string;
+    type: "" | "INCOME" | "EXPENSE";
+    categoryId: number;
     platform: string;
     shift_tag: string;
     city: string;
   };
   categories: Category[];
   isLoading: boolean;
-  onFilterChange: (filters: EntryFiltersProps['filters']) => void;
+  onFilterChange: (filters: EntryFiltersProps["filters"]) => void;
 }
 
 const EntryFilters: React.FC<EntryFiltersProps> = ({
   filters,
   categories,
   isLoading,
-  onFilterChange
+  onFilterChange,
 }) => {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
+    const processedValue =
+      name === "categoryId" ? (value === "" ? 0 : Number(value)) : value;
     onFilterChange({
       ...filters,
-      [name]: value,
+      [name]: processedValue,
     });
   };
 
   const handleReset = () => {
     onFilterChange({
-      startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
-      endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0],
-      type: '',
-      categoryId: '',
-      platform: '',
-      shift_tag: '',
-      city: '',
+      startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+        .toISOString()
+        .split("T")[0],
+      endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)
+        .toISOString()
+        .split("T")[0],
+      type: "",
+      categoryId: 0,
+      platform: "",
+      shift_tag: "",
+      city: "",
     });
   };
 
   return (
     <div className="bg-white shadow-sm rounded-lg p-4">
       <h2 className="text-lg font-medium text-gray-900 mb-3">Filtros</h2>
-  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-7">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-7">
         <div>
-          <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="startDate"
+            className="block text-sm font-medium text-gray-700"
+          >
             Data Inicial
           </label>
           <input
@@ -61,7 +72,10 @@ const EntryFilters: React.FC<EntryFiltersProps> = ({
         </div>
 
         <div>
-          <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="endDate"
+            className="block text-sm font-medium text-gray-700"
+          >
             Data Final
           </label>
           <input
@@ -75,7 +89,10 @@ const EntryFilters: React.FC<EntryFiltersProps> = ({
         </div>
 
         <div>
-          <label htmlFor="type" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="type"
+            className="block text-sm font-medium text-gray-700"
+          >
             Tipo
           </label>
           <select
@@ -92,7 +109,10 @@ const EntryFilters: React.FC<EntryFiltersProps> = ({
         </div>
 
         <div>
-          <label htmlFor="categoryId" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="categoryId"
+            className="block text-sm font-medium text-gray-700"
+          >
             Categoria
           </label>
           <select
@@ -112,7 +132,10 @@ const EntryFilters: React.FC<EntryFiltersProps> = ({
           </select>
         </div>
         <div>
-          <label htmlFor="platform" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="platform"
+            className="block text-sm font-medium text-gray-700"
+          >
             Plataforma
           </label>
           <select
@@ -130,7 +153,10 @@ const EntryFilters: React.FC<EntryFiltersProps> = ({
           </select>
         </div>
         <div>
-          <label htmlFor="shift_tag" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="shift_tag"
+            className="block text-sm font-medium text-gray-700"
+          >
             Turno
           </label>
           <select
@@ -148,7 +174,10 @@ const EntryFilters: React.FC<EntryFiltersProps> = ({
           </select>
         </div>
         <div>
-          <label htmlFor="city" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="city"
+            className="block text-sm font-medium text-gray-700"
+          >
             Cidade
           </label>
           <input

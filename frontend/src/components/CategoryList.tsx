@@ -1,34 +1,34 @@
-import React from 'react';
-import { Category } from '../types';
+import React from "react";
+import { Category } from "../types";
 
 // Lista de ícones para associar com nomes
 const COMMON_ICONS = {
-  'home': '🏠',
-  'food': '🍽️',
-  'grocery': '🛒',
-  'transport': '🚗',
-  'health': '💊',
-  'education': '📚',
-  'entertainment': '🎬',
-  'shopping': '👜',
-  'utilities': '💡',
-  'travel': '✈️',
-  'sports': '⚽',
-  'pets': '🐾',
-  'gifts': '🎁',
-  'salary': '💰',
-  'investment': '📈',
-  'savings': '💲',
-  'other': '📋',
-  'bills': '📄',
-  'tax': '💼',
-  'car': '🚙',
+  home: "🏠",
+  food: "🍽️",
+  grocery: "🛒",
+  transport: "🚗",
+  health: "💊",
+  education: "📚",
+  entertainment: "🎬",
+  shopping: "👜",
+  utilities: "💡",
+  travel: "✈️",
+  sports: "⚽",
+  pets: "🐾",
+  gifts: "🎁",
+  salary: "💰",
+  investment: "📈",
+  savings: "💲",
+  other: "📋",
+  bills: "📄",
+  tax: "💼",
+  car: "🚙",
 };
 
 interface CategoryListProps {
   categories: Category[];
   isLoading: boolean;
-  activeType: 'income' | 'expense';
+  activeType: "income" | "expense";
   onEdit: (category: Category) => void;
   onDelete: (id: string) => void;
 }
@@ -38,12 +38,12 @@ const CategoryList: React.FC<CategoryListProps> = ({
   isLoading,
   activeType,
   onEdit,
-  onDelete
+  onDelete,
 }) => {
   // Função para obter o emoji por nome de ícone
   const getIconEmoji = (iconName: string | undefined): string => {
-    if (!iconName) return '📋'; // Ícone padrão
-    return (COMMON_ICONS as any)[iconName] || '📋';
+    if (!iconName) return "📋"; // Ícone padrão
+    return (COMMON_ICONS as any)[iconName] || "📋";
   };
 
   if (isLoading) {
@@ -71,8 +71,8 @@ const CategoryList: React.FC<CategoryListProps> = ({
     return (
       <div className="bg-white shadow overflow-hidden sm:rounded-lg">
         <div className="px-4 py-5 sm:p-6 text-center text-gray-500">
-          Nenhuma categoria de {activeType === 'income' ? 'receita' : 'despesa'} encontrada.
-          Adicione uma nova categoria usando o botão acima.
+          Nenhuma categoria de {activeType === "income" ? "receita" : "despesa"}{" "}
+          encontrada. Adicione uma nova categoria usando o botão acima.
         </div>
       </div>
     );
@@ -88,11 +88,14 @@ const CategoryList: React.FC<CategoryListProps> = ({
         </div>
 
         {categories.map((category) => (
-          <div key={category.id} className="px-4 py-4 sm:px-6 sm:grid sm:grid-cols-12 sm:gap-4">
+          <div
+            key={category.id}
+            className="px-4 py-4 sm:px-6 sm:grid sm:grid-cols-12 sm:gap-4"
+          >
             <div className="sm:col-span-4 text-sm font-medium text-gray-900 sm:flex sm:items-center">
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center mr-2 text-white"
-                style={{ backgroundColor: category.color || '#CBD5E1' }}
+                style={{ backgroundColor: category.color || "#CBD5E1" }}
               >
                 <span className="text-lg">{getIconEmoji(category.icon)}</span>
               </div>
@@ -110,7 +113,10 @@ const CategoryList: React.FC<CategoryListProps> = ({
               {category.subcategories && category.subcategories.length > 0 ? (
                 <div className="flex flex-wrap gap-1">
                   {category.subcategories.map((subcategory, index) => (
-                    <span key={index} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                    <span
+                      key={index}
+                      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                    >
                       {subcategory}
                     </span>
                   ))}
@@ -126,8 +132,8 @@ const CategoryList: React.FC<CategoryListProps> = ({
                 disabled={category.is_default}
                 className={`inline-flex items-center py-1.5 px-3 text-xs font-medium rounded mr-2 ${
                   category.is_default
-                    ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
-                    : 'text-indigo-700 bg-indigo-100 hover:bg-indigo-200'
+                    ? "text-gray-400 bg-gray-100 cursor-not-allowed"
+                    : "text-indigo-700 bg-indigo-100 hover:bg-indigo-200"
                 }`}
               >
                 Editar
@@ -137,8 +143,8 @@ const CategoryList: React.FC<CategoryListProps> = ({
                 disabled={category.is_default}
                 className={`inline-flex items-center py-1.5 px-3 text-xs font-medium rounded ${
                   category.is_default
-                    ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
-                    : 'text-red-700 bg-red-100 hover:bg-red-200'
+                    ? "text-gray-400 bg-gray-100 cursor-not-allowed"
+                    : "text-red-700 bg-red-100 hover:bg-red-200"
                 }`}
               >
                 Excluir
