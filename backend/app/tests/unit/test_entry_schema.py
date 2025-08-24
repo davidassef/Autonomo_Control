@@ -16,7 +16,7 @@ from app.schemas.entry_schema import (
     EntryResponse,
     EntrySummary,
     CategoryDistribution,
-    CategoryDistributionList
+    CategoryDistributionList,
 )
 
 
@@ -32,7 +32,7 @@ class TestEntryBase:
             "type": "EXPENSE",
             "category": "food",
             "subcategory": "restaurant",
-            "is_recurring": True
+            "is_recurring": True,
         }
         entry = EntryBase(**entry_data)
         assert entry.amount == 100.50
@@ -49,7 +49,7 @@ class TestEntryBase:
             "description": "Minimal entry",
             "date": datetime.now(timezone.utc),
             "type": "INCOME",
-            "category": "salary"
+            "category": "salary",
         }
         entry = EntryBase(**entry_data)
         assert entry.amount == 50.0
@@ -66,7 +66,7 @@ class TestEntryBase:
             "description": "Monthly salary",
             "date": datetime.now(timezone.utc),
             "type": "INCOME",
-            "category": "work"
+            "category": "work",
         }
         entry = EntryBase(**entry_data)
         assert entry.type == "INCOME"
@@ -78,7 +78,7 @@ class TestEntryBase:
             "description": "Grocery shopping",
             "date": datetime.now(timezone.utc),
             "type": "EXPENSE",
-            "category": "food"
+            "category": "food",
         }
         entry = EntryBase(**entry_data)
         assert entry.type == "EXPENSE"
@@ -90,7 +90,7 @@ class TestEntryBase:
             "description": "Invalid type",
             "date": datetime.now(timezone.utc),
             "type": "INVALID",
-            "category": "test"
+            "category": "test",
         }
         with pytest.raises(ValidationError) as exc_info:
             EntryBase(**entry_data)
@@ -104,7 +104,7 @@ class TestEntryBase:
             "description": "Missing amount",
             "date": datetime.now(timezone.utc),
             "type": "EXPENSE",
-            "category": "test"
+            "category": "test",
         }
         with pytest.raises(ValidationError) as exc_info:
             EntryBase(**entry_data)
@@ -118,7 +118,7 @@ class TestEntryBase:
             "amount": 100.0,
             "date": datetime.now(timezone.utc),
             "type": "EXPENSE",
-            "category": "test"
+            "category": "test",
         }
         with pytest.raises(ValidationError) as exc_info:
             EntryBase(**entry_data)
@@ -132,7 +132,7 @@ class TestEntryBase:
             "amount": 100.0,
             "description": "Missing date",
             "type": "EXPENSE",
-            "category": "test"
+            "category": "test",
         }
         with pytest.raises(ValidationError) as exc_info:
             EntryBase(**entry_data)
@@ -146,7 +146,7 @@ class TestEntryBase:
             "amount": 100.0,
             "description": "Missing category",
             "date": datetime.now(timezone.utc),
-            "type": "EXPENSE"
+            "type": "EXPENSE",
         }
         with pytest.raises(ValidationError) as exc_info:
             EntryBase(**entry_data)
@@ -161,7 +161,7 @@ class TestEntryBase:
             "description": "Zero amount",
             "date": datetime.now(timezone.utc),
             "type": "EXPENSE",
-            "category": "test"
+            "category": "test",
         }
         entry = EntryBase(**entry_data)
         assert entry.amount == 0.0
@@ -173,7 +173,7 @@ class TestEntryBase:
             "description": "Negative amount",
             "date": datetime.now(timezone.utc),
             "type": "EXPENSE",
-            "category": "test"
+            "category": "test",
         }
         entry = EntryBase(**entry_data)
         assert entry.amount == -50.0
@@ -185,7 +185,7 @@ class TestEntryBase:
             "description": "High precision",
             "date": datetime.now(timezone.utc),
             "type": "EXPENSE",
-            "category": "test"
+            "category": "test",
         }
         entry = EntryBase(**entry_data)
         assert entry.amount == 123.456789
@@ -201,7 +201,7 @@ class TestEntryCreate:
             "description": "Valid entry",
             "date": datetime.now(timezone.utc),
             "type": "EXPENSE",
-            "category": "test"
+            "category": "test",
         }
         entry = EntryCreate(**entry_data)
         assert entry.amount == 100.0
@@ -217,7 +217,7 @@ class TestEntryCreate:
             "description": "Zero amount",
             "date": datetime.now(timezone.utc),
             "type": "EXPENSE",
-            "category": "test"
+            "category": "test",
         }
         with pytest.raises(ValidationError) as exc_info:
             EntryCreate(**entry_data)
@@ -232,7 +232,7 @@ class TestEntryCreate:
             "description": "Negative amount",
             "date": datetime.now(timezone.utc),
             "type": "EXPENSE",
-            "category": "test"
+            "category": "test",
         }
         with pytest.raises(ValidationError) as exc_info:
             EntryCreate(**entry_data)
@@ -247,7 +247,7 @@ class TestEntryCreate:
             "description": "Small amount",
             "date": datetime.now(timezone.utc),
             "type": "EXPENSE",
-            "category": "test"
+            "category": "test",
         }
         entry = EntryCreate(**entry_data)
         assert entry.amount == 0.01
@@ -259,7 +259,7 @@ class TestEntryCreate:
             "description": "Large amount",
             "date": datetime.now(timezone.utc),
             "type": "INCOME",
-            "category": "investment"
+            "category": "investment",
         }
         entry = EntryCreate(**entry_data)
         assert entry.amount == 999999.99
@@ -271,7 +271,7 @@ class TestEntryCreate:
             "description": "Salary income",
             "date": datetime.now(timezone.utc),
             "type": "INCOME",
-            "category": "salary"
+            "category": "salary",
         }
         entry = EntryCreate(**entry_data)
         assert entry.type == "INCOME"
@@ -284,7 +284,7 @@ class TestEntryCreate:
             "date": datetime.now(timezone.utc),
             "type": "EXPENSE",
             "category": "food",
-            "subcategory": "beverages"
+            "subcategory": "beverages",
         }
         entry = EntryCreate(**entry_data)
         assert entry.subcategory == "beverages"
@@ -297,7 +297,7 @@ class TestEntryCreate:
             "date": datetime.now(timezone.utc),
             "type": "EXPENSE",
             "category": "housing",
-            "is_recurring": True
+            "is_recurring": True,
         }
         entry = EntryCreate(**entry_data)
         assert entry.is_recurring is True
@@ -308,9 +308,7 @@ class TestEntryUpdate:
 
     def test_entry_update_partial_amount(self):
         """Test EntryUpdate with only amount."""
-        update_data = {
-            "amount": 150.0
-        }
+        update_data = {"amount": 150.0}
         entry_update = EntryUpdate(**update_data)
         assert entry_update.amount == 150.0
         assert entry_update.description is None
@@ -318,9 +316,7 @@ class TestEntryUpdate:
 
     def test_entry_update_partial_description(self):
         """Test EntryUpdate with only description."""
-        update_data = {
-            "description": "Updated description"
-        }
+        update_data = {"description": "Updated description"}
         entry_update = EntryUpdate(**update_data)
         assert entry_update.description == "Updated description"
         assert entry_update.amount is None
@@ -334,7 +330,7 @@ class TestEntryUpdate:
             "date": new_date,
             "category": "updated_category",
             "subcategory": "updated_sub",
-            "is_recurring": True
+            "is_recurring": True,
         }
         entry_update = EntryUpdate(**update_data)
         assert entry_update.amount == 200.0
@@ -356,17 +352,13 @@ class TestEntryUpdate:
 
     def test_entry_update_amount_validation_positive(self):
         """Test EntryUpdate amount validation with positive value."""
-        update_data = {
-            "amount": 75.0
-        }
+        update_data = {"amount": 75.0}
         entry_update = EntryUpdate(**update_data)
         assert entry_update.amount == 75.0
 
     def test_entry_update_amount_validation_zero_invalid(self):
         """Test EntryUpdate amount validation with zero (invalid)."""
-        update_data = {
-            "amount": 0.0
-        }
+        update_data = {"amount": 0.0}
         with pytest.raises(ValidationError) as exc_info:
             EntryUpdate(**update_data)
 
@@ -375,9 +367,7 @@ class TestEntryUpdate:
 
     def test_entry_update_amount_validation_negative_invalid(self):
         """Test EntryUpdate amount validation with negative value."""
-        update_data = {
-            "amount": -25.0
-        }
+        update_data = {"amount": -25.0}
         with pytest.raises(ValidationError) as exc_info:
             EntryUpdate(**update_data)
 
@@ -386,10 +376,7 @@ class TestEntryUpdate:
 
     def test_entry_update_amount_none_allowed(self):
         """Test EntryUpdate with amount as None (should be allowed)."""
-        update_data = {
-            "amount": None,
-            "description": "Updated description"
-        }
+        update_data = {"amount": None, "description": "Updated description"}
         entry_update = EntryUpdate(**update_data)
         assert entry_update.amount is None
         assert entry_update.description == "Updated description"
@@ -397,29 +384,23 @@ class TestEntryUpdate:
     def test_entry_update_explicit_none_values(self):
         """Test EntryUpdate with explicitly None values."""
         update_data = {
-            "amount": None,            "description": None,
+            "amount": None,
+            "description": None,
             "date": None,
             "category": None,
             "subcategory": None,
-            "is_recurring": None
+            "is_recurring": None,
         }
         entry_update = EntryUpdate(**update_data)
-        assert all(
-            getattr(entry_update, field) is None
-            for field in update_data
-        )
+        assert all(getattr(entry_update, field) is None for field in update_data)
 
     def test_entry_update_boolean_fields(self):
         """Test EntryUpdate with boolean fields."""
-        update_data = {
-            "is_recurring": False
-        }
+        update_data = {"is_recurring": False}
         entry_update = EntryUpdate(**update_data)
         assert entry_update.is_recurring is False
 
-        update_data = {
-            "is_recurring": True
-        }
+        update_data = {"is_recurring": True}
         entry_update = EntryUpdate(**update_data)
         assert entry_update.is_recurring is True
 
@@ -441,7 +422,7 @@ class TestEntryInDB:
             "is_recurring": True,
             "created_at": now,
             "updated_at": now,
-            "user_id": "user-123"
+            "user_id": "user-123",
         }
         entry = EntryInDB(**entry_data)
         assert entry.id == "entry-123"
@@ -462,7 +443,7 @@ class TestEntryInDB:
             "type": "INCOME",
             "category": "test",
             "created_at": now,
-            "user_id": "user-123"
+            "user_id": "user-123",
         }
         entry = EntryInDB(**entry_data)
         assert entry.id == "entry-123"
@@ -484,7 +465,7 @@ class TestEntryInDB:
             "type": "EXPENSE",
             "category": "test",
             "created_at": now,
-            "user_id": "user-123"
+            "user_id": "user-123",
         }
         with pytest.raises(ValidationError) as exc_info:
             EntryInDB(**entry_data)
@@ -502,7 +483,7 @@ class TestEntryInDB:
             "date": now,
             "type": "EXPENSE",
             "category": "test",
-            "user_id": "user-123"
+            "user_id": "user-123",
         }
         with pytest.raises(ValidationError) as exc_info:
             EntryInDB(**entry_data)
@@ -520,7 +501,7 @@ class TestEntryInDB:
             "date": now,
             "type": "EXPENSE",
             "category": "test",
-            "created_at": now
+            "created_at": now,
         }
         with pytest.raises(ValidationError) as exc_info:
             EntryInDB(**entry_data)
@@ -573,7 +554,7 @@ class TestEntryResponse:
             "type": "EXPENSE",
             "category": "test",
             "created_at": now,
-            "user_id": "user-123"
+            "user_id": "user-123",
         }
         entry_response = EntryResponse(**entry_data)
         entry_in_db = EntryInDB(**entry_data)
@@ -592,7 +573,7 @@ class TestEntrySummary:
             "balance": 2000.0,
             "count_income": 10,
             "count_expense": 15,
-            "total_count": 25
+            "total_count": 25,
         }
         summary = EntrySummary(**summary_data)
         assert summary.total_income == 5000.0
@@ -610,7 +591,7 @@ class TestEntrySummary:
             "balance": 0.0,
             "count_income": 0,
             "count_expense": 0,
-            "total_count": 0
+            "total_count": 0,
         }
         summary = EntrySummary(**summary_data)
         assert summary.total_income == 0.0
@@ -625,7 +606,7 @@ class TestEntrySummary:
             "balance": -1000.0,
             "count_income": 5,
             "count_expense": 10,
-            "total_count": 15
+            "total_count": 15,
         }
         summary = EntrySummary(**summary_data)
         assert summary.balance == -1000.0
@@ -634,7 +615,7 @@ class TestEntrySummary:
         """Test EntrySummary with missing required fields."""
         summary_data = {
             "total_income": 1000.0,
-            "total_expense": 500.0
+            "total_expense": 500.0,
             # Missing other required fields
         }
         with pytest.raises(ValidationError):
@@ -648,7 +629,7 @@ class TestEntrySummary:
             "balance": 246.913,
             "count_income": 10,
             "count_expense": 15,
-            "total_count": 25
+            "total_count": 25,
         }
         summary = EntrySummary(**summary_data)
         assert summary.total_income == 1234.567
@@ -663,14 +644,14 @@ class TestCategoryDistribution:
         """Test CategoryDistribution with valid data."""
         dist_data = {
             "category": "food",
-            "category_name": "Food & Dining",
+            "category": "Food & Dining",
             "amount": 1500.0,
             "count": 25,
-            "percentage": 35.5
+            "percentage": 35.5,
         }
         distribution = CategoryDistribution(**dist_data)
         assert distribution.category == "food"
-        assert distribution.category_name == "Food & Dining"
+        assert distribution.category == "Food & Dining"
         assert distribution.amount == 1500.0
         assert distribution.count == 25
         assert distribution.percentage == 35.5
@@ -679,10 +660,10 @@ class TestCategoryDistribution:
         """Test CategoryDistribution with zero values."""
         dist_data = {
             "category": "empty",
-            "category_name": "Empty Category",
+            "category": "Empty Category",
             "amount": 0.0,
             "count": 0,
-            "percentage": 0.0
+            "percentage": 0.0,
         }
         distribution = CategoryDistribution(**dist_data)
         assert distribution.amount == 0.0
@@ -693,10 +674,10 @@ class TestCategoryDistribution:
         """Test CategoryDistribution with high precision values."""
         dist_data = {
             "category": "precise",
-            "category_name": "Precise Category",
+            "category": "Precise Category",
             "amount": 123.456789,
             "count": 100,
-            "percentage": 12.3456
+            "percentage": 12.3456,
         }
         distribution = CategoryDistribution(**dist_data)
         assert distribution.amount == 123.456789
@@ -706,7 +687,7 @@ class TestCategoryDistribution:
         """Test CategoryDistribution with missing required fields."""
         dist_data = {
             "category": "incomplete",
-            "amount": 100.0
+            "amount": 100.0,
             # Missing required fields
         }
         with pytest.raises(ValidationError):
@@ -716,10 +697,10 @@ class TestCategoryDistribution:
         """Test CategoryDistribution with large values."""
         dist_data = {
             "category": "large",
-            "category_name": "Large Category",
+            "category": "Large Category",
             "amount": 999999.99,
             "count": 10000,
-            "percentage": 100.0
+            "percentage": 100.0,
         }
         distribution = CategoryDistribution(**dist_data)
         assert distribution.amount == 999999.99
@@ -735,23 +716,20 @@ class TestCategoryDistributionList:
         distributions = [
             {
                 "category": "food",
-                "category_name": "Food",
+                "category": "Food",
                 "amount": 1000.0,
                 "count": 20,
-                "percentage": 50.0
+                "percentage": 50.0,
             },
             {
                 "category": "transport",
-                "category_name": "Transport",
+                "category": "Transport",
                 "amount": 500.0,
                 "count": 10,
-                "percentage": 25.0
-            }
+                "percentage": 25.0,
+            },
         ]
-        list_data = {
-            "distributions": distributions,
-            "total": 2000.0
-        }
+        list_data = {"distributions": distributions, "total": 2000.0}
         dist_list = CategoryDistributionList(**list_data)
         assert len(dist_list.distributions) == 2
         assert dist_list.total == 2000.0
@@ -760,10 +738,7 @@ class TestCategoryDistributionList:
 
     def test_category_distribution_list_empty(self):
         """Test CategoryDistributionList with empty distributions."""
-        list_data = {
-            "distributions": [],
-            "total": 0.0
-        }
+        list_data = {"distributions": [], "total": 0.0}
         dist_list = CategoryDistributionList(**list_data)
         assert len(dist_list.distributions) == 0
         assert dist_list.total == 0.0
@@ -773,16 +748,13 @@ class TestCategoryDistributionList:
         distributions = [
             {
                 "category": "single",
-                "category_name": "Single Category",
+                "category": "Single Category",
                 "amount": 1000.0,
                 "count": 5,
-                "percentage": 100.0
+                "percentage": 100.0,
             }
         ]
-        list_data = {
-            "distributions": distributions,
-            "total": 1000.0
-        }
+        list_data = {"distributions": distributions, "total": 1000.0}
         dist_list = CategoryDistributionList(**list_data)
         assert len(dist_list.distributions) == 1
         assert dist_list.total == 1000.0
@@ -792,10 +764,10 @@ class TestCategoryDistributionList:
         distributions = [
             {
                 "category": "test",
-                "category_name": "Test",
+                "category": "Test",
                 "amount": 100.0,
                 "count": 1,
-                "percentage": 100.0
+                "percentage": 100.0,
             }
         ]
         list_data = {
@@ -826,7 +798,7 @@ class TestSchemaIntegration:
             "description": "Test entry",
             "date": datetime.now(timezone.utc),
             "type": "EXPENSE",
-            "category": "test"
+            "category": "test",
         }
         entry_create = EntryCreate(**create_data)
         assert entry_create.amount == 100.0
@@ -837,7 +809,7 @@ class TestSchemaIntegration:
             **create_data,
             "id": "entry-123",
             "created_at": now,
-            "user_id": "user-123"
+            "user_id": "user-123",
         }
         entry_in_db = EntryInDB(**db_data)
         assert entry_in_db.id == "entry-123"
@@ -847,10 +819,7 @@ class TestSchemaIntegration:
         assert entry_response.model_dump() == entry_in_db.model_dump()
 
         # Update
-        update_data = {
-            "amount": 150.0,
-            "description": "Updated entry"
-        }
+        update_data = {"amount": 150.0, "description": "Updated entry"}
         entry_update = EntryUpdate(**update_data)
         assert entry_update.amount == 150.0
 
@@ -862,45 +831,41 @@ class TestSchemaIntegration:
                 "description": "Income 1",
                 "date": datetime.now(timezone.utc),
                 "type": "INCOME",
-                "category": "salary"
+                "category": "salary",
             },
             {
                 "amount": 4000.0,
                 "description": "Income 2",
                 "date": datetime.now(timezone.utc),
                 "type": "INCOME",
-                "category": "freelance"
+                "category": "freelance",
             },
             {
                 "amount": 200.0,
                 "description": "Expense 1",
                 "date": datetime.now(timezone.utc),
                 "type": "EXPENSE",
-                "category": "food"
+                "category": "food",
             },
             {
                 "amount": 300.0,
                 "description": "Expense 2",
                 "date": datetime.now(timezone.utc),
                 "type": "EXPENSE",
-                "category": "transport"
+                "category": "transport",
             },
             {
                 "amount": 500.0,
                 "description": "Expense 3",
                 "date": datetime.now(timezone.utc),
                 "type": "EXPENSE",
-                "category": "utilities"
-            }
+                "category": "utilities",
+            },
         ]
 
         # Calculate summary
-        total_income = sum(
-            e["amount"] for e in entries_data if e["type"] == "INCOME"
-        )
-        total_expense = sum(
-            e["amount"] for e in entries_data if e["type"] == "EXPENSE"
-        )
+        total_income = sum(e["amount"] for e in entries_data if e["type"] == "INCOME")
+        total_expense = sum(e["amount"] for e in entries_data if e["type"] == "EXPENSE")
         balance = total_income - total_expense
         count_income = sum(1 for e in entries_data if e["type"] == "INCOME")
         count_expense = sum(1 for e in entries_data if e["type"] == "EXPENSE")
@@ -912,7 +877,7 @@ class TestSchemaIntegration:
             "balance": balance,
             "count_income": count_income,
             "count_expense": count_expense,
-            "total_count": total_count
+            "total_count": total_count,
         }
         summary = EntrySummary(**summary_data)
 

@@ -259,8 +259,7 @@ async def get_category_distribution(
         percentage = (item.amount / total * 100) if total > 0 else 0
         distributions.append(
             CategoryDistribution(
-                category=item.category,
-                category_name=item.category,  # Aqui pode-se buscar o nome real se necessário
+                category=item.category,  # Campo category já contém o nome da categoria
                 amount=item.amount,
                 count=item.count,  # type: ignore
                 percentage=percentage

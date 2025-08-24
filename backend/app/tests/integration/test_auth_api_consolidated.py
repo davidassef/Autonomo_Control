@@ -2,6 +2,7 @@
 Testes consolidados para a API de autenticação
 Consolida todos os testes de auth_api, auth_api_coverage, auth_api_extended
 """
+
 import datetime
 from unittest.mock import patch
 
@@ -12,7 +13,10 @@ from jose import jwt  # type: ignore
 from app.models.user import User
 from app.core.config import settings
 from app.core.security import (
-    create_access_token, verify_password, verify_token, get_password_hash
+    create_access_token,
+    verify_password,
+    verify_token,
+    get_password_hash,
 )
 
 # Dados simulados para testes
@@ -34,7 +38,7 @@ def test_user_with_password(test_db):
         email="test_user@example.com",
         name="Test User",
         is_active=True,
-        password_hash=get_password_hash("password123")
+        password_hash=get_password_hash("password123"),
     )
     test_db.add(user)
     test_db.commit()
@@ -53,13 +57,9 @@ def test_token_generation():
     # Act
     token = create_access_token(
         data={"sub": email, "user_id": user_id},
-        expires_delta=datetime.timedelta(minutes=30)
-    )    # Assert
-    payload = jwt.decode(
-        token,
-        settings.SECRET_KEY,
-        algorithms=[settings.ALGORITHM]
-    )
+        expires_delta=datetime.timedelta(minutes=30),
+    )  # Assert
+    payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
     assert payload.get("sub") == email
     assert payload.get("user_id") == user_id
     assert "exp" in payload
@@ -94,7 +94,7 @@ def test_get_current_user_invalid_token(test_client):
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-@patch('app.api.v1.auth.verify_google_token')
+@patch("app.api.v1.auth.verify_google_token")
 def test_google_auth_success(mock_verify_token, test_client, test_db):
     """
     Testa autenticação Google bem-sucedida para novo usuário
@@ -104,8 +104,7 @@ def test_google_auth_success(mock_verify_token, test_client, test_db):
 
     # Act
     response = test_client.post(
-        "/api/v1/auth/google",
-        params={"token": MOCK_VALID_TOKEN}
+        "/api/v1/auth/google", params={"token": MOCK_VALID_TOKEN}
     )
 
     # Assert
@@ -115,15 +114,13 @@ def test_google_auth_success(mock_verify_token, test_client, test_db):
     assert data["token_type"] == "bearer"
 
     # Verificar se usuário foi criado
-    user = test_db.query(User).filter(
-        User.email == MOCK_USER_DATA["email"]
-    ).first()
+    user = test_db.query(User).filter(User.email == MOCK_USER_DATA["email"]).first()
     assert user is not None
     assert user.name == MOCK_USER_DATA["name"]
     assert user.google_id == MOCK_USER_DATA["google_id"]
 
 
-@patch('app.api.v1.auth.verify_google_token')
+@patch("app.api.v1.auth.verify_google_token")
 def test_google_auth_existing_user(mock_verify_token, test_client, test_db):
     """
     Testa autenticação Google para usuário existente
@@ -133,7 +130,7 @@ def test_google_auth_existing_user(mock_verify_token, test_client, test_db):
         email="existing@gmail.com",
         name="Usuário Existente",
         google_id="987654321",
-        is_active=True
+        is_active=True,
     )
     test_db.add(existing_user)
     test_db.commit()
@@ -147,8 +144,7 @@ def test_google_auth_existing_user(mock_verify_token, test_client, test_db):
 
     # Act
     response = test_client.post(
-        "/api/v1/auth/google",
-        params={"token": "valid_google_token"}
+        "/api/v1/auth/google", params={"token": "valid_google_token"}
     )
 
     # Assert
@@ -158,34 +154,32 @@ def test_google_auth_existing_user(mock_verify_token, test_client, test_db):
     assert data["token_type"] == "bearer"
 
     # Verificar que usuário mantém dados originais
-    updated_user = test_db.query(User).filter(
-        User.email == "existing@gmail.com"
-    ).first()
+    updated_user = (
+        test_db.query(User).filter(User.email == "existing@gmail.com").first()
+    )
     assert updated_user.name == "Usuário Existente"
 
 
-@patch('app.api.v1.auth.verify_google_token')
+@patch("app.api.v1.auth.verify_google_token")
 def test_google_auth_invalid_token(mock_verify_token, test_client):
     """
     Testa autenticação Google com token inválido
     """
     # Arrange
     mock_verify_token.side_effect = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Token inválido"
+        status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido"
     )
 
     # Act
     response = test_client.post(
-        "/api/v1/auth/google",
-        params={"token": MOCK_INVALID_TOKEN}
+        "/api/v1/auth/google", params={"token": MOCK_INVALID_TOKEN}
     )
 
     # Assert
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-@patch('app.api.v1.auth.verify_google_token')
+@patch("app.api.v1.auth.verify_google_token")
 def test_google_auth_without_google_id(mock_verify_token, test_client):
     """
     Testa autenticação Google sem google_id no payload
@@ -194,14 +188,13 @@ def test_google_auth_without_google_id(mock_verify_token, test_client):
     mock_verify_token.return_value = {
         "email": "user@gmail.com",
         "name": "User Name",
-        "picture": "https://example.com/photo.jpg"
+        "picture": "https://example.com/photo.jpg",
         # google_id ausente
     }
 
     # Act
     response = test_client.post(
-        "/api/v1/auth/google",
-        params={"token": MOCK_VALID_TOKEN}
+        "/api/v1/auth/google", params={"token": MOCK_VALID_TOKEN}
     )
 
     # Assert
@@ -243,7 +236,7 @@ def test_verify_token_expired():
     """Token expirado retorna None"""
     expired_token = create_access_token(
         data={"sub": "test@example.com", "user_id": "123"},
-        expires_delta=datetime.timedelta(seconds=-1)
+        expires_delta=datetime.timedelta(seconds=-1),
     )
     assert verify_token(expired_token) is None
 
@@ -261,8 +254,7 @@ def test_create_access_token_default_expiry():
     data = {"sub": "test@example.com", "user_id": "123"}
     token = create_access_token(data=data)
 
-    payload = jwt.decode(token, settings.SECRET_KEY,
-                         algorithms=[settings.ALGORITHM])
+    payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
     assert payload["sub"] == "test@example.com"
     assert payload["user_id"] == "123"
     assert "exp" in payload
@@ -274,13 +266,12 @@ def test_create_access_token_custom_expiry():
     expires_delta = datetime.timedelta(hours=2)
     token = create_access_token(data=data, expires_delta=expires_delta)
 
-    payload = jwt.decode(token, settings.SECRET_KEY,
-                         algorithms=[settings.ALGORITHM])
+    payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
     assert payload["sub"] == "test@example.com"
     assert "exp" in payload
 
 
-@patch('app.api.v1.auth.verify_google_token')
+@patch("app.api.v1.auth.verify_google_token")
 def test_google_auth_database_error(mock_verify_token, test_client, test_db):
     """Testa tratamento de erro de banco de dados"""
     mock_verify_token.return_value = MOCK_USER_DATA
@@ -289,13 +280,12 @@ def test_google_auth_database_error(mock_verify_token, test_client, test_db):
     test_db.close()
 
     response = test_client.post(
-        "/api/v1/auth/google",
-        params={"token": MOCK_VALID_TOKEN}
+        "/api/v1/auth/google", params={"token": MOCK_VALID_TOKEN}
     )
 
     # Com sessão fechada, dependência reabre conexão e retorna 200
     assert response.status_code == status.HTTP_200_OK
-    assert 'access_token' in response.json()
+    assert "access_token" in response.json()
 
 
 def test_auth_endpoint_without_token(test_client):
@@ -306,37 +296,35 @@ def test_auth_endpoint_without_token(test_client):
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
 
-@patch('app.api.v1.auth.verify_google_token')
+@patch("app.api.v1.auth.verify_google_token")
 def test_google_auth_missing_email(mock_verify_token, test_client):
     """Testa autenticação Google sem email no payload"""
     mock_verify_token.return_value = {
         "name": "User Name",
         "picture": "https://example.com/photo.jpg",
-        "google_id": "123456789"
+        "google_id": "123456789",
         # email ausente
     }
 
     response = test_client.post(
-        "/api/v1/auth/google",
-        params={"token": MOCK_VALID_TOKEN}
+        "/api/v1/auth/google", params={"token": MOCK_VALID_TOKEN}
     )
 
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
 
-@patch('app.api.v1.auth.verify_google_token')
+@patch("app.api.v1.auth.verify_google_token")
 def test_google_auth_empty_email(mock_verify_token, test_client):
     """Testa autenticação Google com email vazio"""
     mock_verify_token.return_value = {
         "email": "",
         "name": "User Name",
         "picture": "https://example.com/photo.jpg",
-        "google_id": "123456789"
+        "google_id": "123456789",
     }
 
     response = test_client.post(
-        "/api/v1/auth/google",
-        params={"token": MOCK_VALID_TOKEN}
+        "/api/v1/auth/google", params={"token": MOCK_VALID_TOKEN}
     )
 
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY

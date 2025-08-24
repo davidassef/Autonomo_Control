@@ -1,18 +1,49 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from app.core.database import SessionLocal
 from app.core.security import get_password_hash
 from app.core.config import settings
 from app.models.user import User
 from fastapi.middleware.cors import CORSMiddleware
+import logging
 
 from app.api.v1 import router as api_router
+
+# Configurar logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Autônomo Control API",
     description="API para gestão financeira de profissionais autônomos",
-    version="0.1.0"
+    version="0.1.0",
 )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Handler personalizado para erros de validação do Pydantic"""
+    logger.error(f"Erro de validação em {request.url}: {exc.errors()}")
+    logger.error(f"Body da requisição: {await request.body()}")
+
+    return JSONResponse(
+        status_code=422,
+        content={
+            "detail": exc.errors(),
+            "message": "Dados de entrada inválidos",
+            "errors": [
+                {
+                    "field": ".".join(str(loc) for loc in error["loc"]),
+                    "message": error["msg"],
+                    "type": error["type"],
+                }
+                for error in exc.errors()
+            ],
+        },
+    )
+
 
 # Configuração CORS para permitir requisições do frontend
 app.add_middleware(
@@ -23,7 +54,7 @@ app.add_middleware(
         "http://localhost:5173",  # Vite
         "http://127.0.0.1:3000",  # Create React App (127.0.0.1)
         "http://127.0.0.1:3001",  # Create React App (127.0.0.1 porta alternativa)
-        "http://127.0.0.1:5173"   # Vite (127.0.0.1)
+        "http://127.0.0.1:5173",  # Vite (127.0.0.1)
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -49,11 +80,11 @@ def bootstrap_master():
         user = db.query(User).filter(User.email == settings.MASTER_EMAIL).first()
         if user:
             changed = False
-            if getattr(user, 'role', 'USER') != 'MASTER':
-                user.role = 'MASTER'  # type: ignore[assignment]
+            if getattr(user, "role", "USER") != "MASTER":
+                user.role = "MASTER"  # type: ignore[assignment]
                 changed = True
             # Se existir MASTER_PASSWORD e usuário não tem hashed_password ainda, definir
-            if settings.MASTER_PASSWORD and not getattr(user, 'hashed_password', None):
+            if settings.MASTER_PASSWORD and not getattr(user, "hashed_password", None):
                 user.hashed_password = get_password_hash(settings.MASTER_PASSWORD)  # type: ignore[assignment]
                 changed = True
             if changed:
@@ -61,10 +92,14 @@ def bootstrap_master():
         else:
             new_user = User(
                 email=settings.MASTER_EMAIL,
-                name='Master',
-                role='MASTER',
+                name="Master",
+                role="MASTER",
                 is_active=True,  # type: ignore[arg-type]
-                hashed_password=get_password_hash(settings.MASTER_PASSWORD) if settings.MASTER_PASSWORD else None
+                hashed_password=(
+                    get_password_hash(settings.MASTER_PASSWORD)
+                    if settings.MASTER_PASSWORD
+                    else None
+                ),
             )
             db.add(new_user)
             db.commit()
@@ -73,7 +108,7 @@ def bootstrap_master():
         null_role_users = db.query(User).filter((User.role == None)).all()  # noqa: E711
         updated = 0
         for u in null_role_users:
-            u.role = 'USER'  # type: ignore[assignment]
+            u.role = "USER"  # type: ignore[assignment]
             updated += 1
         if updated:
             db.commit()
@@ -85,6 +120,8 @@ def bootstrap_master():
 def _on_startup():
     bootstrap_master()
 
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)

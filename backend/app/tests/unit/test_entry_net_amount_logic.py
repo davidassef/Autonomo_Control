@@ -1,6 +1,7 @@
 import datetime
 from app.models.entry import Entry, EntryType
 
+
 def test_net_amount_auto_calculation(test_db, sample_user):
     gross = 30.0
     fee = 6.0

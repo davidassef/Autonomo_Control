@@ -1,6 +1,7 @@
 """
 Testes para o serviço de autenticação Google
 """
+
 from unittest.mock import patch, AsyncMock, MagicMock
 
 import pytest
@@ -73,10 +74,13 @@ async def test_verify_google_token_wrong_issuer(mock_verify_oauth2_token):
 
 
 @pytest.mark.asyncio
-@patch("app.services.google_auth.settings", MagicMock(
-    GOOGLE_CLIENT_ID="mock-client-id",
-    GOOGLE_REDIRECT_URI="mock-redirect-uri",
-))
+@patch(
+    "app.services.google_auth.settings",
+    MagicMock(
+        GOOGLE_CLIENT_ID="mock-client-id",
+        GOOGLE_REDIRECT_URI="mock-redirect-uri",
+    ),
+)
 async def test_get_authorization_url():
     """
     Testa a geração da URL de autorização do Google
@@ -104,7 +108,7 @@ async def test_get_token_success():
     response_mock.json.return_value = {
         "access_token": "test_access_token",
         "refresh_token": "test_refresh_token",
-        "id_token": "test_id_token"
+        "id_token": "test_id_token",
     }
     client_mock.post.return_value = response_mock
 
@@ -155,7 +159,7 @@ async def test_get_user_info_success():
         "email": "teste@exemplo.com",
         "name": "Usuário Teste",
         "picture": "https://exemplo.com/foto.jpg",
-        "id": "123456789"
+        "id": "123456789",
     }
     client_mock.get.return_value = response_mock
 

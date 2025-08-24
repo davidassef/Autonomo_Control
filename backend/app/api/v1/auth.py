@@ -1,6 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
+import logging
+import traceback
 
 from app.core.database import get_db
 from app.core.security import create_access_token, verify_token, verify_password
@@ -9,11 +12,21 @@ from app.dependencies import get_current_user
 import secrets
 import string
 from app.schemas.user_schema import (
-    Token, UserInDB, UserCreate, PasswordResetRequest, 
-    PasswordResetByEmail, PasswordResetBySecurityQuestions,
-    SecurityQuestionsUpdate, ProfileUpdate, SecurityQuestionsResponse
+    Token,
+    UserInDB,
+    UserCreate,
+    PasswordResetRequest,
+    PasswordResetByEmail,
+    PasswordResetBySecurityQuestions,
+    SecurityQuestionsUpdate,
+    ProfileUpdate,
+    SecurityQuestionsResponse,
 )
-from app.core.security_questions import get_all_questions, get_question_text, is_valid_question_id
+from app.core.security_questions import (
+    get_all_questions,
+    get_question_text,
+    is_valid_question_id,
+)
 from app.services.google_auth import verify_google_token
 from app.services.audit_service import AuditService, AuditActions
 from app.core.security import get_password_hash
@@ -22,7 +35,8 @@ from datetime import datetime, UTC, timedelta
 router = APIRouter(prefix="/auth", tags=["autenticação"])
 
 # Esquema OAuth2 para autenticação via token
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")
+
 
 @router.get("/security-questions", response_model=SecurityQuestionsResponse)
 async def get_security_questions():
@@ -32,99 +46,257 @@ async def get_security_questions():
     questions = get_all_questions()
     return SecurityQuestionsResponse(questions=questions)
 
+
 @router.post("/token", response_model=Token)
 async def login_for_access_token(
-    form_data: OAuth2PasswordRequestForm = Depends(), 
+    form_data: OAuth2PasswordRequestForm = Depends(),
     request: Request = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Endpoint de login tradicional com email e senha (para desenvolvimento)
     Suporta tanto senha normal quanto senha temporária
+    Implementa try/catch abrangente, logging detalhado e validação
+    robusta (Solução C1)
     """
-    user = db.query(User).filter(User.email == form_data.username).first()
-    if not user:
-        # Registrar tentativa de login com email inexistente
-        AuditService.log_auth_action(
-            db=db,
-            action=AuditActions.LOGIN_FAILED,
-            user_email=form_data.username,
-            description=f"Tentativa de login com email inexistente: {form_data.username}",
-            success=False,
-            details={"reason": "email_not_found"},
-            request=request
-        )
+    logger = logging.getLogger(__name__)
+
+    try:
+        # Log início da tentativa de login
+        logger.info(f"Iniciando tentativa de login para: {form_data.username}")
+
+        # Validação de entrada
+        if not form_data.username or not form_data.password:
+            logger.warning(
+                f"Tentativa de login com dados incompletos: "
+                f"username={bool(form_data.username)}, "
+                f"password={bool(form_data.password)}"
+            )
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Username e senha são obrigatórios",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        # Tentar buscar por email primeiro, depois por username (para Master)
+        user = None
+        try:
+            user = db.query(User).filter(User.email == form_data.username).first()
+            if not user:
+                # Se não encontrou por email, tentar por username
+                # (especialmente para Master)
+                user = (
+                    db.query(User).filter(User.username == form_data.username).first()
+                )
+                logger.debug(f"Usuário encontrado por username: {bool(user)}")
+            else:
+                logger.debug(f"Usuário encontrado por email: {bool(user)}")
+        except SQLAlchemyError as e:
+            logger.error(
+                f"Erro de banco de dados ao buscar usuário "
+                f"{form_data.username}: {str(e)}"
+            )
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Erro interno do servidor",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        if not user:
+            logger.warning(f"Usuário não encontrado: {form_data.username}")
+            # Registrar tentativa de login com credenciais inexistentes
+            try:
+                AuditService.log_auth_action(
+                    db=db,
+                    action=AuditActions.LOGIN_FAILED,
+                    user_email=form_data.username,
+                    description=(
+                        f"Tentativa de login com credenciais inexistentes: "
+                        f"{form_data.username}"
+                    ),
+                    success=False,
+                    details={"reason": "user_not_found"},
+                    request=request,
+                )
+            except Exception as audit_error:
+                logger.error(f"Erro ao registrar auditoria: {str(audit_error)}")
+
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Email/Username ou senha incorretos",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        # Verificar primeiro se há senha temporária válida
+        password_verified = False
+        login_type = None
+
+        try:
+            temp_password_valid = False
+            if (
+                user.temp_password_hash
+                and user.temp_password_expires
+                and user.temp_password_expires > datetime.now(UTC)
+            ):
+                temp_password_valid = verify_password(
+                    form_data.password, user.temp_password_hash
+                )
+
+                if temp_password_valid:
+                    # Limpar senha temporária após uso bem-sucedido
+                    user.temp_password_hash = None  # type: ignore[assignment]
+                    user.temp_password_expires = None  # type: ignore
+                    user.password_reset_by = None  # type: ignore[assignment]
+                    user.updated_at = datetime.now(UTC)  # type: ignore
+                    db.commit()
+                    password_verified = True
+                    login_type = "temporary_password"
+                    logger.info(
+                        f"Senha temporária verificada com sucesso para: "
+                        f"{user.email}"
+                    )
+
+            # Se não há senha temporária válida, verificar senha normal
+            if not temp_password_valid:
+                if not user.hashed_password:
+                    logger.warning(
+                        f"Usuário {user.email} não possui senha " f"configurada"
+                    )
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Email ou senha incorretos",
+                        headers={"WWW-Authenticate": "Bearer"},
+                    )
+
+                if verify_password(form_data.password, user.hashed_password):
+                    password_verified = True
+                    login_type = "normal_password"
+                    logger.info(
+                        f"Senha normal verificada com sucesso para: " f"{user.email}"
+                    )
+                else:
+                    logger.warning(f"Senha incorreta para usuário: {user.email}")
+
+        except HTTPException:
+            # Re-raise HTTPExceptions (já tratadas)
+            raise
+        except Exception as e:
+            logger.error(f"Erro ao verificar senha para {user.email}: {str(e)}")
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Erro interno do servidor",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        if not password_verified:
+            # Registrar tentativa de login com senha incorreta
+            try:
+                AuditService.log_auth_action(
+                    db=db,
+                    action=AuditActions.LOGIN_FAILED,
+                    user_email=user.email,
+                    description=(
+                        f"Tentativa de login com senha incorreta para " f"{user.email}"
+                    ),
+                    success=False,
+                    details={"reason": "invalid_password"},
+                    request=request,
+                )
+            except Exception as audit_error:
+                logger.error(
+                    f"Erro ao registrar auditoria de falha: " f"{str(audit_error)}"
+                )
+
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Email ou senha incorretos",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        # Login bem-sucedido - criar token de acesso
+        try:
+            access_token = create_access_token(
+                data={"sub": user.email, "user_id": user.id, "role": user.role}
+            )
+            logger.info(f"Token de acesso criado com sucesso para: {user.email}")
+        except Exception as e:
+            logger.error(f"Erro ao criar token de acesso para {user.email}: {str(e)}")
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Erro interno do servidor",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        # Registrar login bem-sucedido
+        try:
+            AuditService.log_auth_action(
+                db=db,
+                action=AuditActions.LOGIN_SUCCESS,
+                user_email=user.email,
+                description=(f"Login bem-sucedido para {user.email} com {login_type}"),
+                success=True,
+                details={"login_method": login_type, "role": user.role},
+                request=request,
+            )
+        except Exception as audit_error:
+            logger.error(f"Erro ao registrar auditoria de sucesso: {str(audit_error)}")
+            # Não falhar o login por erro de auditoria
+
+        logger.info(f"Login concluído com sucesso para: {user.email}")
+        return {"access_token": access_token, "token_type": "bearer"}
+
+    except HTTPException:
+        # Re-raise HTTPExceptions (já tratadas)
+        raise
+    except Exception as e:
+        # Capturar qualquer erro não tratado
+        logger.error(f"Erro inesperado no endpoint /auth/token: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Email ou senha incorretos",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erro interno do servidor",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Verificar primeiro se há senha temporária válida
-    temp_password_valid = False
-    if (user.temp_password_hash and 
-        user.temp_password_expires and 
-        user.temp_password_expires > datetime.now(UTC)):
-        temp_password_valid = verify_password(form_data.password, user.temp_password_hash)
-        
-        if temp_password_valid:
-            # Limpar senha temporária após uso bem-sucedido
-            user.temp_password_hash = None  # type: ignore[assignment]
-            user.temp_password_expires = None  # type: ignore[assignment]
-            user.password_reset_by = None  # type: ignore[assignment]
-            user.updated_at = datetime.now(UTC)  # type: ignore[assignment]
-            db.commit()
-    
-    # Se não há senha temporária válida, verificar senha normal
-    if not temp_password_valid:
-        if not user.hashed_password:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Email ou senha incorretos",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-        
-        if not verify_password(form_data.password, user.hashed_password):
-            # Registrar tentativa de login com senha incorreta
-            AuditService.log_auth_action(
-                db=db,
-                action=AuditActions.LOGIN_FAILED,
-                user_email=user.email,
-                description=f"Tentativa de login com senha incorreta para {user.email}",
-                success=False,
-                details={"reason": "invalid_password"},
-                request=request
-            )
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Email ou senha incorretos",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
 
-    access_token = create_access_token(
-        data={"sub": user.email, "user_id": user.id, "role": user.role}
-    )
-    
-    # Registrar login bem-sucedido
-    login_method = "temporary_password" if temp_password_valid else "normal_password"
-    AuditService.log_auth_action(
-        db=db,
-        action=AuditActions.LOGIN_SUCCESS,
-        user_email=user.email,
-        description=f"Login bem-sucedido para {user.email}",
-        success=True,
-        details={"login_method": login_method, "role": user.role},
-        request=request
-    )
-    
-    return {"access_token": access_token, "token_type": "bearer"}
+@router.get("/check-user-type/{username}")
+async def check_user_type(username: str, db: Session = Depends(get_db)):
+    """
+    Verifica o tipo de usuário pelo username ou email
+    Retorna o role do usuário para determinar opções de recuperação de senha
+    """
+    # Primeiro tentar buscar por username
+    user = db.query(User).filter(User.username == username).first()
+
+    # Se não encontrou por username, tentar por email
+    if not user:
+        user = db.query(User).filter(User.email == username).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Usuário não encontrado"
+        )
+
+    return {
+        "success": True,
+        "user_role": user.role,
+        "has_security_questions": bool(
+            user.security_answer_1 and user.security_answer_2 and user.security_answer_3
+        ),
+        "username": user.username,
+        "email": user.email,
+    }
+
 
 # Endpoints para recuperação de senha
 @router.post("/password-reset/request")
 async def request_password_reset(
     request_data: PasswordResetRequest,
     request: Request = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Solicita reset de senha por email ou perguntas secretas
@@ -132,64 +304,91 @@ async def request_password_reset(
     user = db.query(User).filter(User.email == request_data.email).first()
     if not user:
         # Por segurança, não revelamos se o email existe
-        return {"success": True, "message": "Se o email existir, você receberá instruções"}
-    
+        return {
+            "success": True,
+            "message": "Se o email existir, você receberá instruções",
+        }
+
     if request_data.method == "email":
         # Mock do envio de email - gerar token temporário
-        reset_token = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(32))
-        
+        reset_token = "".join(
+            secrets.choice(string.ascii_letters + string.digits) for _ in range(32)
+        )
+
         # Salvar token temporário no usuário (simulação)
         user.temp_password_hash = reset_token  # type: ignore[assignment]
-        user.temp_password_expires = datetime.now(UTC) + timedelta(hours=1)  # type: ignore[assignment]
+        user.temp_password_expires = datetime.now(UTC) + timedelta(
+            hours=1
+        )  # type: ignore[assignment]
         user.password_reset_by = "email_mock"  # type: ignore[assignment]
         db.commit()
-        
+
         # Log da ação
         AuditService.log_auth_action(
             db=db,
             action="PASSWORD_RESET_REQUEST",
             user_email=user.email,
-            description=f"Solicitação de reset de senha por email (mock) para {user.email}",
+            description=(
+                f"Solicitação de reset de senha por email (mock) para " f"{user.email}"
+            ),
             success=True,
             details={"method": "email", "reset_token": reset_token[:8] + "..."},
-            request=request
+            request=request,
         )
-        
+
         return {
-            "success": True, 
+            "success": True,
             "message": "Token de reset enviado (MOCK)",
-            "mock_token": reset_token  # Em produção, isso seria enviado por email
+            "mock_token": reset_token,  # Em produção, enviado por email
         }
-    
+
     elif request_data.method == "security_questions":
         # Verificar se o usuário tem perguntas secretas configuradas
-        if not all([user.security_answer_1, user.security_answer_2, user.security_answer_3,
-                   user.security_question_1_id, user.security_question_2_id, user.security_question_3_id]):
+        if not all(
+            [
+                user.security_answer_1,
+                user.security_answer_2,
+                user.security_answer_3,
+                user.security_question_1_id,
+                user.security_question_2_id,
+                user.security_question_3_id,
+            ]
+        ):
             return {
-                "success": False, 
-                "message": "Usuário não possui perguntas secretas configuradas"
+                "success": False,
+                "message": ("Usuário não possui perguntas secretas " "configuradas"),
             }
-        
+
         # Retornar as perguntas específicas do usuário
         user_questions = [
-            {"id": user.security_question_1_id, "text": get_question_text(user.security_question_1_id)},
-            {"id": user.security_question_2_id, "text": get_question_text(user.security_question_2_id)},
-            {"id": user.security_question_3_id, "text": get_question_text(user.security_question_3_id)}
+            {
+                "id": user.security_question_1_id,
+                "text": get_question_text(user.security_question_1_id),
+            },
+            {
+                "id": user.security_question_2_id,
+                "text": get_question_text(user.security_question_2_id),
+            },
+            {
+                "id": user.security_question_3_id,
+                "text": get_question_text(user.security_question_3_id),
+            },
         ]
-        
+
         return {
             "success": True,
             "message": "Responda às perguntas secretas",
-            "questions": user_questions
+            "questions": user_questions,
         }
-    
+
     return {"success": False, "message": "Método inválido"}
+
 
 @router.post("/password-reset/email")
 async def reset_password_by_email(
     reset_data: PasswordResetByEmail,
     request: Request = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Reset de senha usando token recebido por email (mock)
@@ -197,57 +396,62 @@ async def reset_password_by_email(
     user = db.query(User).filter(User.email == reset_data.email).first()
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Usuário não encontrado"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Usuário não encontrado"
         )
-    
+
     # Verificar token temporário
-    if (not user.temp_password_hash or 
-        user.temp_password_hash != reset_data.reset_token or
-        not user.temp_password_expires or
-        datetime.now(UTC) > user.temp_password_expires):
-        
+    if (
+        not user.temp_password_hash
+        or user.temp_password_hash != reset_data.reset_token
+        or not user.temp_password_expires
+        or datetime.now(UTC) > user.temp_password_expires
+    ):
+
         AuditService.log_auth_action(
             db=db,
             action="PASSWORD_RESET_FAILED",
             user_email=user.email,
-            description=f"Tentativa de reset com token inválido para {user.email}",
+            description=(
+                f"Tentativa de reset com token inválido para " f"{user.email}"
+            ),
             success=False,
             details={"method": "email", "reason": "invalid_token"},
-            request=request
+            request=request,
         )
-        
+
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Token inválido ou expirado"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Token inválido ou expirado"
         )
-    
+
     # Atualizar senha
-    user.hashed_password = get_password_hash(reset_data.new_password)  # type: ignore[assignment]
+    user.hashed_password = get_password_hash(
+        reset_data.new_password
+    )  # type: ignore[assignment]
     user.temp_password_hash = None  # type: ignore[assignment]
     user.temp_password_expires = None  # type: ignore[assignment]
     user.password_reset_by = None  # type: ignore[assignment]
     user.updated_at = datetime.now(UTC)  # type: ignore[assignment]
     db.commit()
-    
+
     # Log da ação
     AuditService.log_auth_action(
         db=db,
         action="PASSWORD_RESET_SUCCESS",
         user_email=user.email,
-        description=f"Senha resetada com sucesso via email para {user.email}",
+        description=(f"Senha resetada com sucesso via email para " f"{user.email}"),
         success=True,
         details={"method": "email"},
-        request=request
+        request=request,
     )
-    
+
     return {"success": True, "message": "Senha alterada com sucesso"}
+
 
 @router.post("/password-reset/security-questions")
 async def reset_password_by_security_questions(
     reset_data: PasswordResetBySecurityQuestions,
     request: Request = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Reset de senha usando perguntas secretas
@@ -255,55 +459,69 @@ async def reset_password_by_security_questions(
     user = db.query(User).filter(User.email == reset_data.email).first()
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Usuário não encontrado"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Usuário não encontrado"
         )
-    
+
     # Verificar se o usuário tem perguntas secretas
-    if not all([user.security_answer_1, user.security_answer_2, user.security_answer_3]):
+    if not all(
+        [user.security_answer_1, user.security_answer_2, user.security_answer_3]
+    ):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Usuário não possui perguntas secretas configuradas"
+            detail=("Usuário não possui perguntas secretas configuradas"),
         )
-    
+
     # Verificar respostas
-    answer_1_valid = verify_password(reset_data.security_answer_1.lower().strip(), user.security_answer_1)
-    answer_2_valid = verify_password(reset_data.security_answer_2.lower().strip(), user.security_answer_2)
-    answer_3_valid = verify_password(reset_data.security_answer_3.strip(), user.security_answer_3)
-    
+    answer_1_valid = verify_password(
+        reset_data.security_answer_1.lower().strip(), user.security_answer_1
+    )
+    answer_2_valid = verify_password(
+        reset_data.security_answer_2.lower().strip(), user.security_answer_2
+    )
+    answer_3_valid = verify_password(
+        reset_data.security_answer_3.strip(), user.security_answer_3
+    )
+
     if not all([answer_1_valid, answer_2_valid, answer_3_valid]):
         AuditService.log_auth_action(
             db=db,
             action="PASSWORD_RESET_FAILED",
             user_email=user.email,
-            description=f"Tentativa de reset com respostas incorretas para {user.email}",
+            description=(
+                f"Tentativa de reset com respostas incorretas para " f"{user.email}"
+            ),
             success=False,
             details={"method": "security_questions", "reason": "wrong_answers"},
-            request=request
+            request=request,
         )
-        
+
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Respostas das perguntas secretas incorretas"
+            detail=("Respostas das perguntas secretas incorretas"),
         )
-    
+
     # Atualizar senha
-    user.hashed_password = get_password_hash(reset_data.new_password)  # type: ignore[assignment]
+    user.hashed_password = get_password_hash(
+        reset_data.new_password
+    )  # type: ignore[assignment]
     user.updated_at = datetime.now(UTC)  # type: ignore[assignment]
     db.commit()
-    
+
     # Log da ação
     AuditService.log_auth_action(
         db=db,
         action="PASSWORD_RESET_SUCCESS",
         user_email=user.email,
-        description=f"Senha resetada com sucesso via perguntas secretas para {user.email}",
+        description=(
+            f"Senha resetada com sucesso via perguntas secretas para " f"{user.email}"
+        ),
         success=True,
         details={"method": "security_questions"},
-        request=request
+        request=request,
     )
-    
+
     return {"success": True, "message": "Senha alterada com sucesso"}
+
 
 # Endpoints para perfil do usuário
 @router.put("/profile/security-questions")
@@ -311,7 +529,7 @@ async def update_security_questions(
     update_data: SecurityQuestionsUpdate,
     current_user: User = Depends(get_current_user),
     request: Request = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Atualiza as perguntas secretas do usuário
@@ -319,61 +537,77 @@ async def update_security_questions(
     # Verificar senha atual
     if not verify_password(update_data.current_password, current_user.hashed_password):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Senha atual incorreta"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Senha atual incorreta"
         )
-    
+
     # Validar IDs das perguntas
-    question_ids = [update_data.security_question_1_id, update_data.security_question_2_id, update_data.security_question_3_id]
-    
+    question_ids = [
+        update_data.security_question_1_id,
+        update_data.security_question_2_id,
+        update_data.security_question_3_id,
+    ]
+
     # Verificar se todas as perguntas são válidas
     for qid in question_ids:
         if not is_valid_question_id(qid):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"ID de pergunta inválido: {qid}"
+                detail=f"ID de pergunta inválido: {qid}",
             )
-    
+
     # Verificar se as perguntas são diferentes
     if len(set(question_ids)) != 3:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="As três perguntas devem ser diferentes"
+            detail="As três perguntas devem ser diferentes",
         )
-    
+
     # Atualizar perguntas e respostas
-    current_user.security_question_1_id = update_data.security_question_1_id  # type: ignore[assignment]
-    current_user.security_answer_1 = get_password_hash(update_data.security_answer_1.lower().strip())  # type: ignore[assignment]
-    current_user.security_question_2_id = update_data.security_question_2_id  # type: ignore[assignment]
-    current_user.security_answer_2 = get_password_hash(update_data.security_answer_2.lower().strip())  # type: ignore[assignment]
-    current_user.security_question_3_id = update_data.security_question_3_id  # type: ignore[assignment]
-    current_user.security_answer_3 = get_password_hash(update_data.security_answer_3.strip())  # type: ignore[assignment]
+    current_user.security_question_1_id = (
+        update_data.security_question_1_id
+    )  # type: ignore[assignment]
+    current_user.security_answer_1 = get_password_hash(
+        update_data.security_answer_1.lower().strip()
+    )  # type: ignore[assignment]
+    current_user.security_question_2_id = (
+        update_data.security_question_2_id
+    )  # type: ignore[assignment]
+    current_user.security_answer_2 = get_password_hash(
+        update_data.security_answer_2.lower().strip()
+    )  # type: ignore[assignment]
+    current_user.security_question_3_id = (
+        update_data.security_question_3_id
+    )  # type: ignore[assignment]
+    current_user.security_answer_3 = get_password_hash(
+        update_data.security_answer_3.strip()
+    )  # type: ignore[assignment]
     current_user.updated_at = datetime.now(UTC)  # type: ignore[assignment]
     db.commit()
-    
+
     # Log da ação
     AuditService.log_auth_action(
         db=db,
         action="SECURITY_QUESTIONS_UPDATED",
         user_email=current_user.email,
-        description=f"Perguntas secretas atualizadas para {current_user.email}",
+        description=(f"Perguntas secretas atualizadas para {current_user.email}"),
         success=True,
         details={
             "question_1_id": update_data.security_question_1_id,
             "question_2_id": update_data.security_question_2_id,
-            "question_3_id": update_data.security_question_3_id
+            "question_3_id": update_data.security_question_3_id,
         },
-        request=request
+        request=request,
     )
-    
+
     return {"success": True, "message": "Perguntas secretas atualizadas com sucesso"}
+
 
 @router.put("/profile")
 async def update_profile(
     update_data: ProfileUpdate,
     current_user: User = Depends(get_current_user),
     request: Request = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Atualiza dados do perfil do usuário
@@ -381,35 +615,39 @@ async def update_profile(
     # Verificar senha atual
     if not verify_password(update_data.current_password, current_user.hashed_password):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Senha atual incorreta"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Senha atual incorreta"
         )
-    
+
     # Atualizar dados do perfil
     if update_data.name:
         current_user.name = update_data.name  # type: ignore[assignment]
-    
+
     current_user.updated_at = datetime.now(UTC)  # type: ignore[assignment]
     db.commit()
-    
+
     # Log da ação
     AuditService.log_auth_action(
         db=db,
         action="PROFILE_UPDATED",
         user_email=current_user.email,
-        description=f"Perfil atualizado para {current_user.email}",
+        description=(f"Perfil atualizado para {current_user.email}"),
         success=True,
-        details={"updated_fields": [k for k, v in update_data.dict().items() if v and k != "current_password"]},
-        request=request
+        details={
+            "updated_fields": [
+                k
+                for k, v in update_data.dict().items()
+                if v and k != "current_password"
+            ]
+        },
+        request=request,
     )
-    
+
     return {"success": True, "message": "Perfil atualizado com sucesso"}
+
 
 @router.post("/register", response_model=Token)
 async def register_user(
-    user_data: UserCreate,
-    request: Request = None,
-    db: Session = Depends(get_db)
+    user_data: UserCreate, request: Request = None, db: Session = Depends(get_db)
 ):
     """
     Registra um novo usuário (para desenvolvimento e testes)
@@ -418,74 +656,95 @@ async def register_user(
     existing_user = db.query(User).filter(User.email == user_data.email).first()
     if existing_user:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email já está em uso"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Email já está em uso"
         )
-    
+
     # Validar IDs das perguntas
-    question_ids = [user_data.security_question_1_id, user_data.security_question_2_id, user_data.security_question_3_id]
-    
+    question_ids = [
+        user_data.security_question_1_id,
+        user_data.security_question_2_id,
+        user_data.security_question_3_id,
+    ]
+
     # Verificar se todas as perguntas são válidas
     for qid in question_ids:
         if not is_valid_question_id(qid):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"ID de pergunta inválido: {qid}"
+                detail=f"ID de pergunta inválido: {qid}",
             )
-    
+
     # Verificar se as perguntas são diferentes
     if len(set(question_ids)) != 3:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="As três perguntas devem ser diferentes"
+            detail="As três perguntas devem ser diferentes",
         )
-    
+
     # Criar novo usuário
     hashed_password = get_password_hash(user_data.password)
-    
+
     # Hash das respostas das perguntas secretas
     hashed_answer_1 = get_password_hash(user_data.security_answer_1.lower().strip())
     hashed_answer_2 = get_password_hash(user_data.security_answer_2.lower().strip())
     hashed_answer_3 = get_password_hash(user_data.security_answer_3.strip())
-    
+
     new_user = User(
         email=user_data.email,
         name=user_data.full_name,
         hashed_password=hashed_password,
-        role='MASTER' if user_data.username == 'master' else 'USER',
+        role=("MASTER" if user_data.username == "master" else "USER"),
         is_active=True,
         security_question_1_id=user_data.security_question_1_id,
         security_answer_1=hashed_answer_1,
         security_question_2_id=user_data.security_question_2_id,
         security_answer_2=hashed_answer_2,
         security_question_3_id=user_data.security_question_3_id,
-        security_answer_3=hashed_answer_3
+        security_answer_3=hashed_answer_3,
+        # Novos campos opcionais de perfil
+        cpf=user_data.cpf,
+        birth_date=user_data.birth_date,
+        phone=user_data.phone,
+        cep=user_data.cep,
+        street=user_data.street,
+        number=user_data.number,
+        complement=user_data.complement,
+        neighborhood=user_data.neighborhood,
+        city=user_data.city,
+        state=user_data.state,
     )
-    
+
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-    
+
     # Gerar token de acesso
     access_token = create_access_token(
         data={"sub": new_user.email, "user_id": new_user.id, "role": new_user.role}
     )
-    
+
     # Registrar criação de usuário
     AuditService.log_auth_action(
         db=db,
-        action=AuditActions.USER_CREATED,
+        action=AuditActions.CREATE_USER,
         user_email=new_user.email,
-        description=f"Usuário criado: {new_user.email} com role {new_user.role}",
+        description=(f"Usuário criado: {new_user.email} com role {new_user.role}"),
         success=True,
         details={"role": new_user.role, "username": user_data.username},
-        request=request
+        request=request,
     )
-    
-    return {"access_token": access_token, "token_type": "bearer", "user_id": new_user.id}
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user_id": new_user.id,
+    }
+
 
 @router.get("/me", response_model=UserInDB)
-async def read_users_me(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+async def read_users_me(
+    token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
+):
     """
     Retorna os dados do usuário autenticado
     """
@@ -505,8 +764,11 @@ async def read_users_me(token: str = Depends(oauth2_scheme), db: Session = Depen
 
     return user
 
+
 @router.post("/google", response_model=Token)
-async def login_with_google(token: str, request: Request = None, db: Session = Depends(get_db)):
+async def login_with_google(
+    token: str, request: Request = None, db: Session = Depends(get_db)
+):
     """
     Autentica um usuário com token do Google OAuth2
     """
@@ -517,23 +779,34 @@ async def login_with_google(token: str, request: Request = None, db: Session = D
             db=db,
             action=AuditActions.LOGIN_FAILED,
             user_email="unknown",
-            description="Tentativa de login com token Google inválido",
+            description=("Tentativa de login com token Google inválido"),
             success=False,
             details={"reason": "invalid_google_token", "login_method": "google"},
-            request=request
+            request=request,
         )
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token de autenticação Google inválido")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token de autenticação Google inválido",
+        )
 
     # Valida campos essenciais
     email = user_data.get("email") if isinstance(user_data, dict) else None
     google_id = user_data.get("google_id") if isinstance(user_data, dict) else None
     name = user_data.get("name") if isinstance(user_data, dict) else None
     if not email or not google_id or not name:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Dados de usuário Google incompletos")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Dados de usuário Google incompletos",
+        )
 
     user = db.query(User).filter(User.email == email).first()
     if not user:
-        new_user = User(email=email, name=name, picture=user_data.get("picture"), google_id=google_id)
+        new_user = User(
+            email=email,
+            name=name,
+            picture=user_data.get("picture"),
+            google_id=google_id,
+        )
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
@@ -543,30 +816,33 @@ async def login_with_google(token: str, request: Request = None, db: Session = D
     access_token = create_access_token(
         data={"sub": user.email, "user_id": user.id, "role": user.role}
     )
-    
+
     # Registrar login bem-sucedido com Google
-    is_new_user = user.created_at and (datetime.now(UTC) - user.created_at).total_seconds() < 60
+    is_new_user = (
+        user.created_at and (datetime.now(UTC) - user.created_at).total_seconds() < 60
+    )
     AuditService.log_auth_action(
         db=db,
         action=AuditActions.LOGIN_SUCCESS,
         user_email=user.email,
-        description=f"Login bem-sucedido via Google para {user.email}",
+        description=(f"Login bem-sucedido via Google para {user.email}"),
         success=True,
         details={
-            "login_method": "google", 
+            "login_method": "google",
             "role": user.role,
-            "is_new_user": is_new_user
+            "is_new_user": is_new_user,
         },
-        request=request
+        request=request,
     )
 
     return {"access_token": access_token, "token_type": "bearer"}
 
+
 @router.post("/refresh", response_model=Token)
 async def refresh_token(
-    token: str = Depends(oauth2_scheme), 
+    token: str = Depends(oauth2_scheme),
     request: Request = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Atualiza o token de acesso
@@ -590,7 +866,7 @@ async def refresh_token(
     access_token = create_access_token(
         data={"sub": user.email, "user_id": user.id, "role": user.role}
     )
-    
+
     # Registrar refresh de token
     AuditService.log_auth_action(
         db=db,
@@ -599,7 +875,7 @@ async def refresh_token(
         description=f"Token renovado para {user.email}",
         success=True,
         details={"role": user.role},
-        request=request
+        request=request,
     )
 
     return {"access_token": access_token, "token_type": "bearer"}

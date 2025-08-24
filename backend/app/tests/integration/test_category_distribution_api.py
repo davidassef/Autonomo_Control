@@ -8,19 +8,15 @@ from app.models.category import Category
 from app.models.entry import Entry
 
 
-def test_category_distribution_endpoint(test_db, test_client, sample_user, auth_headers):
+def test_category_distribution_endpoint(
+    test_db, test_client, sample_user, auth_headers
+):
     """Testa o endpoint de distribuição por categoria."""
 
     # Criar categorias de teste
-    income_category = Category(
-        name="Salário",
-        type="INCOME",
-        user_id=sample_user.id
-    )
+    income_category = Category(name="Salário", type="INCOME", user_id=sample_user.id)
     expense_category = Category(
-        name="Alimentação",
-        type="EXPENSE",
-        user_id=sample_user.id
+        name="Alimentação", type="EXPENSE", user_id=sample_user.id
     )
 
     test_db.add(income_category)
@@ -36,7 +32,7 @@ def test_category_distribution_endpoint(test_db, test_client, sample_user, auth_
         date=datetime(2024, 1, 15),
         type="INCOME",
         category=income_category.name,
-        user_id=sample_user.id
+        user_id=sample_user.id,
     )
 
     expense_entry1 = Entry(
@@ -45,7 +41,7 @@ def test_category_distribution_endpoint(test_db, test_client, sample_user, auth_
         date=datetime(2024, 1, 20),
         type="EXPENSE",
         category=expense_category.name,
-        user_id=sample_user.id
+        user_id=sample_user.id,
     )
 
     expense_entry2 = Entry(
@@ -54,14 +50,16 @@ def test_category_distribution_endpoint(test_db, test_client, sample_user, auth_
         date=datetime(2024, 1, 25),
         type="EXPENSE",
         category=expense_category.name,
-        user_id=sample_user.id
+        user_id=sample_user.id,
     )
 
     test_db.add_all([income_entry, expense_entry1, expense_entry2])
     test_db.commit()
 
     # Testar endpoint de distribuição
-    response = test_client.get("/api/v1/entries/category-distribution", headers=auth_headers)
+    response = test_client.get(
+        "/api/v1/entries/category-distribution", headers=auth_headers
+    )
 
     assert response.status_code == 200
     data = response.json()
@@ -93,15 +91,13 @@ def test_category_distribution_endpoint(test_db, test_client, sample_user, auth_
     assert data["total"] == 3800.0  # 3000 + 500 + 300
 
 
-def test_category_distribution_with_date_filter(test_db, test_client, sample_user, auth_headers):
+def test_category_distribution_with_date_filter(
+    test_db, test_client, sample_user, auth_headers
+):
     """Testa o endpoint com filtro de data."""
 
     # Criar categoria
-    category = Category(
-        name="Transporte",
-        type="EXPENSE",
-        user_id=sample_user.id
-    )
+    category = Category(name="Transporte", type="EXPENSE", user_id=sample_user.id)
 
     test_db.add(category)
     test_db.commit()
@@ -114,7 +110,7 @@ def test_category_distribution_with_date_filter(test_db, test_client, sample_use
         date=datetime(2024, 1, 15),
         type="EXPENSE",
         category=category.name,
-        user_id=sample_user.id
+        user_id=sample_user.id,
     )
 
     entry_feb = Entry(
@@ -123,7 +119,7 @@ def test_category_distribution_with_date_filter(test_db, test_client, sample_use
         date=datetime(2024, 2, 15),
         type="EXPENSE",
         category=category.name,
-        user_id=sample_user.id
+        user_id=sample_user.id,
     )
 
     test_db.add_all([entry_jan, entry_feb])
@@ -133,10 +129,7 @@ def test_category_distribution_with_date_filter(test_db, test_client, sample_use
     response = test_client.get(
         "/api/v1/entries/category-distribution",
         headers=auth_headers,
-        params={
-            "start_date": "2024-01-01",
-            "end_date": "2024-01-31"
-        }
+        params={"start_date": "2024-01-01", "end_date": "2024-01-31"},
     )
 
     assert response.status_code == 200
@@ -149,10 +142,14 @@ def test_category_distribution_with_date_filter(test_db, test_client, sample_use
     assert distributions[0]["count"] == 1
 
 
-def test_category_distribution_empty_result(test_db, test_client, sample_user, auth_headers):
+def test_category_distribution_empty_result(
+    test_db, test_client, sample_user, auth_headers
+):
     """Testa o endpoint quando não há entradas."""
 
-    response = test_client.get("/api/v1/entries/category-distribution", headers=auth_headers)
+    response = test_client.get(
+        "/api/v1/entries/category-distribution", headers=auth_headers
+    )
 
     assert response.status_code == 200
     data = response.json()

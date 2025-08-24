@@ -1,6 +1,7 @@
 """
 Este módulo implementa a integração com a autenticação Google OAuth2.
 """
+
 from typing import Dict, Optional
 import httpx
 from google.oauth2 import id_token
@@ -92,7 +93,7 @@ def verify_google_token(token: str) -> Optional[Dict]:
         )
 
         # Verificar o emissor do token
-        if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
+        if idinfo["iss"] not in ["accounts.google.com", "https://accounts.google.com"]:
             return None
 
         # Retornar informações do usuário

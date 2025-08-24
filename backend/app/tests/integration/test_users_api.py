@@ -10,9 +10,7 @@ def test_get_users(test_client, auth_headers, test_db):
     """
     # Arrange - cria um usuário adicional
     new_user = User(
-        email="outro@exemplo.com",
-        name="Outro Usuário",
-        google_id="987654321"
+        email="outro@exemplo.com", name="Outro Usuário", google_id="987654321"
     )
     test_db.add(new_user)
     test_db.commit()
@@ -78,16 +76,11 @@ def test_update_user(test_client, auth_headers, sample_user):
     Testa a atualização de dados do usuário
     """
     # Arrange
-    update_data = {
-        "name": "Nome Atualizado",
-        "picture": "https://exemplo.com/foto.jpg"
-    }
+    update_data = {"name": "Nome Atualizado", "picture": "https://exemplo.com/foto.jpg"}
 
     # Act
     response = test_client.put(
-        "/api/v1/users/me",
-        json=update_data,
-        headers=auth_headers
+        "/api/v1/users/me", json=update_data, headers=auth_headers
     )
 
     # Assert

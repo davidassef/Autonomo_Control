@@ -1,6 +1,7 @@
 """
 Mock para o serviço de autenticação do Google
 """
+
 from typing import Dict, Optional
 
 # Dados simulados para testes
@@ -46,7 +47,7 @@ async def get_token(code: str) -> Optional[Dict]:
             "access_token": mock_valid_token,
             "refresh_token": "refresh_token",
             "id_token": "id_token",
-            "expires_in": 3600
+            "expires_in": 3600,
         }
     return None
 

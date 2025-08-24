@@ -1,4 +1,5 @@
 from sqlalchemy import Boolean, Column, String, DateTime, Integer, Float, ForeignKey
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from enum import Enum as PyEnum
 from uuid import uuid4
@@ -17,10 +18,10 @@ class Entry(Base):
     # Dados do lançamento genérico / financeiro
     amount = Column(Float)  # Valor consolidado (para despesas ou receitas simples)
     description = Column(String)  # Descrição
-    date = Column(DateTime(timezone=True))  # Data do lançamento
+    date = Column(DateTime(timezone=True), index=True)  # Data do lançamento
     type = Column(String, nullable=False, index=True)  # INCOME / EXPENSE
     category = Column(String, index=True)  # Categoria (Combustível, Corrida, etc.)
-    subcategory = Column(String, nullable=True)
+    subcategory = Column(String, nullable=True, index=True)
 
     # Campos específicos de corrida (opcionais, somente quando type=INCOME e representar corrida)
     platform = Column(String, nullable=True, index=True)              # Plataforma (UBER, 99, etc.)
@@ -46,3 +47,7 @@ class Entry(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     is_deleted = Column(Boolean, default=False)  # Soft delete
+    
+    # Relacionamentos SQLAlchemy
+    user = relationship("User", back_populates="entries")
+    linked_entry = relationship("Entry", remote_side=[id], backref="linked_entries")

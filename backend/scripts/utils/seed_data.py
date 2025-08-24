@@ -1,6 +1,7 @@
 """Seed script para categorias padrão e corridas fictícias.
 Executar: python seed_data.py
 """
+
 from datetime import datetime, timedelta, UTC
 from random import choice, uniform, randint
 from sqlalchemy.orm import Session
@@ -43,7 +44,11 @@ def get_or_create_system_user(db: Session) -> User:
 
 def seed_categories(db: Session, user: User):
     for name, ctype in DEFAULT_CATEGORIES:
-        exists = db.query(Category).filter(Category.name == name, Category.user_id == user.id).first()
+        exists = (
+            db.query(Category)
+            .filter(Category.name == name, Category.user_id == user.id)
+            .first()
+        )
         if not exists:
             db.add(Category(name=name, type=ctype, user_id=user.id, is_default=True))
     db.commit()
@@ -98,16 +103,22 @@ def main():
                     name="Master",
                     role="MASTER",
                     is_active=True,  # type: ignore[arg-type]
-                    hashed_password=get_password_hash(settings.MASTER_PASSWORD) if settings.MASTER_PASSWORD else None
+                    hashed_password=(
+                        get_password_hash(settings.MASTER_PASSWORD)
+                        if settings.MASTER_PASSWORD
+                        else None
+                    ),
                 )
                 db.add(master)
                 db.commit()
             else:
                 changed = False
-                if getattr(master, 'role', 'USER') != 'MASTER':
-                    master.role = 'MASTER'  # type: ignore[assignment]
+                if getattr(master, "role", "USER") != "MASTER":
+                    master.role = "MASTER"  # type: ignore[assignment]
                     changed = True
-                if settings.MASTER_PASSWORD and not getattr(master, 'hashed_password', None):
+                if settings.MASTER_PASSWORD and not getattr(
+                    master, "hashed_password", None
+                ):
                     master.hashed_password = get_password_hash(settings.MASTER_PASSWORD)  # type: ignore[assignment]
                     changed = True
                 if changed:

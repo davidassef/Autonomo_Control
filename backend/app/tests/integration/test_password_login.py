@@ -1,4 +1,5 @@
 """Testes para login tradicional /auth/token cobrindo sucesso e falha."""
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -12,7 +13,9 @@ def client(test_db):
     return TestClient(app)
 
 
-def _create_login_user(db, email="pwd.user@example.com", password="Pass12345", role="USER"):
+def _create_login_user(
+    db, email="pwd.user@example.com", password="Pass12345", role="USER"
+):
     user = User(email=email, name="Pwd User", role=role, is_active=True, hashed_password=get_password_hash(password))  # type: ignore[arg-type]
     db.add(user)
     db.commit()

@@ -7,8 +7,9 @@ import asyncio
 import sys
 from pathlib import Path
 
-# Adicionar o diretório raiz ao path para imports
-sys.path.append(str(Path(__file__).parent))
+# Adicionar o diretório backend ao path para imports
+backend_dir = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(backend_dir))
 
 from sqlalchemy.orm import Session
 from app.core.database import SessionLocal, engine
@@ -19,11 +20,14 @@ from app.core.security import get_password_hash  # Agora usado para permitir log
 from datetime import datetime, date
 import uuid
 
+
 def create_admin_user():
     """Cria um usuário administrador de exemplo"""
     db: Session = SessionLocal()
     # Verificar se o usuário admin já existe
-    existing_admin = db.query(User).filter(User.email == "admin@autonomocontrol.com").first()
+    existing_admin = (
+        db.query(User).filter(User.email == "admin@autonomocontrol.com").first()
+    )
     if existing_admin:
         print("✅ Usuário admin já existe!")
         print(f"   📧 Email: {existing_admin.email}")
@@ -41,7 +45,7 @@ def create_admin_user():
             picture="https://via.placeholder.com/150/1f2937/ffffff?text=ADMIN",
             is_active=True,
             google_id="admin_google_id_example",
-            hashed_password=get_password_hash(dev_password)
+            hashed_password=get_password_hash(dev_password),
         )
         db.add(admin_user)
         db.commit()
@@ -61,6 +65,7 @@ def create_admin_user():
     finally:
         db.close()
 
+
 def create_default_categories(db: Session, user_id: str):
     """Cria categorias padrão para o usuário admin"""
 
@@ -70,8 +75,12 @@ def create_default_categories(db: Session, user_id: str):
         {"name": "Consultoria", "type": "INCOME", "color": "#3B82F6", "icon": "🎯"},
         {"name": "Vendas", "type": "INCOME", "color": "#8B5CF6", "icon": "💰"},
         {"name": "Investimentos", "type": "INCOME", "color": "#F59E0B", "icon": "📈"},
-        {"name": "Outros Recebimentos", "type": "INCOME", "color": "#06B6D4", "icon": "💎"},
-
+        {
+            "name": "Outros Recebimentos",
+            "type": "INCOME",
+            "color": "#06B6D4",
+            "icon": "💎",
+        },
         # Categorias de Despesa
         {"name": "Escritório", "type": "EXPENSE", "color": "#EF4444", "icon": "🏢"},
         {"name": "Marketing", "type": "EXPENSE", "color": "#F97316", "icon": "📢"},
@@ -87,10 +96,11 @@ def create_default_categories(db: Session, user_id: str):
 
     for cat_data in default_categories:
         # Verificar se a categoria já existe
-        existing_cat = db.query(Category).filter(
-            Category.name == cat_data["name"],
-            Category.user_id == user_id
-        ).first()
+        existing_cat = (
+            db.query(Category)
+            .filter(Category.name == cat_data["name"], Category.user_id == user_id)
+            .first()
+        )
 
         if not existing_cat:
             category = Category(
@@ -100,7 +110,7 @@ def create_default_categories(db: Session, user_id: str):
                 color=cat_data["color"],
                 icon=cat_data["icon"],
                 user_id=user_id,
-                created_at=datetime.utcnow()
+                created_at=datetime.utcnow(),
             )
             db.add(category)
             created_categories.append(category)
@@ -110,80 +120,109 @@ def create_default_categories(db: Session, user_id: str):
 
     return created_categories
 
+
 def create_sample_entries(db: Session, user_id: str):
     """Cria lançamentos de exemplo para o usuário admin"""
 
     # Buscar algumas categorias criadas
-    income_categories = db.query(Category).filter(
-        Category.user_id == user_id,
-        Category.type == "INCOME"
-    ).limit(3).all()
+    income_categories = (
+        db.query(Category)
+        .filter(Category.user_id == user_id, Category.type == "INCOME")
+        .limit(3)
+        .all()
+    )
 
-    expense_categories = db.query(Category).filter(
-        Category.user_id == user_id,
-        Category.type == "EXPENSE"
-    ).limit(5).all()
+    expense_categories = (
+        db.query(Category)
+        .filter(Category.user_id == user_id, Category.type == "EXPENSE")
+        .limit(5)
+        .all()
+    )
 
     sample_entries = []
 
     if income_categories:
         # Receitas de exemplo
-        sample_entries.extend([
-            {
-                "amount": 2500.00,
-                "description": "Projeto de desenvolvimento web",
-                "type": EntryType.INCOME,
-                "category_id": income_categories[0].id,
-                "date": date(2024, 12, 15)
-            },
-            {
-                "amount": 1800.00,
-                "description": "Consultoria em React",
-                "type": EntryType.INCOME,
-                "category_id": income_categories[1].id if len(income_categories) > 1 else income_categories[0].id,
-                "date": date(2024, 12, 10)
-            },
-            {
-                "amount": 3200.00,
-                "description": "Desenvolvimento de API",
-                "type": EntryType.INCOME,
-                "category_id": income_categories[2].id if len(income_categories) > 2 else income_categories[0].id,
-                "date": date(2024, 12, 5)
-            }
-        ])
+        sample_entries.extend(
+            [
+                {
+                    "amount": 2500.00,
+                    "description": "Projeto de desenvolvimento web",
+                    "type": EntryType.INCOME,
+                    "category_id": income_categories[0].id,
+                    "date": date(2024, 12, 15),
+                },
+                {
+                    "amount": 1800.00,
+                    "description": "Consultoria em React",
+                    "type": EntryType.INCOME,
+                    "category_id": (
+                        income_categories[1].id
+                        if len(income_categories) > 1
+                        else income_categories[0].id
+                    ),
+                    "date": date(2024, 12, 10),
+                },
+                {
+                    "amount": 3200.00,
+                    "description": "Desenvolvimento de API",
+                    "type": EntryType.INCOME,
+                    "category_id": (
+                        income_categories[2].id
+                        if len(income_categories) > 2
+                        else income_categories[0].id
+                    ),
+                    "date": date(2024, 12, 5),
+                },
+            ]
+        )
 
     if expense_categories:
         # Despesas de exemplo
-        sample_entries.extend([
-            {
-                "amount": 150.00,
-                "description": "Hospedagem servidor",
-                "type": EntryType.EXPENSE,
-                "category_id": expense_categories[0].id,
-                "date": date(2024, 12, 1)
-            },
-            {
-                "amount": 89.90,
-                "description": "Adobe Creative Suite",
-                "type": EntryType.EXPENSE,
-                "category_id": expense_categories[1].id if len(expense_categories) > 1 else expense_categories[0].id,
-                "date": date(2024, 12, 3)
-            },
-            {
-                "amount": 45.00,
-                "description": "Transporte para cliente",
-                "type": EntryType.EXPENSE,
-                "category_id": expense_categories[2].id if len(expense_categories) > 2 else expense_categories[0].id,
-                "date": date(2024, 12, 8)
-            },
-            {
-                "amount": 120.00,
-                "description": "Almoço com cliente",
-                "type": EntryType.EXPENSE,
-                "category_id": expense_categories[3].id if len(expense_categories) > 3 else expense_categories[0].id,
-                "date": date(2024, 12, 12)
-            }
-        ])
+        sample_entries.extend(
+            [
+                {
+                    "amount": 150.00,
+                    "description": "Hospedagem servidor",
+                    "type": EntryType.EXPENSE,
+                    "category_id": expense_categories[0].id,
+                    "date": date(2024, 12, 1),
+                },
+                {
+                    "amount": 89.90,
+                    "description": "Adobe Creative Suite",
+                    "type": EntryType.EXPENSE,
+                    "category_id": (
+                        expense_categories[1].id
+                        if len(expense_categories) > 1
+                        else expense_categories[0].id
+                    ),
+                    "date": date(2024, 12, 3),
+                },
+                {
+                    "amount": 45.00,
+                    "description": "Transporte para cliente",
+                    "type": EntryType.EXPENSE,
+                    "category_id": (
+                        expense_categories[2].id
+                        if len(expense_categories) > 2
+                        else expense_categories[0].id
+                    ),
+                    "date": date(2024, 12, 8),
+                },
+                {
+                    "amount": 120.00,
+                    "description": "Almoço com cliente",
+                    "type": EntryType.EXPENSE,
+                    "category_id": (
+                        expense_categories[3].id
+                        if len(expense_categories) > 3
+                        else expense_categories[0].id
+                    ),
+                    "date": date(2024, 12, 12),
+                },
+            ]
+        )
 
     created_entries = []
 
@@ -196,7 +235,7 @@ def create_sample_entries(db: Session, user_id: str):
             category_id=entry_data["category_id"],
             date=entry_data["date"],
             user_id=user_id,
-            created_at=datetime.utcnow()
+            created_at=datetime.utcnow(),
         )
         db.add(entry)
         created_entries.append(entry)
@@ -205,6 +244,7 @@ def create_sample_entries(db: Session, user_id: str):
     print(f"💼 {len(created_entries)} lançamentos de exemplo criados!")
 
     return created_entries
+
 
 if __name__ == "__main__":
     print("🚀 Criando usuário administrador de exemplo...")

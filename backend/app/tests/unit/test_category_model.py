@@ -4,6 +4,7 @@ Testes unitários para o modelo Category.
 Este módulo contém testes para validar o comportamento do modelo Category,
 incluindo criação, atualização e relacionamentos com usuários.
 """
+
 from uuid import UUID
 
 from app.models.category import Category
@@ -21,19 +22,13 @@ def test_create_category(test_db, sample_user):
 
     # Act
     category = Category(
-        name=name,
-        type=category_type,
-        color=color,
-        icon=icon,
-        user_id=sample_user.id
+        name=name, type=category_type, color=color, icon=icon, user_id=sample_user.id
     )
     test_db.add(category)
     test_db.commit()
 
     # Assert
-    db_category = test_db.query(Category).filter(
-        Category.name == name
-    ).first()
+    db_category = test_db.query(Category).filter(Category.name == name).first()
     assert db_category is not None
     assert db_category.name == name
     assert db_category.type == category_type
@@ -64,18 +59,12 @@ def test_create_default_category(test_db):
     category_type = "EXPENSE"  # Renamed from 'type' to avoid built-in conflict
 
     # Act
-    category = Category(
-        name=name,
-        type=category_type,
-        is_default=True
-    )
+    category = Category(name=name, type=category_type, is_default=True)
     test_db.add(category)
     test_db.commit()
 
     # Assert
-    db_category = test_db.query(Category).filter(
-        Category.name == name
-    ).first()
+    db_category = test_db.query(Category).filter(Category.name == name).first()
     assert db_category is not None
     assert db_category.name == name
     assert db_category.user_id is None
@@ -92,18 +81,16 @@ def test_category_update(test_db, sample_category):
     new_color = "#3366FF"
 
     # Act
-    db_category = test_db.query(Category).filter(
-        Category.id == category_id
-    ).first()
+    db_category = test_db.query(Category).filter(Category.id == category_id).first()
     db_category.name = new_name
     db_category.color = new_color
     test_db.commit()
     test_db.refresh(db_category)
 
     # Assert
-    updated_category = test_db.query(Category).filter(
-        Category.id == category_id
-    ).first()
+    updated_category = (
+        test_db.query(Category).filter(Category.id == category_id).first()
+    )
     assert updated_category.name == new_name
     assert updated_category.color == new_color
 
@@ -116,16 +103,16 @@ def test_user_categories(test_db, sample_user):
     categories = [
         Category(name="Alimentação", type="EXPENSE", user_id=sample_user.id),
         Category(name="Transporte", type="EXPENSE", user_id=sample_user.id),
-        Category(name="Freelancer", type="INCOME", user_id=sample_user.id)
+        Category(name="Freelancer", type="INCOME", user_id=sample_user.id),
     ]
 
     for category in categories:
         test_db.add(category)
 
-    test_db.commit()    # Assert
-    user_categories = test_db.query(Category).filter(
-        Category.user_id == sample_user.id
-    ).all()  # Pode haver a categoria de amostra também
+    test_db.commit()  # Assert
+    user_categories = (
+        test_db.query(Category).filter(Category.user_id == sample_user.id).all()
+    )  # Pode haver a categoria de amostra também
     assert len(user_categories) >= 3
 
     # Verificar se há pelo menos uma categoria de cada tipo

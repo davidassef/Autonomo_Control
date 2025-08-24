@@ -6,9 +6,14 @@ from app.dependencies import get_current_user
 from app.core.database import get_db
 from app.models.category import Category
 from app.models.user import User
-from app.schemas.category_schema import Category as CategorySchema, CategoryCreate, CategoryUpdate
+from app.schemas.category_schema import (
+    Category as CategorySchema,
+    CategoryCreate,
+    CategoryUpdate,
+)
 
 router = APIRouter(prefix="/categories", tags=["categorias"])
+
 
 @router.post("/", response_model=CategorySchema, status_code=status.HTTP_201_CREATED)
 async def create_category(
@@ -20,16 +25,20 @@ async def create_category(
     Cria uma nova categoria personalizada para o usuário
     """
     # Verificar se já existe uma categoria com o mesmo nome e tipo para o usuário
-    existing_category = db.query(Category).filter(
-        Category.name == category.name,
-        Category.type == category.type,
-        Category.user_id == current_user.id
-    ).first()
+    existing_category = (
+        db.query(Category)
+        .filter(
+            Category.name == category.name,
+            Category.type == category.type,
+            Category.user_id == current_user.id,
+        )
+        .first()
+    )
 
     if existing_category:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Já existe uma categoria com este nome e tipo"
+            detail="Já existe uma categoria com este nome e tipo",
         )
 
     db_category = Category(
@@ -41,6 +50,7 @@ async def create_category(
     db.commit()
     db.refresh(db_category)
     return db_category
+
 
 @router.get("/", response_model=List[CategorySchema])
 async def read_categories(
@@ -63,6 +73,7 @@ async def read_categories(
 
     return query.all()
 
+
 @router.get("/{category_id}", response_model=CategorySchema)
 async def read_category(
     category_id: str,
@@ -72,15 +83,20 @@ async def read_category(
     """
     Retorna uma categoria específica
     """
-    db_category = db.query(Category).filter(
-        Category.id == category_id,
-        (Category.is_default == True) | (Category.user_id == current_user.id),
-    ).first()
+    db_category = (
+        db.query(Category)
+        .filter(
+            Category.id == category_id,
+            (Category.is_default == True) | (Category.user_id == current_user.id),
+        )
+        .first()
+    )
 
     if db_category is None:
         raise HTTPException(status_code=404, detail="Categoria não encontrada")
 
     return db_category
+
 
 @router.get("/{category_id}/subcategories", response_model=List[str])
 async def get_category_subcategories(
@@ -91,15 +107,20 @@ async def get_category_subcategories(
     """
     Retorna a lista de subcategorias de uma categoria específica
     """
-    db_category = db.query(Category).filter(
-        Category.id == category_id,
-        (Category.is_default == True) | (Category.user_id == current_user.id)
-    ).first()
+    db_category = (
+        db.query(Category)
+        .filter(
+            Category.id == category_id,
+            (Category.is_default == True) | (Category.user_id == current_user.id),
+        )
+        .first()
+    )
 
     if db_category is None:
         raise HTTPException(status_code=404, detail="Categoria não encontrada")
 
     return db_category.subcategories or []
+
 
 @router.put("/{category_id}", response_model=CategorySchema)
 async def update_category(
@@ -111,16 +132,23 @@ async def update_category(
     """
     Atualiza uma categoria personalizada do usuário
     """
-    db_category = db.query(Category).filter(
-        Category.id == category_id,
-        Category.user_id == current_user.id,  # Apenas categorias do usuário podem ser atualizadas
-        Category.is_default.is_(False),  # Categorias padrão não podem ser atualizadas
-    ).first()
+    db_category = (
+        db.query(Category)
+        .filter(
+            Category.id == category_id,
+            Category.user_id
+            == current_user.id,  # Apenas categorias do usuário podem ser atualizadas
+            Category.is_default.is_(
+                False
+            ),  # Categorias padrão não podem ser atualizadas
+        )
+        .first()
+    )
 
     if db_category is None:
         raise HTTPException(
             status_code=404,
-            detail="Categoria não encontrada ou não pode ser atualizada"
+            detail="Categoria não encontrada ou não pode ser atualizada",
         )
 
     update_data = category_update.model_dump(exclude_unset=True)
@@ -131,6 +159,7 @@ async def update_category(
     db.refresh(db_category)
 
     return db_category
+
 
 @router.patch("/{category_id}", response_model=CategorySchema)
 async def patch_category(
@@ -142,16 +171,23 @@ async def patch_category(
     """
     Atualiza parcialmente uma categoria personalizada do usuário (PATCH)
     """
-    db_category = db.query(Category).filter(
-        Category.id == category_id,
-        Category.user_id == current_user.id,  # Apenas categorias do usuário podem ser atualizadas
-        Category.is_default.is_(False),  # Categorias padrão não podem ser atualizadas
-    ).first()
+    db_category = (
+        db.query(Category)
+        .filter(
+            Category.id == category_id,
+            Category.user_id
+            == current_user.id,  # Apenas categorias do usuário podem ser atualizadas
+            Category.is_default.is_(
+                False
+            ),  # Categorias padrão não podem ser atualizadas
+        )
+        .first()
+    )
 
     if db_category is None:
         raise HTTPException(
             status_code=404,
-            detail="Categoria não encontrada ou não pode ser atualizada"
+            detail="Categoria não encontrada ou não pode ser atualizada",
         )
 
     update_data = category_update.model_dump(exclude_unset=True)
@@ -163,6 +199,7 @@ async def patch_category(
 
     return db_category
 
+
 @router.delete("/{category_id}", status_code=status.HTTP_200_OK)
 async def delete_category(
     category_id: str,
@@ -172,16 +209,20 @@ async def delete_category(
     """
     Remove uma categoria personalizada do usuário
     """
-    db_category = db.query(Category).filter(
-        Category.id == category_id,
-        Category.user_id == current_user.id,  # Apenas categorias do usuário podem ser removidas
-        Category.is_default.is_(False),  # Categorias padrão não podem ser removidas
-    ).first()
+    db_category = (
+        db.query(Category)
+        .filter(
+            Category.id == category_id,
+            Category.user_id
+            == current_user.id,  # Apenas categorias do usuário podem ser removidas
+            Category.is_default.is_(False),  # Categorias padrão não podem ser removidas
+        )
+        .first()
+    )
 
     if db_category is None:
         raise HTTPException(
-            status_code=404,
-            detail="Categoria não encontrada ou não pode ser removida"
+            status_code=404, detail="Categoria não encontrada ou não pode ser removida"
         )
 
     db.delete(db_category)

@@ -8,6 +8,7 @@ class SQLiteListType(types.TypeDecorator):
     Tipo personalizado que salva listas como texto delimitado em SQLite
     mas mantém o comportamento normal de ARRAY no PostgreSQL
     """
+
     impl = types.Text
     cache_ok = True
 
@@ -23,7 +24,7 @@ class SQLiteListType(types.TypeDecorator):
             return None
 
         # Para SQLite, converte a lista para uma string JSON
-        if dialect.name == 'sqlite':
+        if dialect.name == "sqlite":
             return json.dumps(value)
 
         # Para PostgreSQL, retorna o valor normalmente (será tratado como ARRAY)
@@ -37,7 +38,7 @@ class SQLiteListType(types.TypeDecorator):
             return None
 
         # Para SQLite, converte a string JSON de volta para lista
-        if dialect.name == 'sqlite':
+        if dialect.name == "sqlite":
             try:
                 return json.loads(value)
             except (ValueError, TypeError):

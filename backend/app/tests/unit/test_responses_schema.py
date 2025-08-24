@@ -1,6 +1,7 @@
 """
 Testes unitários para schemas de respostas (responses.py)
 """
+
 from typing import List
 
 import pytest
@@ -10,7 +11,7 @@ from app.schemas.responses import (
     ResponseBase,
     SingleResponse,
     ListResponse,
-    ErrorResponse
+    ErrorResponse,
 )
 
 
@@ -26,10 +27,7 @@ class TestResponseBase:
 
     def test_response_base_custom_values(self):
         """Testa ResponseBase com valores customizados"""
-        response = ResponseBase(
-            success=False,
-            message="Operação customizada"
-        )
+        response = ResponseBase(success=False, message="Operação customizada")
 
         assert response.success is False
         assert response.message == "Operação customizada"
@@ -70,8 +68,7 @@ class TestSingleResponse:
     def test_single_response_with_string_data(self):
         """Testa SingleResponse com dados string"""
         response = SingleResponse[str](
-            data="Dados de teste",
-            message="Dados carregados"
+            data="Dados de teste", message="Dados carregados"
         )
 
         assert response.success is True
@@ -82,9 +79,7 @@ class TestSingleResponse:
         """Testa SingleResponse com dados de dicionário"""
         test_data = {"id": 1, "name": "Teste", "active": True}
         response = SingleResponse[dict](
-            data=test_data,
-            success=True,
-            message="Dados do dicionário"
+            data=test_data, success=True, message="Dados do dicionário"
         )
 
         assert response.success is True
@@ -97,10 +92,7 @@ class TestSingleResponse:
     def test_single_response_with_list_data(self):
         """Testa SingleResponse com dados de lista"""
         test_data = [1, 2, 3, 4, 5]
-        response = SingleResponse[List[int]](
-            data=test_data,
-            message="Lista de números"
-        )
+        response = SingleResponse[List[int]](data=test_data, message="Lista de números")
 
         assert response.success is True
         assert response.data == test_data
@@ -108,10 +100,7 @@ class TestSingleResponse:
 
     def test_single_response_with_none_data(self):
         """Testa SingleResponse com data explicitamente None"""
-        response = SingleResponse[str](
-            data=None,
-            message="Sem dados"
-        )
+        response = SingleResponse[str](data=None, message="Sem dados")
 
         assert response.success is True
         assert response.data is None
@@ -119,9 +108,7 @@ class TestSingleResponse:
     def test_single_response_failure(self):
         """Testa SingleResponse com falha"""
         response = SingleResponse[str](
-            success=False,
-            message="Operação falhou",
-            data=None
+            success=False, message="Operação falhou", data=None
         )
 
         assert response.success is False
@@ -147,11 +134,7 @@ class TestListResponse:
         """Testa ListResponse com dados"""
         test_data = ["item1", "item2", "item3"]
         response = ListResponse[str](
-            data=test_data,
-            total=3,
-            page=1,
-            page_size=10,
-            message="Lista carregada"
+            data=test_data, total=3, page=1, page_size=10, message="Lista carregada"
         )
 
         assert response.success is True
@@ -165,11 +148,7 @@ class TestListResponse:
         """Testa ListResponse com paginação"""
         test_data = [{"id": i, "name": f"Item {i}"} for i in range(1, 6)]
         response = ListResponse[dict](
-            data=test_data,
-            total=50,
-            page=2,
-            page_size=5,
-            message="Página 2 de 10"
+            data=test_data, total=50, page=2, page_size=5, message="Página 2 de 10"
         )
 
         assert response.data == test_data
@@ -181,11 +160,7 @@ class TestListResponse:
     def test_list_response_empty_data(self):
         """Testa ListResponse com dados vazios"""
         response = ListResponse[str](
-            data=[],
-            total=0,
-            page=1,
-            page_size=20,
-            message="Nenhum item encontrado"
+            data=[], total=0, page=1, page_size=20, message="Nenhum item encontrado"
         )
 
         assert response.data == []
@@ -197,11 +172,7 @@ class TestListResponse:
         """Testa ListResponse com dataset grande"""
         test_data = list(range(100, 150))  # 50 items
         response = ListResponse[int](
-            data=test_data,
-            total=1000,
-            page=3,
-            page_size=50,
-            message="Dados paginados"
+            data=test_data, total=1000, page=3, page_size=50, message="Dados paginados"
         )
 
         assert len(response.data) == 50
@@ -212,10 +183,7 @@ class TestListResponse:
     def test_list_response_failure(self):
         """Testa ListResponse com falha"""
         response = ListResponse[str](
-            success=False,
-            message="Falha ao carregar lista",
-            data=[],
-            total=0
+            success=False, message="Falha ao carregar lista", data=[], total=0
         )
 
         assert response.success is False
@@ -225,11 +193,7 @@ class TestListResponse:
 
     def test_list_response_custom_page_size(self):
         """Testa ListResponse com page_size customizado"""
-        response = ListResponse[str](
-            page_size=25,
-            page=4,
-            total=100
-        )
+        response = ListResponse[str](page_size=25, page=4, total=100)
 
         assert response.page_size == 25
         assert response.page == 4
@@ -250,15 +214,9 @@ class TestErrorResponse:
 
     def test_error_response_complete(self):
         """Testa ErrorResponse com todos os campos"""
-        details = {
-            "field": "email",
-            "value": "invalid-email",
-            "constraint": "format"
-        }
+        details = {"field": "email", "value": "invalid-email", "constraint": "format"}
         response = ErrorResponse(
-            message="Erro de validação",
-            error_code="VALIDATION_ERROR",
-            details=details
+            message="Erro de validação", error_code="VALIDATION_ERROR", details=details
         )
 
         assert response.success is False
@@ -269,10 +227,7 @@ class TestErrorResponse:
 
     def test_error_response_with_error_code_only(self):
         """Testa ErrorResponse apenas com código de erro"""
-        response = ErrorResponse(
-            message="Erro interno",
-            error_code="INTERNAL_ERROR"
-        )
+        response = ErrorResponse(message="Erro interno", error_code="INTERNAL_ERROR")
 
         assert response.success is False
         assert response.message == "Erro interno"
@@ -282,10 +237,7 @@ class TestErrorResponse:
     def test_error_response_with_details_only(self):
         """Testa ErrorResponse apenas com detalhes"""
         details = {"timestamp": "2025-05-24T10:00:00Z", "request_id": "123"}
-        response = ErrorResponse(
-            message="Erro de sistema",
-            details=details
-        )
+        response = ErrorResponse(message="Erro de sistema", details=details)
 
         assert response.success is False
         assert response.message == "Erro de sistema"
@@ -301,10 +253,7 @@ class TestErrorResponse:
 
     def test_error_response_empty_details(self):
         """Testa ErrorResponse com detalhes vazios"""
-        response = ErrorResponse(
-            message="Erro com detalhes vazios",
-            details={}
-        )
+        response = ErrorResponse(message="Erro com detalhes vazios", details={})
 
         assert response.success is False
         assert response.details == {}
@@ -314,22 +263,19 @@ class TestErrorResponse:
         details = {
             "errors": [
                 {"field": "name", "message": "Nome é obrigatório"},
-                {"field": "email", "message": "Email inválido"}
+                {"field": "email", "message": "Email inválido"},
             ],
-            "metadata": {
-                "validation_time": 0.025,
-                "rules_applied": 5
-            },
+            "metadata": {"validation_time": 0.025, "rules_applied": 5},
             "suggestions": [
                 "Verifique o formato do email",
-                "Preencha todos os campos obrigatórios"
-            ]
+                "Preencha todos os campos obrigatórios",
+            ],
         }
 
         response = ErrorResponse(
             message="Múltiplos erros de validação",
             error_code="MULTIPLE_VALIDATION_ERRORS",
-            details=details
+            details=details,
         )
 
         assert response.success is False
@@ -361,18 +307,12 @@ class TestResponseIntegration:
         list_error = ListResponse[str](success=False, message="Erro")
         error_response = ErrorResponse(message="Erro")
 
-        assert (single_error.success ==
-                list_error.success ==
-                error_response.success)
+        assert single_error.success == list_error.success == error_response.success
         assert single_error.success is False
 
     def test_response_message_inheritance(self):
         """Testa herança de mensagens padrão"""
-        responses = [
-            SingleResponse(),
-            ListResponse(),
-            ResponseBase()
-        ]
+        responses = [SingleResponse(), ListResponse(), ResponseBase()]
 
         for response in responses:
             assert response.message == "Operação realizada com sucesso"

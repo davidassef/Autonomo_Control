@@ -32,39 +32,39 @@ class EntryBase(BaseModel):
 
 
 class EntryCreate(EntryBase):
-    @field_validator('amount')
+    @field_validator("amount")
     @classmethod
     def amount_must_be_positive(cls, v):
         if v <= 0:
-            raise ValueError('O valor deve ser maior que zero')
+            raise ValueError("O valor deve ser maior que zero")
         return v
 
-    @field_validator('distance_km')
+    @field_validator("distance_km")
     @classmethod
     def distance_positive(cls, v):
         if v is not None and v <= 0:
-            raise ValueError('distance_km deve ser > 0')
+            raise ValueError("distance_km deve ser > 0")
         return v
 
-    @field_validator('duration_min')
+    @field_validator("duration_min")
     @classmethod
     def duration_positive(cls, v):
         if v is not None and v <= 0:
-            raise ValueError('duration_min deve ser > 0')
+            raise ValueError("duration_min deve ser > 0")
         return v
 
-    @field_validator('platform')
+    @field_validator("platform")
     @classmethod
     def platform_valid(cls, v):
         if v is not None and v not in PLATFORM_VALUES:
-            raise ValueError(f'platform deve estar em {PLATFORM_VALUES}')
+            raise ValueError(f"platform deve estar em {PLATFORM_VALUES}")
         return v
 
-    @field_validator('shift_tag')
+    @field_validator("shift_tag")
     @classmethod
     def shift_valid(cls, v):
         if v is not None and v not in SHIFT_TAG_VALUES:
-            raise ValueError(f'shift_tag deve estar em {SHIFT_TAG_VALUES}')
+            raise ValueError(f"shift_tag deve estar em {SHIFT_TAG_VALUES}")
         return v
 
 
@@ -90,11 +90,11 @@ class EntryUpdate(BaseModel):
     is_trip_expense: Optional[bool] = None
     linked_entry_id: Optional[str] = None
 
-    @field_validator('amount')
+    @field_validator("amount")
     @classmethod
     def amount_must_be_positive(cls, v):
         if v is not None and v <= 0:
-            raise ValueError('O valor deve ser maior que zero')
+            raise ValueError("O valor deve ser maior que zero")
         return v
 
 
@@ -122,7 +122,6 @@ class EntrySummary(BaseModel):
 
 class CategoryDistribution(BaseModel):
     category: str
-    category_name: str
     amount: float
     count: int
     percentage: float

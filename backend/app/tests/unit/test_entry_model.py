@@ -4,6 +4,7 @@ Testes unitários para o modelo Entry.
 Este módulo contém testes para validar o comportamento do modelo Entry,
 incluindo criação, atualização e relacionamentos com categorias e usuários.
 """
+
 import datetime
 from uuid import UUID
 
@@ -26,13 +27,11 @@ def test_create_entry(test_db, sample_user, sample_category):
         date=date,
         type=EntryType.INCOME,
         category=sample_category.name,
-        user_id=sample_user.id
+        user_id=sample_user.id,
     )
     test_db.add(entry)
-    test_db.commit()    # Assert
-    db_entry = test_db.query(Entry).filter(
-        Entry.description == description
-    ).first()
+    test_db.commit()  # Assert
+    db_entry = test_db.query(Entry).filter(Entry.description == description).first()
     assert db_entry is not None
     assert db_entry.amount == amount
     assert db_entry.description == description
@@ -48,7 +47,7 @@ def test_create_entry(test_db, sample_user, sample_category):
         is_valid_uuid = True
     except ValueError:
         is_valid_uuid = False
-    assert is_valid_uuid is True    # Verifica timestamps automáticos
+    assert is_valid_uuid is True  # Verifica timestamps automáticos
     assert db_entry.created_at is not None
 
 
@@ -66,7 +65,7 @@ def test_entry_update(test_db, sample_entry):
     db_entry.amount = new_amount
     db_entry.description = new_description
     test_db.commit()
-    test_db.refresh(db_entry)    # Assert
+    test_db.refresh(db_entry)  # Assert
     updated_entry = test_db.query(Entry).filter(Entry.id == entry_id).first()
     assert updated_entry.amount == new_amount
     assert updated_entry.description == new_description
@@ -82,7 +81,7 @@ def test_entry_soft_delete(test_db, sample_entry):
     # Act
     db_entry = test_db.query(Entry).filter(Entry.id == entry_id).first()
     db_entry.is_deleted = True
-    test_db.commit()    # Assert
+    test_db.commit()  # Assert
     deleted_entry = test_db.query(Entry).filter(Entry.id == entry_id).first()
     assert deleted_entry.is_deleted is True
     # The record should still exist in the database
@@ -100,7 +99,7 @@ def test_entry_with_different_types(test_db, sample_user):
         date=datetime.datetime.now(),
         type=EntryType.INCOME,
         category="Vendas",
-        user_id=sample_user.id
+        user_id=sample_user.id,
     )
     test_db.add(income_entry)
 
@@ -108,18 +107,19 @@ def test_entry_with_different_types(test_db, sample_user):
     expense_entry = Entry(
         amount=50.00,
         description="Compra de material",
-        date=datetime.datetime.now(),        type=EntryType.EXPENSE,
+        date=datetime.datetime.now(),
+        type=EntryType.EXPENSE,
         category="Material",
-        user_id=sample_user.id
+        user_id=sample_user.id,
     )
     test_db.add(expense_entry)
-    test_db.commit()    # Assert
-    db_income = test_db.query(Entry).filter(
-        Entry.description == "Pagamento de cliente"
-    ).first()
-    db_expense = test_db.query(Entry).filter(
-        Entry.description == "Compra de material"
-    ).first()
+    test_db.commit()  # Assert
+    db_income = (
+        test_db.query(Entry).filter(Entry.description == "Pagamento de cliente").first()
+    )
+    db_expense = (
+        test_db.query(Entry).filter(Entry.description == "Compra de material").first()
+    )
 
     assert db_income.type == EntryType.INCOME
     assert db_expense.type == EntryType.EXPENSE

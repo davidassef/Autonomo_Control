@@ -24,7 +24,7 @@ def test_db():
     engine = create_engine(
         "sqlite:///:memory:",
         connect_args={"check_same_thread": False},
-        poolclass=StaticPool
+        poolclass=StaticPool,
     )
 
     # Cria tabelas do banco de dados
@@ -58,11 +58,7 @@ def sample_user(test_db):
     """
     Fixture que cria um usuário de exemplo para testes
     """
-    user = User(
-        email="teste@exemplo.com",
-        name="Usuário Teste",
-        google_id="123456789"
-    )
+    user = User(email="teste@exemplo.com", name="Usuário Teste", google_id="123456789")
     test_db.add(user)
     test_db.commit()
     test_db.refresh(user)
@@ -74,11 +70,7 @@ def sample_category(test_db, sample_user):
     """
     Fixture que cria uma categoria de exemplo para testes
     """
-    category = Category(
-        name="Combustível",
-        type="EXPENSE",
-        user_id=sample_user.id
-    )
+    category = Category(name="Combustível", type="EXPENSE", user_id=sample_user.id)
     test_db.add(category)
     test_db.commit()
     test_db.refresh(category)
@@ -96,7 +88,7 @@ def sample_entry(test_db, sample_user, sample_category):
         date=datetime.datetime.now(),
         type="EXPENSE",
         category=sample_category.name,
-        user_id=sample_user.id
+        user_id=sample_user.id,
     )
     test_db.add(entry)
     test_db.commit()
@@ -120,7 +112,7 @@ def auth_token(sample_user):
     # Cria um token de acesso para o usuário de exemplo
     access_token = create_access_token(
         data={"sub": sample_user.email, "user_id": sample_user.id},
-        expires_delta=datetime.timedelta(minutes=30)
+        expires_delta=datetime.timedelta(minutes=30),
     )
     return access_token
 

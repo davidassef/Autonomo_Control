@@ -31,7 +31,9 @@ def test_get_entry_by_id(test_client, auth_headers, sample_entry):
     Testa a busca de lançamento por ID
     """
     # Act
-    response = test_client.get(f"/api/v1/entries/{sample_entry.id}", headers=auth_headers)
+    response = test_client.get(
+        f"/api/v1/entries/{sample_entry.id}", headers=auth_headers
+    )
 
     # Assert
     assert response.status_code == status.HTTP_200_OK
@@ -53,14 +55,12 @@ def test_create_entry(test_client, auth_headers, sample_category):
         "description": "Pagamento de serviço",
         "date": today,
         "type": "INCOME",
-        "category": sample_category.name
+        "category": sample_category.name,
     }
 
     # Act
     response = test_client.post(
-        "/api/v1/entries/",
-        json=new_entry_data,
-        headers=auth_headers
+        "/api/v1/entries/", json=new_entry_data, headers=auth_headers
     )
 
     # Assert
@@ -78,16 +78,11 @@ def test_update_entry(test_client, auth_headers, sample_entry):
     Testa a atualização de um lançamento existente
     """
     # Arrange
-    update_data = {
-        "amount": 67.89,
-        "description": "Descrição atualizada"
-    }
+    update_data = {"amount": 67.89, "description": "Descrição atualizada"}
 
     # Act
     response = test_client.patch(
-        f"/api/v1/entries/{sample_entry.id}",
-        json=update_data,
-        headers=auth_headers
+        f"/api/v1/entries/{sample_entry.id}", json=update_data, headers=auth_headers
     )
 
     # Assert
@@ -104,8 +99,7 @@ def test_soft_delete_entry(test_client, auth_headers, sample_entry, test_db):
     """
     # Act
     response = test_client.delete(
-        f"/api/v1/entries/{sample_entry.id}",
-        headers=auth_headers
+        f"/api/v1/entries/{sample_entry.id}", headers=auth_headers
     )
 
     # Assert
@@ -118,7 +112,9 @@ def test_soft_delete_entry(test_client, auth_headers, sample_entry, test_db):
     assert len(deleted_entries) == 0  # Não deve aparecer na listagem normal
 
 
-def test_filter_entries_by_type(test_client, auth_headers, test_db, sample_entry, sample_user, sample_category):
+def test_filter_entries_by_type(
+    test_client, auth_headers, test_db, sample_entry, sample_user, sample_category
+):
     """
     Testa a filtragem de lançamentos por tipo (INCOME/EXPENSE)
     """
@@ -128,26 +124,20 @@ def test_filter_entries_by_type(test_client, auth_headers, test_db, sample_entry
         "description": "Freelance",
         "date": datetime.datetime.now().isoformat(),
         "type": "INCOME",
-        "category": "Serviços"
+        "category": "Serviços",
     }
 
     # Adiciona a entrada de receita
-    test_client.post(
-        "/api/v1/entries/",
-        json=income_entry,
-        headers=auth_headers
-    )
+    test_client.post("/api/v1/entries/", json=income_entry, headers=auth_headers)
 
     # Act - filtra por despesas
     expense_response = test_client.get(
-        "/api/v1/entries/?type=EXPENSE",
-        headers=auth_headers
+        "/api/v1/entries/?type=EXPENSE", headers=auth_headers
     )
 
     # Act - filtra por receitas
     income_response = test_client.get(
-        "/api/v1/entries/?type=INCOME",
-        headers=auth_headers
+        "/api/v1/entries/?type=INCOME", headers=auth_headers
     )
 
     # Assert

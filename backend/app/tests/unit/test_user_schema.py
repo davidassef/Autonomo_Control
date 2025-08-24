@@ -1,6 +1,7 @@
 """
 Testes unitários para schemas de usuários (user_schema.py)
 """
+
 from datetime import datetime
 
 import pytest
@@ -13,7 +14,7 @@ from app.schemas.user_schema import (
     UserInDB,
     User,
     Token,
-    TokenData
+    TokenData,
 )
 
 
@@ -22,10 +23,7 @@ class TestUserBase:
 
     def test_user_base_valid(self):
         """Testa criação de usuário base válido"""
-        user_data = {
-            "email": "test@example.com",
-            "name": "João Silva"
-        }
+        user_data = {"email": "test@example.com", "name": "João Silva"}
         user = UserBase(**user_data)
 
         assert user.email == "test@example.com"
@@ -38,7 +36,7 @@ class TestUserBase:
             "user.name@domain.com",
             "user+tag@domain.co.uk",
             "123@domain.org",
-            "user@sub.domain.com"
+            "user@sub.domain.com",
         ]
 
         for email in valid_emails:
@@ -54,7 +52,7 @@ class TestUserBase:
             "user@",
             "user.domain.com",
             "",
-            "user@domain"
+            "user@domain",
         ]
 
         for email in invalid_emails:
@@ -84,7 +82,16 @@ class TestUserCreate:
         """Testa criação de usuário válida"""
         user_data = {
             "email": "newuser@example.com",
-            "name": "Novo Usuário"
+            "name": "Novo Usuário",
+            "username": "testuser",
+            "full_name": "Test User",
+            "password": "SecurePass123!",
+            "security_question_1_id": "MOTHER_MAIDEN_NAME",
+            "security_answer_1": "Silva",
+            "security_question_2_id": "FIRST_PET_NAME",
+            "security_answer_2": "Rex",
+            "security_question_3_id": "CHILDHOOD_FRIEND",
+            "security_answer_3": "João",
         }
         user = UserCreate(**user_data)
 
@@ -99,7 +106,7 @@ class TestUserUpdate:
         """Testa atualização de usuário válida"""
         update_data = {
             "name": "Nome Atualizado",
-            "picture": "https://example.com/avatar.jpg"
+            "picture": "https://example.com/avatar.jpg",
         }
         user_update = UserUpdate(**update_data)
 
@@ -127,7 +134,7 @@ class TestUserInDB:  # pylint: disable=too-few-public-methods
             "is_active": True,
             "created_at": datetime(2025, 5, 24, 10, 0, 0),
             "updated_at": datetime(2025, 5, 24, 11, 0, 0),
-            "picture": "https://avatar.com/user.jpg"
+            "picture": "https://avatar.com/user.jpg",
         }
         user = UserInDB(**user_data)
 
@@ -153,7 +160,7 @@ class TestToken:  # pylint: disable=too-few-public-methods
         """Testa criação de token válido"""
         token_data = {
             "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test.token",
-            "token_type": "bearer"
+            "token_type": "bearer",
         }
         token = Token(**token_data)
 
@@ -167,10 +174,7 @@ class TestTokenData:
 
     def test_token_data_valid_complete(self):
         """Testa criação de dados de token válidos e completos"""
-        token_data = {
-            "email": "token@example.com",
-            "user_id": "token_user123"
-        }
+        token_data = {"email": "token@example.com", "user_id": "token_user123"}
         data = TokenData(**token_data)
 
         assert data.email == "token@example.com"

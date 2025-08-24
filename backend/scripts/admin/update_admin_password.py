@@ -14,13 +14,16 @@ from app.core.database import SessionLocal
 from app.models.user import User
 from app.core.security import get_password_hash
 
+
 def update_admin_password():
     """Atualiza a senha do usuário admin"""
     db: Session = SessionLocal()
 
     try:
         # Buscar o usuário admin
-        admin_user = db.query(User).filter(User.email == "admin@autonomocontrol.com").first()
+        admin_user = (
+            db.query(User).filter(User.email == "admin@autonomocontrol.com").first()
+        )
         if not admin_user:
             print("❌ Usuário admin não encontrado!")
             return False
@@ -47,6 +50,7 @@ def update_admin_password():
         return False
     finally:
         db.close()
+
 
 if __name__ == "__main__":
     print("🔐 Atualizando senha do usuário admin...")

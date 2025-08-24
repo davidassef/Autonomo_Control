@@ -1,6 +1,7 @@
 """
 Testes unitários para schemas de categorias (category_schema.py)
 """
+
 from datetime import datetime
 
 import pytest
@@ -11,7 +12,7 @@ from app.schemas.category_schema import (
     CategoryCreate,
     CategoryUpdate,
     CategoryInDB,
-    Category
+    Category,
 )
 
 
@@ -25,7 +26,7 @@ class TestCategoryBase:
             "type": "INCOME",
             "icon": "💰",
             "color": "#4CAF50",
-            "subcategories": ["Produtos", "Serviços"]
+            "subcategories": ["Produtos", "Serviços"],
         }
         category = CategoryBase(**category_data)
 
@@ -41,7 +42,7 @@ class TestCategoryBase:
             "name": "Alimentação",
             "type": "EXPENSE",
             "icon": "🍽️",
-            "color": "#FF5722"
+            "color": "#FF5722",
         }
         category = CategoryBase(**category_data)
 
@@ -53,10 +54,7 @@ class TestCategoryBase:
 
     def test_category_base_minimal(self):
         """Testa criação de categoria base com campos mínimos"""
-        category_data = {
-            "name": "Categoria Simples",
-            "type": "INCOME"
-        }
+        category_data = {"name": "Categoria Simples", "type": "INCOME"}
         category = CategoryBase(**category_data)
 
         assert category.name == "Categoria Simples"
@@ -67,21 +65,14 @@ class TestCategoryBase:
 
     def test_category_base_invalid_type(self):
         """Testa validação de tipo inválido"""
-        category_data = {
-            "name": "Teste",
-            "type": "INVALID_TYPE"
-        }
+        category_data = {"name": "Teste", "type": "INVALID_TYPE"}
 
         with pytest.raises(ValidationError):
             CategoryBase(**category_data)
 
     def test_category_base_empty_subcategories(self):
         """Testa categoria com lista vazia de subcategorias"""
-        category_data = {
-            "name": "Categoria",
-            "type": "EXPENSE",
-            "subcategories": []
-        }
+        category_data = {"name": "Categoria", "type": "EXPENSE", "subcategories": []}
         category = CategoryBase(**category_data)
 
         assert category.subcategories == []
@@ -111,7 +102,7 @@ class TestCategoryCreate:
             "type": "INCOME",
             "icon": "📊",
             "color": "#2196F3",
-            "subcategories": ["Sub1", "Sub2"]
+            "subcategories": ["Sub1", "Sub2"],
         }
         category = CategoryCreate(**category_data)
 
@@ -127,11 +118,7 @@ class TestCategoryUpdate:
 
     def test_category_update_valid(self):
         """Testa atualização de categoria válida"""
-        update_data = {
-            "name": "Nome Atualizado",
-            "icon": "🔄",
-            "color": "#FF9800"
-        }
+        update_data = {"name": "Nome Atualizado", "icon": "🔄", "color": "#FF9800"}
         category_update = CategoryUpdate(**update_data)
 
         assert category_update.name == "Nome Atualizado"
@@ -189,7 +176,7 @@ class TestCategoryInDB:
             "user_id": "user123",
             "created_at": datetime(2025, 5, 24, 10, 0, 0),
             "updated_at": datetime(2025, 5, 24, 11, 0, 0),
-            "is_default": False
+            "is_default": False,
         }
         category = CategoryInDB(**category_data)
 
@@ -208,7 +195,7 @@ class TestCategoryInDB:
             "name": "Categoria Padrão",
             "type": "INCOME",
             "created_at": datetime(2025, 5, 24, 10, 0, 0),
-            "is_default": True
+            "is_default": True,
         }
         category = CategoryInDB(**category_data)
 
@@ -226,7 +213,7 @@ class TestCategoryInDB:
             "name": "Categoria Mínima",
             "type": "EXPENSE",
             "created_at": datetime(2025, 5, 24, 10, 0, 0),
-            "is_default": False
+            "is_default": False,
         }
         category = CategoryInDB(**category_data)
 
@@ -242,7 +229,7 @@ class TestCategoryInDB:
             "name": "Teste",
             "type": "INCOME",
             "created_at": datetime.now(),
-            "is_default": True
+            "is_default": True,
         }
 
         # Sem ID
@@ -284,7 +271,7 @@ class TestCategory:
             "user_id": "user456",
             "created_at": datetime(2025, 5, 24, 12, 0, 0),
             "updated_at": datetime(2025, 5, 24, 12, 30, 0),
-            "is_default": False
+            "is_default": False,
         }
         category = Category(**category_data)
 
@@ -309,17 +296,19 @@ class TestCategorySchemaIntegration:
             "type": "EXPENSE",
             "icon": "⚡",
             "color": "#3F51B5",
-            "subcategories": ["Sub Test"]
+            "subcategories": ["Sub Test"],
         }
 
         # Simula dados que seriam adicionados pelo banco
         db_data = create_data.copy()
-        db_data.update({
-            "id": "generated_id",
-            "user_id": "user789",
-            "created_at": datetime(2025, 5, 24, 15, 0, 0),
-            "is_default": False
-        })
+        db_data.update(
+            {
+                "id": "generated_id",
+                "user_id": "user789",
+                "created_at": datetime(2025, 5, 24, 15, 0, 0),
+                "is_default": False,
+            }
+        )
 
         category_create = CategoryCreate(**create_data)
         category_in_db = CategoryInDB(**db_data)
@@ -342,4 +331,4 @@ class TestCategorySchemaIntegration:
         assert update.type is None
 
         # Verifica que não tem subcategories (que não está em CategoryUpdate)
-        assert not hasattr(update, 'subcategories')
+        assert not hasattr(update, "subcategories")

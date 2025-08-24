@@ -5,6 +5,7 @@ Cobrem os ramos:
  - Usuário existente sem role MASTER -> promoção + hash
  - Usuário MASTER sem hashed_password -> só aplica hash
 """
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -30,6 +31,7 @@ def memory_session(monkeypatch):
 
     # monkeypatch SessionLocal usado em bootstrap_master
     import app.main as main_mod
+
     monkeypatch.setattr(main_mod, "SessionLocal", SessionLocal)
     return SessionLocal, engine
 
@@ -44,7 +46,8 @@ def _run_bootstrap_and_fetch(session_factory):
 
 
 @pytest.mark.parametrize(
-    "pre_state", ["absent", "present_user", "present_master_no_hash"],
+    "pre_state",
+    ["absent", "present_user", "present_master_no_hash"],
 )
 def test_bootstrap_master_variants(pre_state, memory_session, monkeypatch):
     session_factory, _engine = memory_session
@@ -64,6 +67,8 @@ def test_bootstrap_master_variants(pre_state, memory_session, monkeypatch):
     user = _run_bootstrap_and_fetch(session_factory)
     assert user is not None, "Bootstrap deve garantir existência do MASTER"
     assert user.role == "MASTER"
-    assert user.hashed_password, "Deve gerar hashed_password quando MASTER_PASSWORD definido"
+    assert (
+        user.hashed_password
+    ), "Deve gerar hashed_password quando MASTER_PASSWORD definido"
     assert settings.MASTER_PASSWORD is not None
     assert verify_password(settings.MASTER_PASSWORD, user.hashed_password) is True

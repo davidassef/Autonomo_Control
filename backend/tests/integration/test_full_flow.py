@@ -6,6 +6,7 @@ Script final para testar todo o fluxo de login
 import requests
 import json
 
+
 def test_full_login_flow():
     """Testa o fluxo completo de login"""
 
@@ -45,17 +46,14 @@ def test_full_login_flow():
     print("\n🔐 TESTE DE LOGIN")
     print("-" * 30)
 
-    login_data = {
-        "username": email,
-        "password": password
-    }
+    login_data = {"username": email, "password": password}
 
     try:
         response = requests.post(
             login_url,
             data=login_data,
             headers={"Content-Type": "application/x-www-form-urlencoded"},
-            timeout=10
+            timeout=10,
         )
 
         print(f"📊 Status Code: {response.status_code}")
@@ -64,7 +62,7 @@ def test_full_login_flow():
             result = response.json()
             print("✅ LOGIN SUCESSO!")
             print(f"🎫 Token Type: {result.get('token_type')}")
-            token = result.get('access_token', '')
+            token = result.get("access_token", "")
             print(f"🔐 Token (primeiros 50 chars): {token[:50]}...")
 
             # Teste 3: Buscar perfil do usuário
@@ -111,6 +109,7 @@ def test_full_login_flow():
     except Exception as e:
         print(f"❌ Erro inesperado: {e}")
         return False
+
 
 if __name__ == "__main__":
     success = test_full_login_flow()

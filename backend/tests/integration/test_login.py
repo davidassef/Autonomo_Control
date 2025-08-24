@@ -6,6 +6,7 @@ Script para testar o endpoint de login da API
 import requests
 import json
 
+
 def test_login_api():
     """Testa o endpoint de login da API"""
 
@@ -16,14 +17,9 @@ def test_login_api():
     url = "http://localhost:8000/api/v1/auth/token"
 
     # Dados do login
-    data = {
-        "username": "admin@autonomocontrol.com",
-        "password": "admin123"
-    }
+    data = {"username": "admin@autonomocontrol.com", "password": "admin123"}
 
-    headers = {
-        "Content-Type": "application/x-www-form-urlencoded"
-    }
+    headers = {"Content-Type": "application/x-www-form-urlencoded"}
 
     try:
         print(f"📍 URL: {url}")
@@ -40,7 +36,7 @@ def test_login_api():
             result = response.json()
             print("✅ LOGIN SUCESSO!")
             print(f"🎫 Token Type: {result.get('token_type')}")
-            token = result.get('access_token', '')
+            token = result.get("access_token", "")
             print(f"🔐 Access Token (primeiros 50 chars): {token[:50]}...")
 
             # Testar endpoint /me
@@ -69,6 +65,7 @@ def test_login_api():
         print("🔧 Verifique se o backend está rodando em http://localhost:8000")
     except Exception as e:
         print(f"❌ ERRO INESPERADO: {e}")
+
 
 if __name__ == "__main__":
     test_login_api()

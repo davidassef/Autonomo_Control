@@ -4,6 +4,7 @@ Testes unitários para tipos customizados.
 Este módulo contém testes para validar o comportamento dos tipos customizados
 do SQLAlchemy, especialmente o SQLiteListType.
 """
+
 import json
 import unittest
 
@@ -28,6 +29,7 @@ class TestSQLiteListType(unittest.TestCase):
         # Criando modelo de teste que usa SQLiteListType
         class TestModel(self.Base):
             """Test model for SQLiteListType functionality."""
+
             __tablename__ = "test_model"
             id = Column(String, primary_key=True)
             tags = Column(SQLiteListType(), nullable=True)
@@ -48,9 +50,7 @@ class TestSQLiteListType(unittest.TestCase):
             session.commit()
 
             # Act - Recuperando o registro
-            retrieved_obj = session.query(self.TestModel).filter_by(
-                id="1"
-            ).first()
+            retrieved_obj = session.query(self.TestModel).filter_by(id="1").first()
 
             # Assert
             self.assertEqual(test_list, retrieved_obj.tags)
@@ -82,9 +82,7 @@ class TestSQLiteListType(unittest.TestCase):
             session.commit()
 
             # Recuperando o registro
-            retrieved_obj = session.query(self.TestModel).filter_by(
-                id="2"
-            ).first()
+            retrieved_obj = session.query(self.TestModel).filter_by(id="2").first()
 
             # Assert
             self.assertIsNone(retrieved_obj.tags)
@@ -103,9 +101,7 @@ class TestSQLiteListType(unittest.TestCase):
 
         # Act & Assert - Recuperando o registro deve retornar lista vazia
         with self.Session() as session:
-            retrieved_obj = session.query(self.TestModel).filter_by(
-                id="3"
-            ).first()
+            retrieved_obj = session.query(self.TestModel).filter_by(id="3").first()
             self.assertEqual([], retrieved_obj.tags)
 
     def test_handling_postgresql_dialect(self):
@@ -118,6 +114,7 @@ class TestSQLiteListType(unittest.TestCase):
 
         class MockDialect:
             """Mock dialect class for testing PostgreSQL behavior."""
+
             name = "postgresql"
 
         mock_dialect = MockDialect()
@@ -128,10 +125,7 @@ class TestSQLiteListType(unittest.TestCase):
         self.assertEqual(test_value, result)
 
         # Testa process_result_value com PostgreSQL
-        result = sqlite_list_type.process_result_value(
-            test_value,
-            mock_dialect
-        )
+        result = sqlite_list_type.process_result_value(test_value, mock_dialect)
         self.assertEqual(test_value, result)
 
 

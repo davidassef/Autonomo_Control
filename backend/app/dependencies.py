@@ -11,9 +11,9 @@ from app.core.config import settings
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/token")
 
+
 async def get_current_user(
-    token: str = Depends(oauth2_scheme),
-    db: Session = Depends(get_db)
+    token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
 ):
     """
     Dependência para obter o usuário atual a partir do token JWT
@@ -34,20 +34,19 @@ async def get_current_user(
 
     if not bool(user.is_active):  # type: ignore[arg-type]
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Usuário inativo"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Usuário inativo"
         )
-    
+
     # Verificar se o usuário está bloqueado
-    if getattr(user, 'blocked_at', None) is not None:  # type: ignore[attr-defined]
+    if getattr(user, "blocked_at", None) is not None:  # type: ignore[attr-defined]
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Usuário bloqueado pelo administrador"
+            detail="Usuário bloqueado pelo administrador",
         )
 
     # Backfill defensivo: alguns registros legados podem ter role NULL
-    if getattr(user, 'role', None) is None:  # type: ignore[attr-defined]
-        user.role = 'USER'  # type: ignore[assignment]
+    if getattr(user, "role", None) is None:  # type: ignore[attr-defined]
+        user.role = "USER"  # type: ignore[assignment]
         try:
             db.commit()
             db.refresh(user)
@@ -59,13 +58,17 @@ async def get_current_user(
 
 async def get_current_admin(current_user: User = Depends(get_current_user)):
     if current_user.role not in ("ADMIN", "MASTER"):  # type: ignore[operator]
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Ação não permitida")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Ação não permitida"
+        )
     return current_user
 
 
 async def get_current_master(current_user: User = Depends(get_current_user)):
     if current_user.role != "MASTER":  # type: ignore[operator]
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Ação restrita ao MASTER")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Ação restrita ao MASTER"
+        )
     return current_user
 
 
@@ -74,4 +77,6 @@ def require_master_password(request: Request):
         raise HTTPException(status_code=500, detail="MASTER_PASSWORD não configurada")
     provided = request.headers.get("X-Master-Key")
     if not provided or not hmac.compare_digest(provided, settings.MASTER_PASSWORD):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Master password inválida")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Master password inválida"
+        )
