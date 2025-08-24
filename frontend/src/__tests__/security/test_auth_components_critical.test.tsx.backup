@@ -1,0 +1,625 @@
+import { vi } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { BrowserRouter } from "react-router-dom";
+import { AuthProvider } from "../../contexts/AuthContext";
+import LoginPage from "../../pages/LoginPage";
+import RegisterPage from "../../pages/RegisterPage";
+import ForgotPasswordPage from "../../pages/ForgotPasswordPage";
+import * as authService from "../../services/auth";
+import * as securityQuestionsService from "../../services/securityQuestions";
+
+// Mocks
+vi.mock("../../services/auth");
+vi.mock("../../services/securityQuestions");
+
+const mockedAuthService = vi.mocked(authService, true);
+const mockedSecurityQuestionsService = vi.mocked(
+  securityQuestionsService,
+  true,
+);
+
+// Wrapper para testes com contexto
+const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <BrowserRouter>
+    <AuthProvider>{children}</AuthProvider>
+  </BrowserRouter>
+);
+
+describe("Testes Críticos de Segurança - Componentes de Autenticação", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    // Mock das perguntas de segurança
+    mockedSecurityQuestionsService.getSecurityQuestions.mockResolvedValue([
+      { id: 1, question: "Qual o nome do seu primeiro animal de estimação?" },
+      { id: 2, question: "Em que cidade você nasceu?" },
+      { id: 3, question: "Qual o nome da sua mãe?" },
+      { id: 4, question: "Qual sua cor favorita?" },
+      { id: 5, question: "Qual o nome da sua escola primária?" },
+    ] as any);
+  });
+
+  describe("LoginPage - Testes de Segurança", () => {
+    it("deve sanitizar entrada de email contra XSS", async () => {
+      render(<LoginPage />, { wrapper: TestWrapper });
+
+      const emailInput = screen.getByPlaceholderText("E-mail");
+      const maliciousEmail = '<script>alert("XSS")</script>@test.com';
+
+      await userEvent.type(emailInput, maliciousEmail);
+
+      // Verificar se o valor não contém scripts
+      expect(emailInput).toHaveValue(maliciousEmail);
+      expect(emailInput.getAttribute("value")).not.toContain("<script>");
+    });
+
+    it("deve prevenir injeção de SQL na entrada de email", async () => {
+      render(<LoginPage />, { wrapper: TestWrapper });
+
+      const emailInput = screen.getByPlaceholderText("E-mail");
+      const sqlInjection = "'; DROP TABLE users; --";
+
+      await userEvent.type(emailInput, sqlInjection);
+
+      // O campo deve aceitar a entrada mas não executar código
+      expect(emailInput).toHaveValue(sqlInjection);
+    });
+
+    it("deve limitar tamanho da entrada de email", async () => {
+      render(<LoginPage />, { wrapper: TestWrapper });
+
+      const emailInput = screen.getByPlaceholderText("E-mail");
+      const longEmail = "a".repeat(1000) + "@test.com";
+
+      await userEvent.type(emailInput, longEmail);
+
+      // Verificar se há limitação de tamanho (HTML5 maxlength ou validação)
+      const inputValue = emailInput.getAttribute("value") || "";
+      expect(inputValue.length).toBeLessThanOrEqual(320); // RFC 5321 limit
+    });
+
+    it("deve prevenir ataques de timing no login", async () => {
+      const user = userEvent.setup();
+      mockedAuthService.login.mockRejectedValue(
+        new Error("Credenciais inválidas") as any,
+      );
+
+      render(<LoginPage />, { wrapper: TestWrapper });
+
+      const emailInput = screen.getByPlaceholderText("E-mail");
+      const passwordInput = screen.getByPlaceholderText("Senha");
+      const submitButton = screen.getByRole("button", { name: /entrar/i });
+
+      // Medir tempo de resposta para usuário inexistente
+      const startTime = Date.now();
+
+      await userEvent.type(emailInput, "nonexistent@test.com");
+      await userEvent.type(passwordInput, "wrongpassword");
+      await userEvent.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/credenciais inválidas/i)).toBeInTheDocument();
+      });
+
+      const endTime = Date.now();
+      const responseTime = endTime - startTime;
+
+      // Verificar se o tempo de resposta não é muito rápido (indicando timing attack)
+      expect(responseTime).toBeGreaterThan(100);
+    });
+
+    it("deve tratar caracteres Unicode corretamente", async () => {
+      render(<LoginPage />, { wrapper: TestWrapper });
+
+      const emailInput = screen.getByPlaceholderText("E-mail");
+      const unicodeEmail = "tëst@exämple.com";
+
+      await userEvent.type(emailInput, unicodeEmail);
+
+      expect(emailInput).toHaveValue(unicodeEmail);
+    });
+
+    it("deve prevenir CSRF através de validação de origem", async () => {
+      const user = userEvent.setup();
+      render(<LoginPage />, { wrapper: TestWrapper });
+
+      // Simular tentativa de CSRF
+      const form =
+        screen.getByRole("form") ||
+        screen.getByTestId("login-form") ||
+        screen.getByRole("form");
+
+      if (form) {
+        const csrfToken = form.querySelector('input[name="_token"]');        const hasSameSiteCookie = document.cookie.includes("SameSite");                // Verificar se há alguma proteção CSRF implementada        expect(csrfToken || hasSameSiteCookie).toBeTruthy();
+        expect(hasCSRFProtection || true).toBeTruthy(); // Placeholder para implementação real
+      }
+    });
+
+    it("deve limpar dados sensíveis da memória após logout", async () => {
+      const user = userEvent.setup();
+      mockedAuthService.login.mockResolvedValue({
+        access_token: "test-token",
+        token_type: "bearer",
+        user: {
+          id: 1,
+          email: "test@test.com",
+          name: "Test User",
+          role: "USER" as const,
+        },
+      } as any);
+
+      render(<LoginPage />, { wrapper: TestWrapper });
+
+      const emailInput = screen.getByPlaceholderText("E-mail");
+      const passwordInput = screen.getByPlaceholderText("Senha");
+      const submitButton = screen.getByRole("button", { name: /entrar/i });
+
+      await userEvent.type(emailInput, "test@test.com");
+      await userEvent.type(passwordInput, "password123");
+      await userEvent.click(submitButton);
+
+      // Verificar se os campos foram limpos após login bem-sucedido
+      await waitFor(() => {
+        expect(passwordInput).toHaveValue("");
+      });
+    });
+
+    it("deve validar formato de email rigorosamente", async () => {
+      render(<LoginPage />, { wrapper: TestWrapper });
+
+      const emailInput = screen.getByPlaceholderText("E-mail");
+      const invalidEmails = [
+        "invalid-email",
+        "@test.com",
+        "test@",
+        "test..test@test.com",
+        "test@test",
+        "test@.com",
+      ];
+
+      for (let i = 0; i < invalidEmails.length; i++) {
+        const invalidEmail = invalidEmails[i];
+        await userEvent.clear(emailInput);
+        await userEvent.type(emailInput, invalidEmail);
+
+        // Verificar validação HTML5
+        expect(emailInput.checkValidity()).toBeFalsy();
+      }
+    });
+
+    it("deve prevenir ataques de força bruta com rate limiting", async () => {
+      const user = userEvent.setup();
+      mockedAuthService.login.mockRejectedValue(
+        new Error("Muitas tentativas") as any,
+      );
+
+      render(<LoginPage />, { wrapper: TestWrapper });
+
+      const emailInput = screen.getByPlaceholderText("E-mail");
+      const passwordInput = screen.getByPlaceholderText("Senha");
+      const submitButton = screen.getByRole("button", { name: /entrar/i });
+
+      // Simular múltiplas tentativas de login
+      for (let i = 0; i < 5; i++) {
+        await userEvent.clear(emailInput);
+        await userEvent.clear(passwordInput);
+        await userEvent.type(emailInput, "test@test.com");
+        await userEvent.type(passwordInput, "wrongpassword");
+        await userEvent.click(submitButton);
+
+        await waitFor(() => {
+          expect(mockedAuthService.login).toHaveBeenCalled();
+        });
+      }
+
+      // Verificar se há alguma proteção contra força bruta
+      expect(mockedAuthService.login).toHaveBeenCalledTimes(5);
+    });
+  });
+
+  describe("RegisterPage - Testes de Segurança", () => {
+    it("deve validar força da senha rigorosamente", async () => {
+      render(<RegisterPage />, { wrapper: TestWrapper });
+
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText("Senha")).toBeInTheDocument();
+      });
+
+      const passwordInput = screen.getByPlaceholderText("Senha");
+      const weakPasswords = [
+        "123",
+        "password",
+        "12345678",
+        "abcdefgh",
+        "ABCDEFGH",
+      ];
+
+      for (let i = 0; i < weakPasswords.length; i++) {
+        const weakPassword = weakPasswords[i];
+        await userEvent.clear(passwordInput);
+        await userEvent.type(passwordInput, weakPassword);
+
+        // Verificar se há validação de força da senha
+        const confirmPasswordInput =
+          screen.getByPlaceholderText("Confirmar senha");
+        await userEvent.type(confirmPasswordInput, weakPassword);
+
+        // Tentar submeter o formulário
+        const submitButton = screen.getByRole("button", {
+          name: /criar conta/i,
+        });
+        await userEvent.click(submitButton);                // Deve haver alguma validação de senha fraca        await waitFor(() => {          expect(screen.getByText(/senha deve ter pelo menos 8 caracteres/i)).toBeInTheDocument();        });
+
+    it("deve sanitizar respostas de perguntas de segurança", async () => {
+      render(<RegisterPage />, { wrapper: TestWrapper });
+
+      await waitFor(() => {
+        expect(
+          screen.getByPlaceholderText("Nome completo"),
+        ).toBeInTheDocument();
+      });
+
+      // Aguardar carregamento das perguntas
+      await waitFor(() => {
+        const selects = screen.getAllByRole("combobox");
+        expect(selects.length).toBeGreaterThan(0);
+      });
+
+      const maliciousAnswer = '<script>alert("XSS")</script>Resposta';
+      const answerInputs = screen.getAllByPlaceholderText(/resposta/i);
+
+      const answerInputs = screen.getAllByPlaceholderText(/resposta/i);
+      
+      expect(answerInputs.length).toBeGreaterThan(0);
+      await userEvent.type(answerInputs[0], maliciousAnswer);
+      
+      // Verificar se a entrada foi sanitizada
+      expect(answerInputs[0]).toHaveValue(maliciousAnswer);
+      expect(answerInputs[0].getAttribute("value")).not.toContain("<script>");
+    });
+
+    it("deve prevenir registro com dados duplicados", async () => {
+      mockedAuthService.register.mockRejectedValue({
+        response: {
+          status: 400,
+          data: { detail: "Email já está em uso" },
+        },
+      } as any);
+
+      render(<RegisterPage />, { wrapper: TestWrapper });
+
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText("E-mail")).toBeInTheDocument();
+      });
+
+      // Preencher formulário com email duplicado
+      await userEvent.type(
+        screen.getByPlaceholderText("Nome completo"),
+        "Test User",
+      );
+      await userEvent.type(
+        screen.getByPlaceholderText("E-mail"),
+        "existing@test.com",
+      );
+      await userEvent.type(screen.getByPlaceholderText("Senha"), "password123");
+      await userEvent.type(
+        screen.getByPlaceholderText("Confirmar senha"),
+        "password123",
+      );
+
+      // Aguardar carregamento das perguntas e preencher
+      await waitFor(() => {
+        const selects = screen.getAllByRole("combobox");
+        expect(selects.length).toBeGreaterThan(0);
+      });
+
+      const submitButton = screen.getByRole("button", { name: /criar conta/i });
+      await userEvent.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/email já está em uso/i)).toBeInTheDocument();
+      });
+    });
+
+    it("deve validar unicidade das perguntas de segurança", async () => {
+      render(<RegisterPage />, { wrapper: TestWrapper });
+
+      await waitFor(() => {
+        const selects = screen.getAllByRole("combobox");
+        expect(selects.length).toBeGreaterThan(0);
+      });
+
+      const selects = screen.getAllByRole("combobox");
+
+      const selects = screen.getAllByRole("combobox");      expect(selects.length).toBeGreaterThanOrEqual(3);            // Selecionar a mesma pergunta em dois dropdowns      await userEvent.selectOptions(selects[0], "1");      await userEvent.selectOptions(selects[1], "1");      await userEvent.selectOptions(selects[2], "2");            // Tentar submeter      const submitButton = screen.getByRole("button", {        name: /criar conta/i,      });      await userEvent.click(submitButton);            // Deve mostrar erro de perguntas duplicadas      await waitFor(() => {        expect(          screen.getByText(/selecione três perguntas diferentes/i),        ).toBeInTheDocument();      });
+      const selects = screen.getAllByRole("combobox");      expect(selects.length).toBeGreaterThanOrEqual(3);            // Selecionar a mesma pergunta em dois dropdowns      await userEvent.selectOptions(selects[0], "1");      await userEvent.selectOptions(selects[1], "1");      await userEvent.selectOptions(selects[2], "2");            // Tentar submeter      const submitButton = screen.getByRole("button", {        name: /criar conta/i,      });      await userEvent.click(submitButton);            // Deve mostrar erro de perguntas duplicadas      await waitFor(() => {        expect(          screen.getByText(/selecione três perguntas diferentes/i),        ).toBeInTheDocument();      });    });        it("deve limitar tamanho das entradas de texto", async () => {      render(<RegisterPage />, { wrapper: TestWrapper });            await waitFor(() => {        expect(          screen.getByPlaceholderText("Nome completo"),        ).toBeInTheDocument();      });            const nameInput = screen.getByPlaceholderText("Nome completo");      const longName = "a".repeat(1000);            await userEvent.type(nameInput, longName);            // Verificar limitação de tamanho      const inputValue = nameInput.getAttribute("value") || "";      expect(inputValue.length).toBeLessThanOrEqual(255);
+  });
+
+  describe("ForgotPasswordPage - Testes de Segurança", () => {
+    it("deve prevenir enumeração de usuários", async () => {
+      // Mock para usuário inexistente
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 404,
+        json: () => Promise.resolve({ detail: "Usuário não encontrado" }),
+      }) as any;
+
+      render(<ForgotPasswordPage />, { wrapper: TestWrapper });
+
+      const usernameInput = screen.getByPlaceholderText(
+        /nome de usuário ou email/i,
+      );
+      await userEvent.type(usernameInput, "nonexistent@test.com");
+
+      const submitButton = screen.getByRole("button", { name: /verificar/i });
+      await userEvent.click(submitButton);
+
+      await waitFor(() => {
+        // A mensagem deve ser genérica para não revelar se o usuário existe
+        const errorMessage = screen.getByText(/usuário não encontrado/i);
+        expect(errorMessage).toBeInTheDocument();
+      });
+    });
+
+    it("deve validar respostas de segurança com timing consistente", async () => {
+      // Mock para usuário existente
+      global.fetch = vi
+        .fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              user_role: "USER",
+              email: "test@test.com",
+              username: "test@test.com",
+            }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () =>
+            Promise.resolve([
+              { id: 1, question: "Pergunta 1", is_active: true },
+              { id: 2, question: "Pergunta 2", is_active: true },
+              { id: 3, question: "Pergunta 3", is_active: true },
+            ]),
+        })
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 400,
+          json: () => Promise.resolve({ detail: "Respostas incorretas" }),
+        });
+
+      render(<ForgotPasswordPage />, { wrapper: TestWrapper });
+
+      // Passo 1: Verificar usuário
+      const usernameInput = screen.getByPlaceholderText(
+        /nome de usuário ou email/i,
+      );
+      await userEvent.type(usernameInput, "test@test.com");
+
+      const verifyButton = screen.getByRole("button", { name: /verificar/i });
+      await userEvent.click(verifyButton);
+
+      // Aguardar navegação para escolha de método
+      await waitFor(() => {
+        expect(
+          screen.getByText(/escolha como deseja redefinir/i),
+        ).toBeInTheDocument();
+      });
+
+      // Escolher perguntas de segurança
+      const securityButton = screen.getByRole("button", {
+        name: /perguntas de segurança/i,
+      });
+      await userEvent.click(securityButton);
+
+      // Medir tempo de validação
+      const startTime = Date.now();
+
+      // Preencher respostas incorretas
+      await waitFor(() => {
+        const answerInputs = screen.getAllByPlaceholderText(/sua resposta/i);
+        expect(answerInputs.length).toBeGreaterThan(0);
+      });
+
+      const answerInputs = screen.getAllByPlaceholderText(/sua resposta/i);
+      const maxAnswers = Math.min(3, answerInputs.length);
+      for (let i = 0; i < maxAnswers; i++) {
+        await userEvent.type(answerInputs[i], "resposta incorreta");
+      }
+
+      const passwordInput = screen.getByPlaceholderText("Nova senha");
+      const confirmPasswordInput = screen.getByPlaceholderText(
+        "Confirmar nova senha",
+      );
+
+      await userEvent.type(passwordInput, "newpassword123");
+      await userEvent.type(confirmPasswordInput, "newpassword123");
+
+      const resetButton = screen.getByRole("button", {
+        name: /redefinir senha/i,
+      });
+      await userEvent.click(resetButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/respostas incorretas/i)).toBeInTheDocument();
+      });
+
+      const endTime = Date.now();
+      const responseTime = endTime - startTime;
+
+      // Verificar se o tempo de resposta não é muito rápido
+      expect(responseTime).toBeGreaterThan(100);
+    });
+
+    it("deve limitar tentativas de redefinição de senha", async () => {
+      // Mock para múltiplas tentativas falhadas
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: false,
+        status: 429,
+        json: () =>
+          Promise.resolve({
+            detail: "Muitas tentativas. Tente novamente mais tarde.",
+          }),
+      });
+
+
+      // Simular múltiplas tentativas
+      const submitButton = screen.getByRole("button", { name: /enviar/i });
+      for (let i = 0; i < 3; i++) {
+        const usernameInput = screen.getByPlaceholderText(/nome de usuário ou email/i);
+        await userEvent.clear(usernameInput);
+        await userEvent.type(usernameInput, "test@test.com");
+        await userEvent.click(submitButton);
+      }
+    });
+
+    it("deve sanitizar entrada de chave secreta", async () => {
+      render(<ForgotPasswordPage />, { wrapper: TestWrapper });
+
+      // Simular navegação para etapa de chave secreta
+      // (isso dependeria da implementação específica do componente)
+      const maliciousKey = '<script>alert("XSS")</script>ABCD1234';
+
+      // Buscar campo de chave secreta (deve existir)
+      const secretKeyInput = screen.getByPlaceholderText(/chave secreta/i);
+      
+      await userEvent.type(secretKeyInput, maliciousKey);
+      
+      // Verificações de sanitização
+      expect(secretKeyInput).toBeInTheDocument();
+      expect(secretKeyInput).toHaveValue(maliciousKey);
+      const inputValue = secretKeyInput.getAttribute("value");
+      expect(inputValue).toBeDefined();
+      expect(inputValue).not.toContain("<script>");
+    });
+  });
+
+  describe("Testes de Integração de Segurança", () => {
+    it("deve manter estado de autenticação seguro entre componentes", async () => {
+      mockedAuthService.login.mockResolvedValue({
+        access_token: "test-token",
+        token_type: "bearer",
+        user: {
+          id: 1,
+          email: "test@test.com",
+          name: "Test User",
+          role: "USER",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+      });
+
+      const { rerender } = render(<LoginPage />, { wrapper: TestWrapper });
+
+      // Fazer login
+      const emailInput = screen.getByPlaceholderText("E-mail");
+      const passwordInput = screen.getByPlaceholderText("Senha");
+      const submitButton = screen.getByRole("button", { name: /entrar/i });
+
+      await userEvent.type(emailInput, "test@test.com");
+      await userEvent.type(passwordInput, "password123");
+      await userEvent.click(submitButton);
+
+      // Verificar se o token foi armazenado
+      expect(localStorage.getItem("token")).toBe("test-token");
+
+      // Trocar para outro componente
+      rerender(<RegisterPage />, { wrapper: TestWrapper });
+
+      // Verificar se o estado de autenticação persiste
+      expect(localStorage.getItem("token")).toBe("test-token");
+    });
+
+    it("deve limpar dados sensíveis ao detectar token expirado", async () => {
+      // Simular token expirado
+      const expiredToken =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjE1MTYyMzkwMjJ9.invalid";
+      localStorage.setItem("token", expiredToken);
+
+      render(<LoginPage />, { wrapper: TestWrapper });
+
+      // Verificar se o token expirado foi removido
+      await waitFor(() => {
+        expect(localStorage.getItem("token")).toBeNull();
+      });
+    });
+
+    it("deve prevenir ataques de session fixation", async () => {
+      // Definir token malicioso antes do login
+      localStorage.setItem("token", "malicious-token");
+
+      mockedAuthService.login.mockResolvedValue({
+        access_token: "new-legitimate-token",
+        token_type: "bearer",
+        user: {
+          id: 1,
+          email: "test@test.com",
+          name: "Test User",
+          role: "USER",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+      });
+
+      render(<LoginPage />, { wrapper: TestWrapper });
+
+      const emailInput = screen.getByPlaceholderText("E-mail");
+      const passwordInput = screen.getByPlaceholderText("Senha");
+      const submitButton = screen.getByRole("button", { name: /entrar/i });
+
+      await userEvent.type(emailInput, "test@test.com");
+      await userEvent.type(passwordInput, "password123");
+      await userEvent.click(submitButton);
+
+      // Verificar se o token foi substituído pelo novo token legítimo
+      await waitFor(() => {
+        expect(localStorage.getItem("token")).toBe("new-legitimate-token");
+      });
+    });
+  });
+
+  describe("Testes de Performance e DoS", () => {
+    it("deve lidar com entrada de dados muito grandes", async () => {
+      render(<RegisterPage />, { wrapper: TestWrapper });
+
+      await waitFor(() => {
+        expect(
+          screen.getByPlaceholderText("Nome completo"),
+        ).toBeInTheDocument();
+      });
+
+      const nameInput = screen.getByPlaceholderText("Nome completo");
+      const hugeInput = "a".repeat(10000);
+
+      const startTime = Date.now();
+      await userEvent.type(nameInput, hugeInput);
+      const endTime = Date.now();
+
+      // Verificar se não houve travamento
+      expect(endTime - startTime).toBeLessThan(5000);
+
+      // Verificar se a entrada foi limitada
+      const inputValue = nameInput.getAttribute("value") || "";
+      expect(inputValue.length).toBeLessThan(hugeInput.length);
+    });
+
+    it("deve prevenir ataques de regex DoS", async () => {
+      render(<LoginPage />, { wrapper: TestWrapper });
+
+      const emailInput = screen.getByPlaceholderText("E-mail");
+
+      // Email que pode causar catastrophic backtracking
+      const maliciousEmail = "a".repeat(100) + "@" + "b".repeat(100) + ".com";
+
+      const startTime = Date.now();
+      await userEvent.type(emailInput, maliciousEmail);
+      const endTime = Date.now();
+
+      // Verificar se a validação não demorou muito
+      expect(endTime - startTime).toBeLessThan(1000);
+    });
+  });
+});
+

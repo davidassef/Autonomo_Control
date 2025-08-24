@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 // Mock manual do react-router-dom
 export const BrowserRouter = ({ children }: any) => (
@@ -28,18 +28,15 @@ export const useNavigate = () => {
 };
 
 export const useLocation = () => ({
-  pathname: '/test',
-  search: '',
-  hash: '',
+  pathname: "/test",
+  search: "",
+  hash: "",
   state: null,
-  key: 'test'
+  key: "test",
 });
 
 export const useParams = () => ({});
 
-export const useSearchParams = () => [
-  new URLSearchParams(),
-  jest.fn()
-];
+export const useSearchParams = () => [new URLSearchParams(), jest.fn()];
 
 export const Outlet = () => <div data-testid="mock-outlet" />;
